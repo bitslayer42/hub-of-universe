@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="description" content="An experiment of projection of the raster tiles using WebGL. (GIS, Geographic, Map Projection)">
+
+    <title>Flat Earth Lab : Azimuthal Equidistant Projection</title>
+
+    <style>
+      body {
+        margin: 2px;
+        background-color: #404040;
+      }
+
+      .copyright {
+        color: #E0E0E0;
+        float: left;
+        font-size: 9pt;
+      }
+
+      .copyright p {
+        margin: 0;
+      }
+    </style>
+
+    <script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-78810725-1', 'auto');
+  ga('send', 'pageview');
+
+    </script>
+
+  </head>
+
+  <body>
+
+    <div id="canvasWrapper" style="text-align: center">
+      <canvas id="webglCanvas" width="100" height="100">
+      </canvas>
+    </div>
+    <div class="copyright">
+      <p>&copy; 2016 www.flatearthlab.com</p>
+    </div>
+
+    <!-- ================================================== -->
+    <script src="./lib/jquery-1.12.4.min.js" type="application/javascript"></script>
+    <script src="./lib/hammer.min.js" type="application/javascript"></script>
+    <script src="./lib/jquery.hammer.js" type="application/javascript"></script>
+    <script src="./lib/webgl-utils.js" type="application/javascript"></script>
+
+    <script src="./src/rasterproj-common.js" type="application/javascript"></script>
+    <script src="./src/rasterproj-aeqd.js" type="application/javascript"></script>
+    <script src="./src/proj-map.js" type="application/javascript"></script>
+    <script src="./src/map-main.js" type="application/javascript"></script>
+    
+    <script type="application/javascript">
+
+    $(document).ready(function() {
+      var w = $(window).width();
+      var h = $(window).height();
+      var margin = 20;
+      var canvasSize = (w < h) ? w - margin : h - margin;
+      $('#webglCanvas').attr({ 'width': canvasSize, 'height': canvasSize });
+
+      //  projCenter parameter
+      var phi0 = +Math.PI/2;
+      var lam0 = 0.0;
+      var projCenter = getProjCenterParameter();
+      if ( projCenter ) {
+        lam0 = projCenter[0];
+        phi0 = projCenter[1];
+      }
+
+      var imageProj = new RasterProjAEQD();
+      main(imageProj);
+      imageProj.setProjCenter(lam0, phi0);
+    });
+
+    </script>
+
+  </body>
+</html>
+
+
+    <!-- ================================================== -->
+
+
+ 
