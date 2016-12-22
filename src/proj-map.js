@@ -13,7 +13,7 @@ if (typeof module!='undefined' && module.exports) {
 
 
 /**
- * ラスタタイル情報管理
+ * ラスタタイル情報管理 Raster tile information management
  * @param {number} rootNumX
  * @param {number} rootNumY
  * @param {number} numLevels
@@ -45,10 +45,10 @@ var TileManager = function(tile_opts) {
       this.numLevels = tile_opts.numLevels;
     }
     if ('inverseY' in tile_opts) {
-      this.inverseY = tile_opts.inverseY;   //  TODO booleanへの型変換
+      this.inverseY = tile_opts.inverseY;   //  TODO booleanへの型変換. Type conversion
     }
     if ('tileOrigin' in tile_opts) {
-      this.tileOrigin = tile_opts.tileOrigin;   //  TODO Array型チェック!!
+      this.tileOrigin = tile_opts.tileOrigin;   //  TODO Array型チェック!!  Type check
     }
   }
   //
@@ -95,13 +95,13 @@ TileManager.prototype.getTileInfos = function(lamRange, phiRange, level, getUrl)
 
   var iyMin = numY + 1;
   for ( var idxY = idxY1; idxY <= idxY2; ++idxY ) {
-    var iy = idxY % numY;   //  正規化
+    var iy = idxY % numY;   //  正規化 normalization
     if ( iyMin == iy )   break;
     if ( iy < iyMin )    iyMin = iy;
 
     var ixMin = numX + 1;
     for ( var idxX = idxX1; idxX <= idxX2; ++idxX ) {
-      var ix = idxX % numX;   //  正規化
+      var ix = idxX % numX;   //  正規化 normalization
       if ( ixMin == ix )   break;
       if ( ix < ixMin )   ixMin = ix;
 
@@ -129,7 +129,7 @@ TileManager.prototype.getTileInfos = function(lamRange, phiRange, level, getUrl)
 /* ------------------------------------------------------------ */
 
 /**
- * 画像キャッシュ
+ *  画像キャッシュ Image cache
  * @constructor
  */
 var ImageCache = function(cache_opts) {
@@ -177,7 +177,7 @@ ImageCache.prototype.loadImageIfAbsent = function(url, info) {
   if ( url in this.textures )   return false;
   if ( url in this.loading )    return false;
   this.loadImage_(url, info);
-  return true;  //  ロード開始
+  return true;  //  ロード開始 Start loading
 };
 
 
@@ -197,7 +197,7 @@ ImageCache.prototype.clearOngoingImageLoads = function() {
 /* ------------------------------------------------------------ */
 
 /**
- * 直交座標系間の変換
+ * 直交座標系間の変換 Conversion between orthogonal coordinate systems 
  * @param {Array.<number>} src_coord_rect
  * @param {Array.<number>} dst_coord_rect
  * @constructor
@@ -244,7 +244,7 @@ CoordTransform.prototype.forwardRect = function(src_rect) {
 var ViewWindowManager = function(viewRect, canvasSize, opts) {
   this.canvasSize = { width: canvasSize.width, height: canvasSize.height };  //  TODO assert?
   //
-  this.viewRect_ = viewRect;   //  投影後の全体領域, projに依存する定数
+  this.viewRect_ = viewRect;   // 投影後の全体領域, projに依存する定数 Constant depending on the entire region after projection 
   this.zoomInLimit_ = null;
   this.zoomOutLimit_ = null;
   //
@@ -270,7 +270,7 @@ ViewWindowManager.prototype.getCanvasSize = function() {
 };
 
 ViewWindowManager.prototype.getViewRect = function() {
-  return this.viewRect_.slice(0);  //  投影後の全体領域
+  return this.viewRect_.slice(0);  //  投影後の全体領域 Absolute area after projection
 };
 
 ViewWindowManager.prototype.setViewWindow = function(x1, y1, x2, y2) {
@@ -295,7 +295,7 @@ ViewWindowManager.prototype.getViewWindowCenter = function() {
 
 ViewWindowManager.prototype.moveWindow = function(dx, dy) {
   var tx = - dx * (this.rect[2] - this.rect[0]) / this.canvasSize.width;
-  var ty = dy * (this.rect[3] - this.rect[1]) / this.canvasSize.height;  //  画面座標の上下は逆
+  var ty = dy * (this.rect[3] - this.rect[1]) / this.canvasSize.height;  //  画面座標の上下は逆 Upside down of screen coordinates
   var x1 = this.rect[0] + tx;
   var y1 = this.rect[1] + ty;
   var x2 = this.rect[2] + tx;
@@ -306,6 +306,8 @@ ViewWindowManager.prototype.moveWindow = function(dx, dy) {
 ViewWindowManager.prototype.zoomWindow = function(dz) {
   //  画面上でのY方向の長さをdzピクセル分だけ絞り込んだ部分の領域に拡大表示する。
   //  X方向はそれに合わせて等縮尺で拡大する。
+  //. Zoom in the Y direction length on the screen to the area of ​​the portion that is narrowed down by dz pixels
+  //  The X direction is enlarged on an equal scale correspondingly.
   var s = (this.canvasSize.height - dz) / this.canvasSize.height;
   var w = s * (this.rect[2] - this.rect[0]) / 2;
   var h = s * (this.rect[3] - this.rect[1]) / 2;
@@ -328,8 +330,12 @@ ViewWindowManager.prototype.getNormalizedSize = function(size) {
 };
 
 /**
- * 長辺を1となるように正規化されたCanvasの矩形を取得する。
- * TRIANGLE_STRIPの形式の点列とする。
+ * 
+ Get the rectangle of Canvas normalized so that the long side is 1.
+ 長辺を1となるように正規化されたCanvasの矩形を取得する。
+ * TRIANGLE_STRIP
+ Make it a point sequence of the form
+ の形式の点列とする。
  */
 ViewWindowManager.prototype.getNormalizedRectAsTriangleStrip = function() {
   var sx = 0.5;
@@ -380,7 +386,7 @@ var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.centerIcon_ = null;
   this.centerIconSize_ = null;  //  iconSize: { width:, height: } [pixel]
   //
-  this.graticuleInterval = 20;   //  0以下の場合は緯度経度線を描画しない
+  this.graticuleInterval = 20;   //  (default 20) If it is 0 or less do not draw latitude and longitude lines 0以下の場合は緯度経度線を描画しない
   this.createUrl = null;
   this.calculateLevel = null;
 };
@@ -456,7 +462,7 @@ MapView.prototype.render = function() {
   this.render_(tileInfos);
 };
 
-//  TODO この実装の詳細は別の場所にあるべきか
+//  TODO この実装の詳細は別の場所にあるべきか Should this implementation's detail be in a different location?
 MapView.prototype.createTexture = function(img) {
   var tex = this.gl.createTexture();
   this.gl.bindTexture(this.gl.TEXTURE_2D, tex);

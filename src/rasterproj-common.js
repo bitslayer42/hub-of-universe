@@ -30,24 +30,24 @@ if ( !Math.sinh ) {
 
 /* ------------------------------------------------------------ */
 
-var CommonUtils = function() {};
+//var CommonUtils = function() {};
 
 /**
  * Copy
  */
-CommonUtils.clone = function(src) {
-  var dst = {};
-  for (var prop in src) {
-    dst[prop] = src[prop];
-  }
-  return dst;
-};
+//CommonUtils.clone = function(src) {
+//  var dst = {};
+//  for (var prop in src) {
+//    dst[prop] = src[prop];
+//  }
+//  return dst;
+//};
 
 
 /* ------------------------------------------------------------ */
 
 /**
- * 数学関数ユーティリティ
+ * 数学関数ユーティリティ. Mathematical function utility
  */
 var ProjMath = function() {};
 
@@ -65,7 +65,7 @@ ProjMath.clamp = function(x, min, max) {
 
 
 /**
- * atan2(y,x)の範囲を求める。
+ * atan2(y,x)の範囲を求める。  Find the range of
  * @param {Range} yRange
  * @param {Range} xRange
  * @return {Range}
@@ -79,7 +79,7 @@ ProjMath.atan2Range = function(yRange, xRange) {
   var ymin = yRange.min;
   var ymax = yRange.max;
 
-  //  y方向正の領域内
+  //  y方向正の領域内. Y direction is not within the domain
   if (0 <= ymin) {
     if (0 < xmin) {
       return { min: Math.atan2(ymin, xmax), max: Math.atan2(ymax, xmin) };
@@ -90,7 +90,7 @@ ProjMath.atan2Range = function(yRange, xRange) {
     return { min: Math.atan2(ymin, xmax), max: Math.atan2(ymin, xmin) };
   }
 
-  //  y方向負の領域内
+  //  y方向負の領域内  Y direction 
   if (ymax < 0) {
     if (0 < xmin) {
       return { min: Math.atan2(ymin, xmin), max: Math.atan2(ymax, xmax) };
@@ -102,11 +102,12 @@ ProjMath.atan2Range = function(yRange, xRange) {
   }
 
   //  x軸上の場合（原点を内部に含まない）
+  //. On the x axis (the origin is not included inside)
   if (0 < xmin) {
     return { min: Math.atan2(ymin, xmin), max: Math.atan2(ymax, xmin) };
   }
   if (xmax < 0) {
-    //  周期性の考慮
+    //  周期性の考慮. Consideration of periodicity
     var t1 = Math.atan2(ymax, xmax);
     var t2 = Math.atan2(ymin, xmax);
     if (Math.PI <= t1) {
@@ -116,7 +117,7 @@ ProjMath.atan2Range = function(yRange, xRange) {
     }
   }
 
-  //  原点を内部に含む
+  //  原点を内部に含む. Include the origin inside
   return { min: -Math.PI, max: Math.PI };
 };
 
@@ -164,7 +165,7 @@ var RasterProjShaderProgram = function(gl) {
   this.locRenderColor_ = null;
   this.locRenderType_ = null;
   //
-  this.locTranslateY_ = null;   //  TODO tmerc独自の処理の調整
+  this.locTranslateY_ = null;   //  TODO tmerc独自の処理の調整. Adjust your own processing
 };
 
 RasterProjShaderProgram.DIMENSION = 2;
@@ -221,7 +222,7 @@ RasterProjShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) 
 };
 
 RasterProjShaderProgram.prototype.initAdditionalParams = function() {
-  this.locTranslateY_ = this.gl_.getUniformLocation(this.program_, "uTranslateY");  //  NOTICE tmerc独自
+  this.locTranslateY_ = this.gl_.getUniformLocation(this.program_, "uTranslateY");  //  NOTICE tmerc独自. Original
 };
 
 RasterProjShaderProgram.prototype.loadShader_ = function(type, shaderSrc) {
@@ -268,7 +269,7 @@ RasterProjShaderProgram.prototype.prepareRender = function(viewRect, texCoords, 
   this.gl_.uniform1i(this.locTexture_, 0);
 
   if ( this.locTranslateY_ != null ) {
-    this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自
+    this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自 Original
   }
 
   var offset = RasterProjShaderProgram.UNIT_RECT_TRIANGLE_STRIP.byteLength;
@@ -282,7 +283,7 @@ RasterProjShaderProgram.prototype.prepareRender = function(viewRect, texCoords, 
 };
 
 
-//  TODO コメントとしてこれは残しておく
+//  TODO コメントとしてこれは残しておく. I will leave this as a comment
 // RasterProjShaderProgram.prototype.prepareRenderPolyline = function() {
 //   this.gl_.enableVertexAttribArray(0);
 //   this.gl_.vertexAttribPointer(0, RasterProjShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, 0);
@@ -290,7 +291,7 @@ RasterProjShaderProgram.prototype.prepareRender = function(viewRect, texCoords, 
 //   this.gl_.vertexAttribPointer(1, RasterProjShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, 0);
 // };
 
-//  TODO 要検討
+//  TODO 要検討. To study
 RasterProjShaderProgram.prototype.renderIconTexture = function(texture, iconSize, xyPos) {
   this.gl_.bindTexture(this.gl_.TEXTURE_2D, texture);
   this.gl_.uniform2f(this.locDataCoord1_, xyPos.x, xyPos.y);
@@ -322,7 +323,7 @@ RasterProjShaderProgram.prototype.setPolylineData = function(points) {
 
 RasterProjShaderProgram.prototype.renderPolylineData = function(numPoints, ty) {
   if (typeof ty !== 'undefined') {
-    this.gl_.uniform1f(this.locTranslateY_, ty);    //  NOTICE uTranslateY, tmerc独自
+    this.gl_.uniform1f(this.locTranslateY_, ty);    //  NOTICE uTranslateY, tmerc独自. Original
   }
   this.gl_.drawArrays(this.gl_.LINE_STRIP, 0, numPoints / 2);
 };
@@ -333,7 +334,8 @@ var GraticuleGenerator = function(proj, numPoints, span) {
   this.projection = proj;
   this.degUnit = span;
   this.maxNumPoints = numPoints;
-  this.graticulePointsDistLimit = 0.01;  //  ２点間の間隔の平均がこれより大きい場合は分割する
+  this.graticulePointsDistLimit = 0.01;  //  ２点間の間隔の平均がこれより大きい場合は分割する 
+  										 //. If the average of the intervals between two points is larger than this, split
   this.maxRecursion = 6;
 };
 
@@ -457,7 +459,8 @@ GraticuleGenerator.prototype.generateEachLine_ = function(results, trans, interp
 
 
 GraticuleGenerator.prototype.generateEachPoints_ = function(results, trans, interpolator) {
-  var farAwayLimit = trans.scaleY() * Math.PI / 10;  //  値粋の平面のほぼ1/10  //  TODO 変更できるようにする
+  var farAwayLimit = trans.scaleY() * Math.PI / 10;  //  値粋の平面のほぼ1/10  Approximately 1/10 of the value plane
+  													 //  TODO 変更できるようにする. Make it changeable
 
   var prevOutPt = null;
   if ( this.checkScreenRect(interpolator.iniPoint) ) {
@@ -470,13 +473,15 @@ GraticuleGenerator.prototype.generateEachPoints_ = function(results, trans, inte
   for (var i = 1; i < interpolator.max(); ++i) {
     var pt = this.transform_(trans, interpolator.lambda(i), interpolator.phi(i));
     if ( !pt ) {
-      //  座標が無効→現在のポリラインを完了する
+      //  座標が無効→現在のポリラインを完了する  Coordinate invalid → Complete current polyline
       results.endPolyline();
       prevOutPt = null;
     } else if ( this.checkScreenRect(pt) ) {
-      //  座標が画面内
+      //  座標が画面内 Coordinates within the screen
       //    直前の点がnullまたは隣接→点を追加、直前の点が領域外の場合はその点も追加
+	  //.   If the previous point is null or Adjacent → Add a point, if the previous point is outside the region add that point
       //    直前の点が離れている→ポリラインを完了した後、別途ポリラインを開始
+      //.   The point immediately before is apart → After completion of polyline, separate polyline is started
       if ( this.isFarAway_(prevPt, pt, farAwayLimit) ) {
         results.endPolyline();
         results.add(pt);
@@ -488,9 +493,11 @@ GraticuleGenerator.prototype.generateEachPoints_ = function(results, trans, inte
       }
       prevOutPt = null;
     } else {
-      //  座標が画面外
+      //  座標が画面外. Coordinates off screen
       //    直前の点がnullまたは隣接→点を追加、ポリラインは閉じる。
+	  //    The previous point is null or Adjacent → Add point, Polyline closes.
       //    直前の点が離れている→点を追加せず、ポリラインは閉じる。
+	  //.   The previous point is far → No points are added, and the polyline is closed.
       if ( this.isFarAway_(prevPt, pt, farAwayLimit) ) {
         results.endPolyline();
       } else {

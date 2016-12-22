@@ -8,11 +8,11 @@
 ///////////////////////////////////////////////////////////////////
 ///////init////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-function init(a) {
+function init(a) { //a is a RasterProjAEQD
     var b = 0,
         c = 0,
-        d = 0,
-        e = Math.PI / 2,
+        d = 0,				//lam0
+        e = Math.PI / 2,	//phi0
         f = canvas.getBoundingClientRect(),
         g = {
             rootNumX: 2,
@@ -32,7 +32,7 @@ function init(a) {
         height: f.height
     };
     mapView = new MapView(gl, a, i, g, h), 
-        //loadIcon("./center-pin.png"), 
+        loadIcon("./center-pin.png"), 
         mapView.calculateLevel = function(a, b) {
         var c = a[2] - a[0],
             d = a[3] - a[1],
@@ -95,7 +95,7 @@ function getProjCenterParameter() {
 ///////////////////////////////////////////////////////////////////
 ///////startup////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-function startup(a) {
+function startup(a) { //a is a RasterProjAEQD
     if (canvas = document.getElementById("webglCanvas"), gl = WebGLUtils.setupWebGL(canvas), !gl) return void alert("Failed to setup WebGL.");
     resizeCanvas(canvas), canvas.addEventListener("webglcontextlost", handleContextLost, !1), canvas.addEventListener("webglcontextrestored", handleContextRestored, !1);
     var b = new Hammer(canvas);
@@ -218,8 +218,9 @@ function handleContextRestored(a) {
 ///////////////////////////////////////////////////////////////////
 ///////main////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-function main(a) { //a is a RasterProjAEQD
-    startup(a), animation()
+function main(a) { 		//a is a RasterProjAEQD
+    startup(a), 		// sets up canvas, webgl, and hammer (map-main ln: 98)
+    animation()			// starts animation
 }
 
 ///////////////////////////////////////////////////////////////////

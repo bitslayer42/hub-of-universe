@@ -13,8 +13,8 @@ if (typeof module!='undefined' && module.exports) {
 // -----------------------------------------------------
 
 /**
- * 区間[-pi,pi]を等分割して量子化した数学関数
- * @param {number} divN 区間[-pi,pi]の分割数
+ * 区間[-pi,pi]を等分割して量子化した数学関数  A mathematical function quantized by equally dividing the interval [-pi, pi]
+ * @param {number} divN 区間[-pi,pi]の分割数 Number of divisions of interval [-pi, pi]
  * @constructor
  */
 var ProjDiscreteMath = function(divN) {
@@ -148,7 +148,7 @@ var ProjAEQD = function(lam0, phi0, opt_divn) {
 };
 
 /**
- * 値域を表す矩形
+ * 値域を表す矩形 Rectangle representing range
  */
 ProjAEQD.RANGE_RECTANGLE = [ -Math.PI, -Math.PI, +Math.PI, +Math.PI ];
 
@@ -179,7 +179,7 @@ ProjAEQD.prototype.forward = function(lambda, phi) {
 
   var sin_c = Math.sin(c);
   if ( Math.abs(sin_c) < ProjMath.EPSILON ) {
-    return null;  //  対蹠点
+    return null;  //  対蹠点. point of view
   }
 
   var k = c / sin_c;
@@ -239,12 +239,12 @@ ProjAEQD.prototype.inverseBoundingBox = function(x1, y1, x2, y2) {
     var containsSouthPole =
         ( this.phi0 < ProjMath.HALF_PI - ProjMath.EPSILON ) && (y_min <= ys) && (ys <= y_max);
 
-    //  N極,S極の双方を含む場合
+    //  N極,S極の双方を含む場合. When it includes both N pole and S pole
     if ( containsNorthPole && containsSouthPole ) {
       return { lambda: [ -Math.PI, +Math.PI ], phi: [ -Math.PI/2, +Math.PI/2 ] };
     }
 
-    //  N極,S極のどちらか一方を含む場合
+    //  N極,S極のどちらか一方を含む場合 When it includes either N pole or S pole
     if ( containsNorthPole || containsSouthPole ) {
       var range = this.inversePhiRange_([x_min, x_max], [y_min, y_max]);
       if ( containsNorthPole ) {
@@ -255,6 +255,7 @@ ProjAEQD.prototype.inverseBoundingBox = function(x1, y1, x2, y2) {
     }
 
     //  N極から上方への半直線、あるいはS極から下方への半直線を跨ぐ場合
+    //  When crossing over a half line upward from the N pole, or a half line downward from the S pole
     if ( y_max < ys || yn < y_min ) {
       var rangeMinus1 = this.inverseLambdaRangeAtY_([x_min, -ProjMath.EPSILON], [y_min, y_max]);
       var rangeMinus2 = this.inverseLambdaRangeAtX_([y_min, y_max], [ x_min ]);
@@ -271,7 +272,7 @@ ProjAEQD.prototype.inverseBoundingBox = function(x1, y1, x2, y2) {
     }
   }
 
-  //  通常ケース
+  //  通常ケース  Normal case
   var phiRange2 = this.inversePhiRange_([x_min, x_max], [y_min, y_max]);
   var lamRange2 = this.inverseLambdaRange_([x_min, x_max], [y_min, y_max]);
   lamRange2 = this.normalizeLambdaRange_(lamRange2);
@@ -622,7 +623,7 @@ RasterProjAEQD.FRAGMENT_SHADER_STR = [
   'uniform vec2 uViewXY2;',
   'uniform vec2 uDataCoord1;',
   'uniform vec2 uDataCoord2;',
-  'uniform vec2 uFixedTextureSize;',    //  アイコンサイズ（画面比）
+  'uniform vec2 uFixedTextureSize;',    //  アイコンサイズ（画面比） Icon size (screen ratio)
   'uniform vec4 uRenderColor;',
   'uniform float uAlpha;',
 
@@ -663,7 +664,8 @@ RasterProjAEQD.FRAGMENT_SHADER_STR = [
 
   'void main()',
   '{',
-  //  画面上の点 vTexCoord ([-1,-1]-[1,1]) をXY平面上の点にマッピング
+  //  画面上の点 vTexCoord ([-1,-1]-[1,1]) をXY平面上の点にマッピング 
+  //. Map the point vTexCoord ([-1, -1] - [1, 1]) on the screen to a point on the XY plane
   '  vec2 xy = mix(uViewXY1, uViewXY2, vTexCoord);',
 
   '  if ( uRenderType == 0 ) {',    //  Texture
@@ -678,7 +680,8 @@ RasterProjAEQD.FRAGMENT_SHADER_STR = [
 
   '  } else if ( uRenderType == 1 ) {',  //  PointTexture (icon)
 
-  //   XY平面上の点を画像上の点[0,0]-[1,1]にマッピングする
+  //   XY平面上の点を画像上の点[0,0]-[1,1]にマッピングする 
+  //.  Map a point on the XY plane to a point [0, 0] - [1, 1] on the image
   '    vec2 fixedTextureSizeXY = uFixedTextureSize * (uViewXY2 - uViewXY1);',
   '    vec2 r1 = vec2(uDataCoord1.x - 0.5 * fixedTextureSizeXY.x, uDataCoord1.x - 0.5 * fixedTextureSizeXY.y);',
   '    vec2 ts = (xy - r1) / fixedTextureSizeXY;',
