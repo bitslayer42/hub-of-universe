@@ -386,7 +386,7 @@ var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.centerIcon_ = null;
   this.centerIconSize_ = null;  //  iconSize: { width:, height: } [pixel]
   //
-  this.graticuleInterval = 20;   //  (default 20) If it is 0 or less do not draw latitude and longitude lines 0以下の場合は緯度経度線を描画しない
+  this.graticuleInterval = 0;   //  (default 20) If it is 0 or less do not draw latitude and longitude lines 0以下の場合は緯度経度線を描画しない
   this.createUrl = null;
   this.calculateLevel = null;
 };

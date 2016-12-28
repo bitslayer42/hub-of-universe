@@ -8,43 +8,54 @@
 ///////////////////////////////////////////////////////////////////
 ///////init////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-function init(a) { //a is a RasterProjAEQD
-    var b = 0,
-        c = 0,
-        d = 0,				//lam0
-        e = Math.PI / 2,	//phi0
-        f = canvas.getBoundingClientRect(),
-        g = {
+function init(imageProj) { //imageProj is a RasterProjAEQD
+    var b = 0;
+    var c = 0;
+    var lam0 = 0;				//map center longitude
+    var phi0 = Math.PI / 2;	    //map center latitude
+    var canvasInfo = canvas.getBoundingClientRect();   //read-only left, top, right, bottom, x, y, width, height properties of canvas
+    var tile_opts = {
             rootNumX: 2,
             rootNumY: 1,
             rootTileSizeX: Math.PI,
             rootTileSizeY: Math.PI,
             numLevels: 4,
             tileOrigin: [-Math.PI, -Math.PI / 2],
-            inverseY: !1
-        },
-        h = {
+            inverseY: false
+        };
+    var cache_opts = {
             num: 50
         };
-    a.init(gl), a.setProjCenter(d, e);
-    var i = {
-        width: f.width,
-        height: f.height
+        
+    imageProj.init(gl); 
+    imageProj.setProjCenter(lam0, phi0);
+    var canvasSize = {
+        width: canvasInfo.width,
+        height: canvasInfo.height
     };
-    mapView = new MapView(gl, a, i, g, h), 
-        loadIcon("./center-pin.png"), 
-        mapView.calculateLevel = function(a, b) {
-        var c = a[2] - a[0],
-            d = a[3] - a[1],
-            e = Math.sqrt(c * d);
+    mapView = new MapView(gl, imageProj, canvasSize, tile_opts, cache_opts); 
+    
+    //loadIcon("./center-pin.png"),
+    
+    //Add custom function to MapView- Determines
+    mapView.calculateLevel = function(window, dataRect) {
+        var c = window[2] - window[0];
+        var d = window[3] - window[1];
+        var e = Math.sqrt(c * d);
         return Math.PI <= e ? 0 : Math.PI / 2 <= e ? 1 : Math.PI / 4 <= e ? 2 : 3
     };
-    var j = mapView.getViewRect(),
-        k = (j[2] - j[0]) / 2;
+    
+    var j = mapView.getViewRect();
+    var k = (j[2] - j[0]) / 2;
+    
+    //Add custom function to MapView
     mapView.createUrl = function(a, b, c) {
         //return "http://www.flatearthlab.com/data/20120925/adb12292ed/NE2_50M_SR_W/" + a + "/" + b + "/" + c + ".png"
         return "./images/" + a + "/" + b + "/" + c + ".png"
-    }, mapView.setWindow(b - k, c - k, b + k, c + k), mapView.requestImagesIfNecessary()
+    };
+    
+    mapView.setWindow(b - k, c - k, b + k, c + k);
+    mapView.requestImagesIfNecessary();
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -62,7 +73,7 @@ function resizeCanvas(a) {
 function loadIcon(a) {
     var b = new Image;
     b.onload = function() {
-        var a = mapView.createTexture(b, !0);
+        var a = mapView.createTexture(b, true);
         a && mapView.setCenterIcon(a, {
             width: 48,
             height: 48
@@ -95,15 +106,30 @@ function getProjCenterParameter() {
 ///////////////////////////////////////////////////////////////////
 ///////startup////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-function startup(a) { //a is a RasterProjAEQD
-    if (canvas = document.getElementById("webglCanvas"), gl = WebGLUtils.setupWebGL(canvas), !gl) return void alert("Failed to setup WebGL.");
-    resizeCanvas(canvas), canvas.addEventListener("webglcontextlost", handleContextLost, !1), canvas.addEventListener("webglcontextrestored", handleContextRestored, !1);
-    var b = new Hammer(canvas);
-    b.get("pinch").set({
-        enable: !0
-    }), $(canvas).hammer().on("panmove", handlePan), $(canvas).hammer().on("panstart", handlePanStart), $(canvas).hammer().on("panend pancancel", handlePanEnd), $(canvas).hammer().on("pinch", handlePinch), $(canvas).hammer().on("pinchend", handlePinchEnd), $(canvas).on("touchend", function(a) {
+function startup(imageProj) { //imageProj is a RasterProjAEQD
+    canvas = document.getElementById("webglCanvas");
+    gl = WebGLUtils.setupWebGL(canvas);
+    if (!gl) {
+	    return void alert("Failed to setup WebGL.");
+	}
+    resizeCanvas(canvas);
+    canvas.addEventListener("webglcontextlost", handleContextLost, false);
+    canvas.addEventListener("webglcontextrestored", handleContextRestored, false);
+    var ham = new Hammer(canvas);
+    ham.get("pinch").set({
+        enable: true
+    });
+    $(canvas).hammer().on("panmove", handlePan);
+    $(canvas).hammer().on("panstart", handlePanStart);
+    $(canvas).hammer().on("panend pancancel", handlePanEnd);
+    $(canvas).hammer().on("pinch", handlePinch);
+    $(canvas).hammer().on("pinchend", handlePinchEnd);
+    $(canvas).on("touchend", function(a) {
         a.preventDefault()
-    }), $(canvas).hammer().on("doubletap", handleDoubleTap), window.WheelEvent && document.addEventListener("wheel", handleWheel, !1), init(a)
+    });
+    $(canvas).hammer().on("doubletap", handleDoubleTap);
+    window.WheelEvent && document.addEventListener("wheel", handleWheel, false);
+    init(imageProj);
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -147,7 +173,7 @@ function handlePan(a) {
 ///////handlePanStart////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 function handlePanStart(a) {
-    viewStatus.drag = !0;
+    viewStatus.drag = true;
     var b = checkAndGetGesturePos(a);
     null != b && (a.preventDefault(), viewStatus.dragStartPos = b)
 }
@@ -156,7 +182,7 @@ function handlePanStart(a) {
 ///////handlePanEnd////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 function handlePanEnd(a) {
-    viewStatus.drag = !1, viewStatus.dragPrevPos = null
+    viewStatus.drag = false, viewStatus.dragPrevPos = null
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -218,8 +244,8 @@ function handleContextRestored(a) {
 ///////////////////////////////////////////////////////////////////
 ///////main////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-function main(a) { 		//a is a RasterProjAEQD
-    startup(a), 		// sets up canvas, webgl, and hammer (map-main ln: 98)
+function main(imageProj) { 		//imageProj is a RasterProjAEQD
+    startup(imageProj), 		// sets up canvas, webgl, and hammer (map-main ln: 98)
     animation()			// starts animation
 }
 
@@ -330,7 +356,7 @@ MapMathUtils.smoothstep = function(a, b, c) {
 ///////Interpolater////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 var Interpolater = function(a, b, c, d, e) {
-    this.v1 = MapMathUtils.toUnitVector3d(a.lambda, a.phi), this.v2 = MapMathUtils.toUnitVector3d(b.lambda, b.phi), this.iniViewPos = c, this.finViewPos = d, this.timeSpan = e, this.startTime = null, this.finished = !1
+    this.v1 = MapMathUtils.toUnitVector3d(a.lambda, a.phi), this.v2 = MapMathUtils.toUnitVector3d(b.lambda, b.phi), this.iniViewPos = c, this.finViewPos = d, this.timeSpan = e, this.startTime = null, this.finished = false
 };
 Interpolater.create = function(a, b, c, d, e) {
     return ProjMath.neighborPoint(a, b) ? null : (Math.PI - ProjMath.EPSILON < Math.abs(b.phi - a.phi) && (a = {
@@ -342,7 +368,7 @@ Interpolater.create = function(a, b, c, d, e) {
     if (null == this.startTime) this.startTime = a;
     else {
         var c = a - this.startTime;
-        b = ProjMath.clamp(c / this.timeSpan, 0, 1), this.startTime + this.timeSpan < a && (this.finished = !0)
+        b = ProjMath.clamp(c / this.timeSpan, 0, 1), this.startTime + this.timeSpan < a && (this.finished = true)
     }
     var d = MapMathUtils.smootherstep(0, 1, b),
         e = MapMathUtils.slerp(this.v1, this.v2, d),
@@ -366,7 +392,7 @@ var interpolateTimeSpan = 1e3,
     requestId = null,
     prevTime = null,
     viewStatus = {
-        drag: !1,
+        drag: false,
         dragPrevPos: null,
         pinchPrevScale: null,
         zoomChange: 0,
