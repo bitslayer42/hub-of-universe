@@ -78,7 +78,8 @@ function loadIcon(a) {
             width: 48,
             height: 48
         })
-    }, b.src = a
+    };
+    b.src = a;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -100,7 +101,7 @@ function getProjCenterParameter() {
             return f < -Math.PI / 2 && (f = -Math.PI / 2), Math.PI / 2 < f && (f = Math.PI / 2), [g, f]
         }
     }
-    return null
+    return null;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -245,7 +246,7 @@ function handleContextRestored(a) {
 ///////main////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 function main(imageProj) { 		//imageProj is a RasterProjAEQD
-    startup(imageProj), 		// sets up canvas, webgl, and hammer (map-main ln: 98)
+    startup(imageProj), 		// sets up canvas, webgl, and hammer, and calls init (map-main ln: 98)
     animation()			// starts animation
 }
 
@@ -254,21 +255,33 @@ function main(imageProj) { 		//imageProj is a RasterProjAEQD
 ///////////////////////////////////////////////////////////////////
 function animation() {
     requestId = requestAnimFrame(animation);
-    var a = (new Date).getTime();
-    if (null == prevTime && (prevTime = a), ProjMath.EPSILON < Math.abs(viewStatus.zoomChange)) {
-        var b = 5 * (a - prevTime),
+    var currTime = (new Date).getTime();
+    if (null == prevTime && (prevTime = currTime), ProjMath.EPSILON < Math.abs(viewStatus.zoomChange)) {
+        var b = 5 * (currTime - prevTime),
             c = viewStatus.zoomChange;
         b < Math.abs(viewStatus.zoomChange) && (c = 0 < viewStatus.zoomChange ? +b : -b), mapView.zoomWindow(c), viewStatus.zoomChange = 0
     }
     var d;
-    if (null != viewStatus.interpolater) d = viewStatus.interpolater.getPos(a), mapView.setProjCenter(d.lp.lambda, d.lp.phi), mapView.setViewCenterPoint(d.viewPos[0], d.viewPos[1]), viewStatus.interpolater.isFinished() && (viewStatus.interpolater = null);
-    else if (null != viewStatus.targetLambdaPhi) {
-        var e = mapView.getViewCenterPoint(),
-            f = mapView.getProjCenter(),
-            g = viewStatus.targetLambdaPhi;
-        viewStatus.interpolater = Interpolater.create(f, g, e, [0, 0], interpolateTimeSpan), viewStatus.targetLambdaPhi = null, null != viewStatus.interpolater && (d = viewStatus.interpolater.getPos(a), mapView.setProjCenter(d.lp.lambda, d.lp.phi), mapView.setViewCenterPoint(d.viewPos[0], d.viewPos[1]))
+    if (null != viewStatus.interpolater) {
+        d = viewStatus.interpolater.getPos(currTime); 
+        mapView.setProjCenter(d.lp.lambda, d.lp.phi);
+        mapView.setViewCenterPoint(d.viewPos[0], d.viewPos[1]);
+        viewStatus.interpolater.isFinished() && (viewStatus.interpolater = null);
     }
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height), mapView.render(), prevTime = a
+    else if (null != viewStatus.targetLambdaPhi) {
+        var e = mapView.getViewCenterPoint();
+        var f = mapView.getProjCenter();
+        var g = viewStatus.targetLambdaPhi;
+        viewStatus.interpolater = Interpolater.create(f, g, e, [0, 0], interpolateTimeSpan);
+        viewStatus.targetLambdaPhi = null;
+        if (null != viewStatus.interpolater) {
+            d = viewStatus.interpolater.getPos(currTime);
+            mapView.setProjCenter(d.lp.lambda, d.lp.phi);
+            mapView.setViewCenterPoint(d.viewPos[0], d.viewPos[1]);
+        }
+    }
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height), mapView.render();
+    prevTime = currTime;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -335,13 +348,16 @@ var MapMathUtils = function() {};
 MapMathUtils.smoothstep = function(a, b, c) {
     var d = ProjMath.clamp((c - a) / (b - a), 0, 1);
     return d * d * (3 - 2 * d)
-}, MapMathUtils.smootherstep = function(a, b, c) {
+};
+MapMathUtils.smootherstep = function(a, b, c) {
     var d = ProjMath.clamp((c - a) / (b - a), 0, 1);
     return d * d * d * (d * (6 * d - 15) + 10)
-}, MapMathUtils.toUnitVector3d = function(a, b) {
+};
+MapMathUtils.toUnitVector3d = function(a, b) {
     var c = Math.cos(b);
     return [Math.cos(a) * c, Math.sin(a) * c, Math.sin(b)]
-}, MapMathUtils.slerp = function(a, b, c) {
+};
+MapMathUtils.slerp = function(a, b, c) {  //Spherical Linear Interpolation
     var d = ProjMath.clamp(a[0] * b[0] + a[1] * b[1] + a[2] * b[2], -1, 1);
     if (1 - ProjMath.EPSILON < d) return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
     d < -(1 - ProjMath.EPSILON);
@@ -356,14 +372,21 @@ MapMathUtils.smoothstep = function(a, b, c) {
 ///////Interpolater////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 var Interpolater = function(a, b, c, d, e) {
-    this.v1 = MapMathUtils.toUnitVector3d(a.lambda, a.phi), this.v2 = MapMathUtils.toUnitVector3d(b.lambda, b.phi), this.iniViewPos = c, this.finViewPos = d, this.timeSpan = e, this.startTime = null, this.finished = false
+    this.v1 = MapMathUtils.toUnitVector3d(a.lambda, a.phi);
+    this.v2 = MapMathUtils.toUnitVector3d(b.lambda, b.phi);
+    this.iniViewPos = c;
+    this.finViewPos = d;
+    this.timeSpan = e;
+    this.startTime = null;
+    this.finished = false;
 };
 Interpolater.create = function(a, b, c, d, e) {
     return ProjMath.neighborPoint(a, b) ? null : (Math.PI - ProjMath.EPSILON < Math.abs(b.phi - a.phi) && (a = {
         lambda: a.lambda,
         phi: a.phi + 1e-4 * (0 < a.phi ? -1 : 1)
     }), new Interpolater(a, b, c, d, e))
-}, Interpolater.prototype.getPos = function(a) {
+};
+Interpolater.prototype.getPos = function(a) {
     var b = 0;
     if (null == this.startTime) this.startTime = a;
     else {
@@ -378,7 +401,8 @@ Interpolater.create = function(a, b, c, d, e) {
         lp: f,
         viewPos: g
     }
-}, Interpolater.prototype.isFinished = function() {
+};
+Interpolater.prototype.isFinished = function() {
     return this.finished
 };
 
