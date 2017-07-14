@@ -293,7 +293,7 @@ ViewWindowManager.prototype.getViewWindowCenter = function() {
   return [x, y];
 };
 
-ViewWindowManager.prototype.moveWindow = function(dx, dy) {
+ViewWindowManager.prototype.moveWindow = function(dx, dy) {    //pan
   var tx = - dx * (this.rect[2] - this.rect[0]) / this.canvasSize.width;
   var ty = dy * (this.rect[3] - this.rect[1]) / this.canvasSize.height;  //  画面座標の上下は逆 Upside down of screen coordinates
   var x1 = this.rect[0] + tx;

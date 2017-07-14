@@ -37,7 +37,7 @@ function init(imageProj) { //imageProj is a RasterProjAEQD
     
     //loadIcon("./center-pin.png"),
     
-    //Add custom function to MapView- Determines
+    //Add custom function to MapView- Determines tile level needed
     mapView.calculateLevel = function(window, dataRect) {
         var c = window[2] - window[0];
         var d = window[3] - window[1];
@@ -46,7 +46,7 @@ function init(imageProj) { //imageProj is a RasterProjAEQD
     };
     
     var j = mapView.getViewRect();
-    var k = (j[2] - j[0]) / 2;
+    var k = (j[2] - j[0]) / 2;  //radius (pi)
     
     //Add custom function to MapView
     mapView.createUrl = function(a, b, c) {
@@ -194,7 +194,7 @@ function handleDoubleTap(a) {
     if (null != b) {
         a.preventDefault();
         var c = mapView.getLambdaPhiPointFromWindow(b[0], b[1]);
-        viewStatus.targetLambdaPhi = c
+        viewStatus.targetLambdaPhi = c; //{lambda: 1.533480323761242, phi: 0.5899993533326611} ; //c
     }
 }
 
@@ -256,10 +256,15 @@ function main(imageProj) { 		//imageProj is a RasterProjAEQD
 function animation() {
     requestId = requestAnimFrame(animation);
     var currTime = (new Date).getTime();
-    if (null == prevTime && (prevTime = currTime), ProjMath.EPSILON < Math.abs(viewStatus.zoomChange)) {
-        var b = 5 * (currTime - prevTime),
-            c = viewStatus.zoomChange;
-        b < Math.abs(viewStatus.zoomChange) && (c = 0 < viewStatus.zoomChange ? +b : -b), mapView.zoomWindow(c), viewStatus.zoomChange = 0
+    if (null == prevTime) {
+        prevTime = currTime;
+    } 
+    if (ProjMath.EPSILON < Math.abs(viewStatus.zoomChange)) {
+        var b = 5 * (currTime - prevTime);
+        var c = viewStatus.zoomChange;
+        b < Math.abs(viewStatus.zoomChange) && (c = 0 < viewStatus.zoomChange ? +b : -b);
+        mapView.zoomWindow(c);
+        viewStatus.zoomChange = 0;
     }
     var d;
     if (null != viewStatus.interpolater) {
@@ -280,7 +285,8 @@ function animation() {
             mapView.setViewCenterPoint(d.viewPos[0], d.viewPos[1]);
         }
     }
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height), mapView.render();
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    mapView.render();
     prevTime = currTime;
 }
 
