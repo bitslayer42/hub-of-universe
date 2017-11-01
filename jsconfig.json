@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "target": "ES6"
+    },
+    "files": [
+        "src/"
+    ],
+     "typeAcquisition": {
+        "include": [
+            "jquery",
+            "hammer",
+            "webgl-utils"
+        ]
+    }
+}

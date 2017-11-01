@@ -6,9 +6,49 @@
 "use strict";
 
 ///////////////////////////////////////////////////////////////////
+///////main////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+function main(imageProj) { //imageProj is a RasterProjAEQD
+    startup(imageProj);
+    animation();
+}
+
+///////////////////////////////////////////////////////////////////
+///////startup////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
+function startup(imageProj) {
+    canvas = document.getElementById("webglCanvas"); 
+    gl = WebGLUtils.setupWebGL(canvas); 
+    if (!gl) {
+        return void alert("Failed to setup WebGL.");
+    }
+    resizeCanvas(canvas);
+    canvas.addEventListener("webglcontextlost", handleContextLost, false);
+    canvas.addEventListener("webglcontextrestored", handleContextRestored, false);
+    
+    var hamm = new Hammer(canvas);
+    hamm.get("pinch").set({
+        enable: true
+    }); 
+
+    $(canvas).hammer().on("panmove", handlePan); 
+    $(canvas).hammer().on("panstart", handlePanStart);
+    $(canvas).hammer().on("panend pancancel", handlePanEnd);
+    $(canvas).hammer().on("pinch", handlePinch);
+    $(canvas).hammer().on("pinchend", handlePinchEnd);
+    $(canvas).on("touchend", function(a) {
+        a.preventDefault();
+    });
+    $(canvas).hammer().on("doubletap", handleDoubleTap);
+    window.WheelEvent && document.addEventListener("wheel", handleWheel, false);
+    
+    init(imageProj);
+}
+
+///////////////////////////////////////////////////////////////////
 ///////init////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-function init(a) {
+function init(imageProj) {
     var b = 0,
         c = 0,
         d = 0,
@@ -21,19 +61,19 @@ function init(a) {
             rootTileSizeY: Math.PI,
             numLevels: 4,
             tileOrigin: [-Math.PI, -Math.PI / 2],
-            inverseY: !1
+            inverseY: false
         },
         h = {
             num: 50
         };
-    a.init(gl), a.setProjCenter(d, e);
+    imageProj.init(gl);
+    imageProj.setProjCenter(d, e);
     var i = {
         width: f.width,
         height: f.height
     };
-    mapView = new MapView(gl, a, i, g, h), 
-        //loadIcon("./center-pin.png"), 
-        mapView.calculateLevel = function(a, b) {
+    mapView = new MapView(gl, imageProj, i, g, h);        
+    mapView.calculateLevel = function(a, b) {
         var c = a[2] - a[0],
             d = a[3] - a[1],
             e = Math.sqrt(c * d);
@@ -41,33 +81,23 @@ function init(a) {
     };
     var j = mapView.getViewRect(),
         k = (j[2] - j[0]) / 2;
+      
     mapView.createUrl = function(a, b, c) {
         //return "http://www.flatearthlab.com/data/20120925/adb12292ed/NE2_50M_SR_W/" + a + "/" + b + "/" + c + ".png"
+        //https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/256/0/0/0?access_token=access_token
         return "./images/" + a + "/" + b + "/" + c + ".png"
-    }, mapView.setWindow(b - k, c - k, b + k, c + k), mapView.requestImagesIfNecessary()
+    }; 
+    mapView.setWindow(b - k, c - k, b + k, c + k);
+    mapView.requestImagesIfNecessary();
 }
 
 ///////////////////////////////////////////////////////////////////
 ///////resizeCanvas////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
-function resizeCanvas(a) {
-    var b = a.clientWidth,
-        c = a.clientHeight;
-    a.width == b && a.height == c || (a.width = b, a.height = c)
-}
-
-///////////////////////////////////////////////////////////////////
-///////loadIcon////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-function loadIcon(a) {
-    var b = new Image;
-    b.onload = function() {
-        var a = mapView.createTexture(b, !0);
-        a && mapView.setCenterIcon(a, {
-            width: 48,
-            height: 48
-        })
-    }, b.src = a
+function resizeCanvas(canvas) {
+    var width = canvas.clientWidth,
+        height = canvas.clientHeight;
+    canvas.width == width && canvas.height == height || (canvas.width = width, canvas.height = height)
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -90,20 +120,6 @@ function getProjCenterParameter() {
         }
     }
     return null
-}
-
-///////////////////////////////////////////////////////////////////
-///////startup////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-function startup(a) {
-    if (canvas = document.getElementById("webglCanvas"), gl = WebGLUtils.setupWebGL(canvas), !gl) return void alert("Failed to setup WebGL.");
-    resizeCanvas(canvas), canvas.addEventListener("webglcontextlost", handleContextLost, !1), canvas.addEventListener("webglcontextrestored", handleContextRestored, !1);
-    var b = new Hammer(canvas);
-    b.get("pinch").set({
-        enable: !0
-    }), $(canvas).hammer().on("panmove", handlePan), $(canvas).hammer().on("panstart", handlePanStart), $(canvas).hammer().on("panend pancancel", handlePanEnd), $(canvas).hammer().on("pinch", handlePinch), $(canvas).hammer().on("pinchend", handlePinchEnd), $(canvas).on("touchend", function(a) {
-        a.preventDefault()
-    }), $(canvas).hammer().on("doubletap", handleDoubleTap), window.WheelEvent && document.addEventListener("wheel", handleWheel, !1), init(a)
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -147,7 +163,7 @@ function handlePan(a) {
 ///////handlePanStart////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 function handlePanStart(a) {
-    viewStatus.drag = !0;
+    viewStatus.drag = true;
     var b = checkAndGetGesturePos(a);
     null != b && (a.preventDefault(), viewStatus.dragStartPos = b)
 }
@@ -156,7 +172,7 @@ function handlePanStart(a) {
 ///////handlePanEnd////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 function handlePanEnd(a) {
-    viewStatus.drag = !1, viewStatus.dragPrevPos = null
+    viewStatus.drag = false, viewStatus.dragPrevPos = null
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -216,13 +232,6 @@ function handleContextRestored(a) {
 }
 
 ///////////////////////////////////////////////////////////////////
-///////main////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-function main(a) { //a is a RasterProjAEQD
-    startup(a), animation()
-}
-
-///////////////////////////////////////////////////////////////////
 ///////animation////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 function animation() {
@@ -243,63 +252,6 @@ function animation() {
     }
     gl.viewport(0, 0, gl.canvas.width, gl.canvas.height), mapView.render(), prevTime = a
 }
-
-///////////////////////////////////////////////////////////////////
-///////MapUI////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-var MapUI = function() {};
-MapUI.resetCityList = function(a) {
-    a.children("ul").not("[hidden]").children("li").removeAttr("class")
-}, MapUI.updateMap = function(a, b) {
-    if (a.attr({
-            "class": "active"
-        }), b) {
-        var c = a.children("a").text(),
-            d = a.attr("data-lonlat"),
-            e = d.split(",");
-        b.call(this, c, parseFloat(e[0]), parseFloat(e[1]))
-    }
-}, MapUI.createCitiesTree = function(a, b, c, d) {
-    var e = 0;
-    a.children.forEach(function(a, f) {
-        e++;
-        var g = $("<li/>").attr({
-            role: "presentation",
-            countryId: e
-        }).append($("<a/>").attr({
-            href: "#"
-        }).text(a.name)).click(function(a) {
-            b.children("li").removeAttr("class");
-            var e = $(this).attr("countryId");
-            $(this).attr({
-                "class": "active"
-            }), c.children("ul").attr({
-                hidden: "true"
-            });
-            var f = c.children("#country_" + e);
-            f.removeAttr("hidden"), f.children("li").removeAttr("class");
-            var g = f.children("li").first();
-            MapUI.updateMap(g, d)
-        });
-        b.append(g);
-        var h = $("<ul/>").attr({
-            id: "country_" + e,
-            "class": "nav nav-pills nav-stacked",
-            hidden: "true"
-        });
-        a.children.forEach(function(a, b) {
-            var c = $("<li/>").attr({
-                role: "presentation",
-                "data-lonlat": a.x + "," + a.y
-            }).append($("<a/>").attr({
-                href: "#"
-            }).text(a.name)).click(function(a) {
-                $(this).parent().children("li").removeAttr("class"), MapUI.updateMap($(this), d)
-            });
-            h.append(c)
-        }), c.append(h)
-    })
-};
 
 ///////////////////////////////////////////////////////////////////
 ///////MapMathUtils////////////////////////////////////////////////////////////
@@ -329,7 +281,7 @@ MapMathUtils.smoothstep = function(a, b, c) {
 ///////Interpolater////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////
 var Interpolater = function(a, b, c, d, e) {
-    this.v1 = MapMathUtils.toUnitVector3d(a.lambda, a.phi), this.v2 = MapMathUtils.toUnitVector3d(b.lambda, b.phi), this.iniViewPos = c, this.finViewPos = d, this.timeSpan = e, this.startTime = null, this.finished = !1
+    this.v1 = MapMathUtils.toUnitVector3d(a.lambda, a.phi), this.v2 = MapMathUtils.toUnitVector3d(b.lambda, b.phi), this.iniViewPos = c, this.finViewPos = d, this.timeSpan = e, this.startTime = null, this.finished = false
 };
 Interpolater.create = function(a, b, c, d, e) {
     return ProjMath.neighborPoint(a, b) ? null : (Math.PI - ProjMath.EPSILON < Math.abs(b.phi - a.phi) && (a = {
@@ -341,7 +293,7 @@ Interpolater.create = function(a, b, c, d, e) {
     if (null == this.startTime) this.startTime = a;
     else {
         var c = a - this.startTime;
-        b = ProjMath.clamp(c / this.timeSpan, 0, 1), this.startTime + this.timeSpan < a && (this.finished = !0)
+        b = ProjMath.clamp(c / this.timeSpan, 0, 1), this.startTime + this.timeSpan < a && (this.finished = true)
     }
     var d = MapMathUtils.smootherstep(0, 1, b),
         e = MapMathUtils.slerp(this.v1, this.v2, d),
@@ -365,7 +317,7 @@ var interpolateTimeSpan = 1e3,
     requestId = null,
     prevTime = null,
     viewStatus = {
-        drag: !1,
+        drag: false,
         dragPrevPos: null,
         pinchPrevScale: null,
         zoomChange: 0,
