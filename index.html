@@ -6,9 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <meta name="description" content="An experiment of projection of the raster tiles using WebGL. (GIS, Geographic, Map Projection)">
-
-    <title>Flat Earth Lab : Azimuthal Equidistant Projection</title>
+    <title>Hub of Universe</title>
 
     <style>
       body {
@@ -48,16 +46,16 @@
       $('#webglCanvas').attr({ 'width': canvasSize, 'height': canvasSize });
 
       //  projCenter parameter
-      var phi0 = +Math.PI/2; //north pole
-      var lam0 = 0.0;
-      var projCenter = getProjCenterParameter();  //map-main ln:77 (if url includes projCenter=)
+      var phi0 = 0.0 // 35.32 * 0.0174533; // +Math.PI/2; //north pole
+      var lam0 = 0.0 //-82.48 * 0.0174533;
+      var projCenter = getProjCenterParameter();  //map-main ln:77 (if url includes projCenter=35.3206141,-82.4861473)
       if ( projCenter ) {
         lam0 = projCenter[0];
         phi0 = projCenter[1];
       }
 
       var imageProj = new RasterProjAEQD();        //rasterproj-aeqd ln:530
-      main(imageProj);                             //map-main ln:236
+      main(imageProj);                             //map-main ln:11
       imageProj.setProjCenter(lam0, phi0);         //rasterproj-aeqd ln:561      
     });
 
