@@ -1,71 +1,70 @@
-
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Hub of Universe</title>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <style>
-      body {
-        margin: 2px;
-        background-color: #404040;
-      }
+  <title>Hub of Universe</title>
+  <link rel="stylesheet" href="./index.css" type="text/css" charset="utf-8">
+</head>
 
-    </style>
+<!-- ================================================== -->
+<script src="./lib/jquery-1.12.4.min.js" type="application/javascript"></script>
+<script src="./lib/hammer.min.js" type="application/javascript"></script>
+<script src="./lib/jquery.hammer.js" type="application/javascript"></script>
+<script src="./lib/webgl-utils.js" type="application/javascript"></script>
 
-  </head>
+<script src="./src/rasterproj-common.js" type="application/javascript"></script>
+<script src="./src/rasterproj-aeqd.js" type="application/javascript"></script>
+<script src="./src/proj-map.js" type="application/javascript"></script>
+<script src="./src/map-main.js" type="application/javascript"></script>
 
-  <body>
+<script type="application/javascript">
 
-    <div id="canvasWrapper" style="text-align: center">
-      <canvas id="webglCanvas" width="100" height="100">
-      </canvas>
-    </div>
+  $(document).ready(function () {
+    var w = $(window).width();
+    var h = $(window).height();
+    var margin = 20;
+    var canvasSize = (w < h) ? w - margin : h - margin;
+    $('#webglCanvas').attr({ 'width': canvasSize, 'height': canvasSize });
 
-    <!-- ================================================== -->
-    <script src="./lib/jquery-1.12.4.min.js" type="application/javascript"></script>
-    <script src="./lib/hammer.min.js" type="application/javascript"></script>
-    <script src="./lib/jquery.hammer.js" type="application/javascript"></script>
-    <script src="./lib/webgl-utils.js" type="application/javascript"></script>
+    //  projCenter parameter
+    var phi0 = 0.0 // 35.32 * 0.0174533; // +Math.PI/2; //north pole
+    var lam0 = 0.0 //-82.48 * 0.0174533;
+    var projCenter = getProjCenterParameter();  //map-main ln:77 (if url includes projCenter=35.3206141,-82.4861473)
+    if (projCenter) {
+      lam0 = projCenter[0];
+      phi0 = projCenter[1];
+    }
 
-    <script src="./src/rasterproj-common.js" type="application/javascript"></script>
-    <script src="./src/rasterproj-aeqd.js" type="application/javascript"></script>
-    <script src="./src/proj-map.js" type="application/javascript"></script>
-    <script src="./src/map-main.js" type="application/javascript"></script>
-    
-    <script type="application/javascript">
+    var imageProj = new RasterProjAEQD();        //rasterproj-aeqd ln:530
+    main(imageProj);                             //map-main ln:11
+    imageProj.setProjCenter(lam0, phi0);         //rasterproj-aeqd ln:561      
+  });
 
-    $(document).ready(function() {
-      var w = $(window).width();
-      var h = $(window).height();
-      var margin = 20;
-      var canvasSize = (w < h) ? w - margin : h - margin;
-      $('#webglCanvas').attr({ 'width': canvasSize, 'height': canvasSize });
+</script>
 
-      //  projCenter parameter
-      var phi0 = 0.0 // 35.32 * 0.0174533; // +Math.PI/2; //north pole
-      var lam0 = 0.0 //-82.48 * 0.0174533;
-      var projCenter = getProjCenterParameter();  //map-main ln:77 (if url includes projCenter=35.3206141,-82.4861473)
-      if ( projCenter ) {
-        lam0 = projCenter[0];
-        phi0 = projCenter[1];
-      }
+<body>
+  <div class="container">
+    <header>
+      <h1>Hub of Universe</h1>
+    </header>
+    <main>
+      <div id="bounds-outer">
+        <div id="bounds-inner">
+          <canvas id="webglCanvas"></canvas>
+        </div>
+      </div>
+    </main>
+    <footer>
+      <div>hubofuniverse.com</div>
+    </footer>
+  </div>
 
-      var imageProj = new RasterProjAEQD();        //rasterproj-aeqd ln:530
-      main(imageProj);                             //map-main ln:11
-      imageProj.setProjCenter(lam0, phi0);         //rasterproj-aeqd ln:561      
-    });
+</body>
 
-    </script>
-
-  </body>
 </html>
 
 
-    <!-- ================================================== -->
-
-
- 
+<!-- ================================================== -->

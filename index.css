@@ -1,0 +1,81 @@
+body,
+html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #404040;
+  }
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-color: rgb(249, 150, 178);
+}
+
+.container {
+    display: grid;
+    width: 100%;
+    height: 100%;
+    grid-template-areas:
+        "header"
+        "main"
+        "footer";
+    grid-template-rows: auto 1fr auto;
+}
+
+header {
+    grid-area: header;
+    background-color: #f1f1f1;
+    border: rgb(0, 255, 115) 10px solid;
+    text-align: center;
+}
+
+main {
+    grid-area: main;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#bounds-outer {
+    width: 100%;
+    max-width: 100vmin;
+    height: 100%;
+    max-height: 100vmin;
+    background-color: #e1e1e1;
+}
+
+#bounds-inner {
+    /* Uses the 'outer' (i.e. border-box) size when setting width and height. */
+    box-sizing: border-box;
+    width: 100vmin;
+    height: 100vmin;
+    background-color: red;
+    border: yellow 10px solid;
+}
+
+footer {
+    grid-area: footer;
+    background-color: #f1f1f1;
+    border: rgb(129, 183, 238) 10px solid;
+    text-align: center;
+}
+
+@media (min-aspect-ratio: 1/1) {
+    .container {
+        grid-template-areas:
+            "header main"
+            "footer main";
+        grid-template-columns: auto 1fr;
+        grid-template-rows: 1fr 1fr;
+    }
+
+    header,
+    footer {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+    }
+}

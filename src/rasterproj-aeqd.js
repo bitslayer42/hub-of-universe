@@ -570,6 +570,7 @@ RasterProjAEQD.prototype.prepareRender = function(texCoords, viewRect) {
   this.shader_.prepareRender(viewRect, texCoords, this.projection.lam0, this.projection.phi0, this.alpha_, this.graticuleColor_);
 };
 
+// c- Renders textures at locations specified in textureInfos
 RasterProjAEQD.prototype.renderTextures = function(textureInfos) {
   this.shader_.setRenderType(RasterProjShaderProgram.RENDER_TYPE_TEXTURE);
   for ( var i = 0; i < textureInfos.length; ++i ) {
@@ -579,11 +580,13 @@ RasterProjAEQD.prototype.renderTextures = function(textureInfos) {
   }
 };
 
+// c- Renders an icon at the center of the map 
 RasterProjAEQD.prototype.renderOverlays = function(centerIcon, iconSize) {
   this.shader_.setRenderType(RasterProjShaderProgram.RENDER_TYPE_POINT_TEXTURE);
   this.shader_.renderIconTexture(centerIcon, iconSize, { x:0.0, y:0.0});
 };
 
+// c- Generates and renders latitude/longitude grid lines at the specified interval
 RasterProjAEQD.prototype.renderGraticule = function(viewRect, interval) {
   this.shader_.setRenderType(RasterProjShaderProgram.RENDER_TYPE_POLYLINE);
 
@@ -629,8 +632,10 @@ RasterProjAEQD.FRAGMENT_SHADER_STR = `
   const float epsilon = 0.00000001;
   const float blurRatio = 0.015;
   const float xyRadius = pi;
+  const float e = 2.718281;
 
-  vec2 proj_invserse(vec2 center, vec2 xy)
+  // lat/lon from map coords
+  vec2 proj_inverse(vec2 center, vec2 xy)
   {
     float sinPhi0 = sin(center.y);
     float cosPhi0 = cos(center.y);
@@ -666,9 +671,9 @@ RasterProjAEQD.FRAGMENT_SHADER_STR = `
   //. Map the point vTexCoord ([-1, -1] - [1, 1]) on the screen to a point on the XY plane
     vec2 xy = mix(uViewXY1, uViewXY2, vTexCoord);
 
-    if ( uRenderType == 0 ) {    //  Texture
+    if ( uRenderType == 0 ) {    //  Texture (map)
 
-      vec2 lp = proj_invserse(uProjCenter, xy);
+      vec2 lp = proj_inverse(uProjCenter, xy);
       vec2 ts = (lp - uDataCoord1) / (uDataCoord2 - uDataCoord1);
       float inXY = inner_xy(xy);
       vec2 inData = step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts);
@@ -687,7 +692,7 @@ RasterProjAEQD.FRAGMENT_SHADER_STR = `
       vec4 OutputColor = texture2D(uTexture, ts) * inData.x * inData.y;
       gl_FragColor = OutputColor;
 
-    } else if ( uRenderType == 2 ) {  //  Polyline
+    } else if ( uRenderType == 2 ) {  //  Polyline (Graticules)
   
         gl_FragColor = uRenderColor;
   

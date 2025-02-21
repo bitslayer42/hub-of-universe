@@ -1,3 +1,2 @@
-.gitignore
 .DS_Store
-jsconfig.json
+node_modules/

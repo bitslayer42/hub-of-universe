@@ -23,7 +23,7 @@ function startup(imageProj) {
   if (!gl) {
     return void alert("Failed to setup WebGL.");
   }
-  resizeCanvas(canvas);
+  // resizeCanvas(canvas);
   canvas.addEventListener("webglcontextlost", handleContextLost, false);
   canvas.addEventListener("webglcontextrestored", handleContextRestored, false);
 
