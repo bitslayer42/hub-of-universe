@@ -29,8 +29,9 @@ canvas {
 header {
     grid-area: header;
     background-color: #f1f1f1;
-    border: rgb(0, 255, 115) 10px solid;
+    border: black 1px solid;
     text-align: center;
+    font-family: sans-serif;
 }
 
 main {
@@ -54,14 +55,15 @@ main {
     width: 100vmin;
     height: 100vmin;
     background-color: red;
-    border: yellow 10px solid;
+    border: black 1px solid;
 }
 
 footer {
     grid-area: footer;
     background-color: #f1f1f1;
-    border: rgb(129, 183, 238) 10px solid;
+    border: black 1px solid;
     text-align: center;
+    font-family: sans-serif;
 }
 
 @media (min-aspect-ratio: 1/1) {
