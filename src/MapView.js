@@ -4,13 +4,7 @@
  * All rights reserved.
  * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
  */
-'use strict';
-
-if (typeof module!='undefined' && module.exports) {
-  var ProjMath = require('./rasterproj-common.js');
-}
-
-
+import { ProjMath } from "./ProjMath.js";
 
 /**
  * ラスタタイル情報管理 Raster tile information management
@@ -540,7 +534,4 @@ MapView.prototype.render_ = function(tileInfos) {
 
 
 /* -------------------------------------------------------------------------- */
-if (typeof module != 'undefined' && module.exports) {
-  module.exports = MapView;
-  module.exports.TileManager = TileManager;
-}
+export { MapView };

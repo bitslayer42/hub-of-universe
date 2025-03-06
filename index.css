@@ -6,7 +6,7 @@ html {
     display: flex;
     justify-content: center;
     align-items: center;
-    background-color: #404040;
+    background-color: black;
   }
 canvas {
     width: 100%;
@@ -55,7 +55,7 @@ main {
     width: 100vmin;
     height: 100vmin;
     background-color: red;
-    border: black 1px solid;
+    border: white 1px solid;
 }
 
 footer {

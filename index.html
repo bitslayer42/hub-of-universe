@@ -15,12 +15,9 @@
 <script src="./lib/jquery.hammer.js" type="application/javascript"></script>
 <script src="./lib/webgl-utils.js" type="application/javascript"></script>
 
-<script src="./src/rasterproj-common.js" type="application/javascript"></script>
-<script src="./src/rasterproj-aeqd.js" type="application/javascript"></script>
-<script src="./src/proj-map.js" type="application/javascript"></script>
-<script src="./src/map-main.js" type="application/javascript"></script>
-
-<script type="application/javascript">
+<script type="module">
+  import { main, resizeCanvas, getProjCenterParameter } from './src/Main.js';
+  import { RasterProjAEQD } from './src/RasterProjAEQD.js';
   window.addEventListener("resize", (event) => {
     draw();
   });

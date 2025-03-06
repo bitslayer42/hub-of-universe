@@ -3,16 +3,11 @@ __function : called by__
 # rasterproj-common
 - ProjMath (: lots) -exported
 - RasterProjShaderProgram : RasterProjAEQD
-<!---
-    - GraticuleGenerator : RasterProjAEQD -not exported should be?
-    - LongitudeLineInterpolator : GraticuleGenerator
-    - LatitudeLineInterpolator : GraticuleGenerator
-    - PolylineContainer : GraticuleGenerator
--->
+
 # proj-map
 - TileManager : MapView -exported but no need?
 - ImageCache : MapView
-- CoordTransform : ViewWindowManager, GraticuleGenerator
+- CoordTransform : ViewWindowManager
 - ViewWindowManager : MapView
 - MapView : init, animation, handlePan, handleDoubleTap, handleContextLost  -exported
 

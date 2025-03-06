@@ -3,7 +3,9 @@
  * Copyright (C) 2016 www.flatearthlab.com
  * All rights reserved.
  */
-"use strict";
+
+import {  ProjMath } from "./ProjMath.js";
+import { MapView } from "./MapView.js";
 
 ///////////////////////////////////////////////////////////////////
 ///////main////////////////////////////////////////////////////////////
@@ -384,3 +386,6 @@ var interpolateTimeSpan = 1e3,
     targetLambdaPhi: null,
     interpolater: null,
   };
+
+///////////////////////////////////////////////////////////////////
+export { main, resizeCanvas, getProjCenterParameter};
