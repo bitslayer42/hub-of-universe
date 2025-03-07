@@ -2,7 +2,7 @@ __function : called by__
 
 # rasterproj-common
 - ProjMath (: lots) -exported
-- RasterProjShaderProgram : RasterProjAEQD
+- ShaderProgram : RasterAEQD
 
 # proj-map
 - TileManager : MapView -exported but no need?
@@ -12,9 +12,9 @@ __function : called by__
 - MapView : init, animation, handlePan, handleDoubleTap, handleContextLost  -exported
 
 # rasterproj-aeqd
-- ProjDiscreteMath : ProjAEQD
-- ProjAEQD : RasterProjAEQD
-- RasterProjAEQD : index   <--(shaders are here)
+- ProjDiscreteMath : AEQD
+- AEQD : RasterAEQD
+- RasterAEQD : index   <--(shaders are here)
 
 # map-main  - This was minified (not licensed)
 - main : index

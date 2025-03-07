@@ -352,7 +352,7 @@ ViewWindowManager.prototype.getNormalizedRectAsTriangleStrip = function() {
 /**
  * Map View
  * @param {object} gl
- * @param {object} RasterProjAEQD or RasterProjLAEA
+ * @param {object} RasterAEQD or RasterProjLAEA
  * @param {number} numLevels
  * @constructor
  */

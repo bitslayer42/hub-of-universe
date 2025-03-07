@@ -15,7 +15,7 @@ import { ProjMath } from "./lib/ProjMath.js";
  * @param {object} option (divN)
  * @constructor
  */
-var ProjAEQD = function(lam0, phi0, opt_divn) {
+var AEQD = function(lam0, phi0, opt_divn) {
   this.lam0 = lam0;
   this.phi0 = phi0;
   this.divN_ = (typeof opt_divn !== 'undefined') ? opt_divn : 180;
@@ -28,13 +28,13 @@ var ProjAEQD = function(lam0, phi0, opt_divn) {
 /**
  * 値域を表す矩形 Rectangle representing range
  */
-ProjAEQD.RANGE_RECTANGLE = [ -Math.PI, -Math.PI, +Math.PI, +Math.PI ];
+AEQD.RANGE_RECTANGLE = [ -Math.PI, -Math.PI, +Math.PI, +Math.PI ];
 
-ProjAEQD.prototype.getRange = function() {
-  return ProjAEQD.RANGE_RECTANGLE.slice(0);
+AEQD.prototype.getRange = function() {
+  return AEQD.RANGE_RECTANGLE.slice(0);
 };
 
-ProjAEQD.prototype.getProjCenter = function() {
+AEQD.prototype.getProjCenter = function() {
   return { lambda: this.lam0, phi: this.phi0 };
 };
 
@@ -44,7 +44,7 @@ ProjAEQD.prototype.getProjCenter = function() {
  * @param {Float} phi
  * @return {Point}
  */
-ProjAEQD.prototype.forward = function(lambda, phi) {
+AEQD.prototype.forward = function(lambda, phi) {
   var sin_phi = Math.sin(phi);
   var cos_phi = Math.cos(phi);
   var sin_lam = Math.sin(lambda - this.lam0);
@@ -72,7 +72,7 @@ ProjAEQD.prototype.forward = function(lambda, phi) {
  * @param {Float} y
  * @param {GeoCoord}
  */
-ProjAEQD.prototype.inverse = function(x, y) {
+AEQD.prototype.inverse = function(x, y) {
   var rh2 = x * x + y * y;
   if ( ProjMath.PI_SQ < rh2 )   return null;
 
@@ -102,7 +102,7 @@ ProjAEQD.prototype.inverse = function(x, y) {
 };
 
 
-ProjAEQD.prototype.inverseBoundingBox = function(x1, y1, x2, y2) {
+AEQD.prototype.inverseBoundingBox = function(x1, y1, x2, y2) {
   var x_min = (x1 <= x2) ? x1 : x2;
   var x_max = (x1 <= x2) ? x2 : x1;
   var y_min = (y1 <= y2) ? y1 : y2;
@@ -158,7 +158,7 @@ ProjAEQD.prototype.inverseBoundingBox = function(x1, y1, x2, y2) {
 };
 
 
-ProjAEQD.prototype.mergeRange_ = function(origRange, newRange) {
+AEQD.prototype.mergeRange_ = function(origRange, newRange) {
   var range = null;
   if ( origRange == null ) {
     range = newRange;
@@ -175,7 +175,7 @@ ProjAEQD.prototype.mergeRange_ = function(origRange, newRange) {
 };
 
 
-ProjAEQD.prototype.normalizeLambdaRange_ = function(range) {
+AEQD.prototype.normalizeLambdaRange_ = function(range) {
   var lam = range[0];
   if ( -Math.PI <= lam && lam < Math.PI ) {
     return range;
@@ -185,7 +185,7 @@ ProjAEQD.prototype.normalizeLambdaRange_ = function(range) {
 };
 
 
-ProjAEQD.prototype.inverseLambdaRange_ = function(xRange, yRange) {
+AEQD.prototype.inverseLambdaRange_ = function(xRange, yRange) {
   var x_min = (xRange[0] <= xRange[1]) ? xRange[0] : xRange[1];
   var x_max = (xRange[0] <= xRange[1]) ? xRange[1] : xRange[0];
   var y_min = (yRange[0] <= yRange[1]) ? yRange[0] : yRange[1];
@@ -199,7 +199,7 @@ ProjAEQD.prototype.inverseLambdaRange_ = function(xRange, yRange) {
 };
 
 
-ProjAEQD.prototype.inverseLambdaRangeAtY_ = function(xRange, yValues) {
+AEQD.prototype.inverseLambdaRangeAtY_ = function(xRange, yValues) {
   var x_min = (xRange[0] <= xRange[1]) ? xRange[0] : xRange[1];
   var x_max = (xRange[0] <= xRange[1]) ? xRange[1] : xRange[0];
 
@@ -221,7 +221,7 @@ ProjAEQD.prototype.inverseLambdaRangeAtY_ = function(xRange, yValues) {
 };
 
 
-ProjAEQD.prototype.inverseLambdaRangeAtX_ = function(yRange, xValues) {
+AEQD.prototype.inverseLambdaRangeAtX_ = function(yRange, xValues) {
   var y_min = (yRange[0] <= yRange[1]) ? yRange[0] : yRange[1];
   var y_max = (yRange[0] <= yRange[1]) ? yRange[1] : yRange[0];
 
@@ -243,7 +243,7 @@ ProjAEQD.prototype.inverseLambdaRangeAtX_ = function(yRange, xValues) {
 };
 
 
-ProjAEQD.prototype.inversePhiRange_ = function(xRange, yRange) {
+AEQD.prototype.inversePhiRange_ = function(xRange, yRange) {
   var x_min = (xRange[0] <= xRange[1]) ? xRange[0] : xRange[1];
   var x_max = (xRange[0] <= xRange[1]) ? xRange[1] : xRange[0];
   var y_min = (yRange[0] <= yRange[1]) ? yRange[0] : yRange[1];
@@ -257,7 +257,7 @@ ProjAEQD.prototype.inversePhiRange_ = function(xRange, yRange) {
 };
 
 
-ProjAEQD.prototype.inversePhiRangeAtY_ = function(xRange, yValues) {
+AEQD.prototype.inversePhiRangeAtY_ = function(xRange, yValues) {
   var xmin = (xRange[0] <= xRange[1]) ? xRange[0] : xRange[1];
   var xmax = (xRange[0] <= xRange[1]) ? xRange[1] : xRange[0];
 
@@ -279,7 +279,7 @@ ProjAEQD.prototype.inversePhiRangeAtY_ = function(xRange, yValues) {
 };
 
 
-ProjAEQD.prototype.inversePhiRangeAtX_ = function(yRange, xValues) {
+AEQD.prototype.inversePhiRangeAtX_ = function(yRange, xValues) {
   var ymin = (yRange[0] <= yRange[1]) ? yRange[0] : yRange[1];
   var ymax = (yRange[0] <= yRange[1]) ? yRange[1] : yRange[0];
 
@@ -301,7 +301,7 @@ ProjAEQD.prototype.inversePhiRangeAtX_ = function(yRange, xValues) {
 };
 
 
-ProjAEQD.prototype.inverseLambdaAtX_ = function(y_idx, x) {
+AEQD.prototype.inverseLambdaAtX_ = function(y_idx, x) {
   if ( ProjMath.HALF_PI - ProjMath.EPSILON < Math.abs(this.phi0) ) {
     var sign = (0 < this.phi0) ? -1 : +1;
     var yl = sign * this.dMath_.X_lower(y_idx);
@@ -330,7 +330,7 @@ ProjAEQD.prototype.inverseLambdaAtX_ = function(y_idx, x) {
 };
 
 
-ProjAEQD.prototype.inverseLambdaAtY_ = function(x_idx, y) {
+AEQD.prototype.inverseLambdaAtY_ = function(x_idx, y) {
   if ( ProjMath.HALF_PI - ProjMath.EPSILON < Math.abs(this.phi0) ) {
     var sign = (0 < this.phi0) ? -1 : +1;
     var x_min = this.dMath_.X_lower(x_idx);
@@ -352,7 +352,7 @@ ProjAEQD.prototype.inverseLambdaAtY_ = function(x_idx, y) {
 
 
 
-ProjAEQD.prototype.inversePhiAtY_ = function(x_idx, y) {
+AEQD.prototype.inversePhiAtY_ = function(x_idx, y) {
   var t1l = this.dMath_.cosR_lower(x_idx, y) * this.sin_phi0_;
   var t1u = this.dMath_.cosR_upper(x_idx, y) * this.sin_phi0_;
   var t1_max = (t1l <= t1u) ? t1u : t1l;
@@ -371,7 +371,7 @@ ProjAEQD.prototype.inversePhiAtY_ = function(x_idx, y) {
 
 
 
-ProjAEQD.prototype.inversePhiAtX_ = function(y_idx, x) {
+AEQD.prototype.inversePhiAtX_ = function(y_idx, x) {
   var t1l = this.dMath_.cosR_lower(y_idx, x) * this.sin_phi0_;
   var t1u = this.dMath_.cosR_upper(y_idx, x) * this.sin_phi0_;
   var t1_max = (t1l <= t1u) ? t1u : t1l;
@@ -397,4 +397,4 @@ ProjAEQD.prototype.inversePhiAtX_ = function(y_idx, x) {
 };
 
 /* -------------------------------------------------------------------------- */
-export { ProjAEQD };
+export { AEQD };

@@ -18,7 +18,7 @@
 
 /* ------------------------------------------------------------ */
 
-var RasterProjShaderProgram = function(gl) {
+var ShaderProgram = function(gl) {
   this.gl_ = gl;
   this.vbo_ = null;
   this.program_ = null;
@@ -37,9 +37,9 @@ var RasterProjShaderProgram = function(gl) {
   this.locTranslateY_ = null;   //  TODO tmerc独自の処理の調整. Adjust your own processing
 };
 
-RasterProjShaderProgram.DIMENSION = 2;
+ShaderProgram.DIMENSION = 2;
 
-RasterProjShaderProgram.UNIT_RECT_TRIANGLE_STRIP = new Float32Array([
+ShaderProgram.UNIT_RECT_TRIANGLE_STRIP = new Float32Array([
     -1.0, -1.0,
     -1.0, +1.0,
     +1.0, -1.0,
@@ -47,12 +47,12 @@ RasterProjShaderProgram.UNIT_RECT_TRIANGLE_STRIP = new Float32Array([
   ]);
 
 
-RasterProjShaderProgram.RENDER_TYPE_TEXTURE = 0;        // dim=2, dataType=GeoGraphic
-RasterProjShaderProgram.RENDER_TYPE_POINT_TEXTURE = 1;  // dim=0, dataType=XYCoordinates
-RasterProjShaderProgram.RENDER_TYPE_POLYLINE = 2;       // dim=1, dataType=??
+ShaderProgram.RENDER_TYPE_TEXTURE = 0;        // dim=2, dataType=GeoGraphic
+ShaderProgram.RENDER_TYPE_POINT_TEXTURE = 1;  // dim=0, dataType=XYCoordinates
+ShaderProgram.RENDER_TYPE_POLYLINE = 2;       // dim=1, dataType=??
 
 
-RasterProjShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
+ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
   var vertexShader = this.loadShader_(this.gl_.VERTEX_SHADER, vertShaderStr);
   var fragmentShader = this.loadShader_(this.gl_.FRAGMENT_SHADER, fragShaderStr);
 
@@ -90,11 +90,11 @@ RasterProjShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) 
   return true;
 };
 
-RasterProjShaderProgram.prototype.initAdditionalParams = function() {
+ShaderProgram.prototype.initAdditionalParams = function() {
   this.locTranslateY_ = this.gl_.getUniformLocation(this.program_, "uTranslateY");  //  NOTICE tmerc独自. Original
 };
 
-RasterProjShaderProgram.prototype.loadShader_ = function(type, shaderSrc) {
+ShaderProgram.prototype.loadShader_ = function(type, shaderSrc) {
   var shader = this.gl_.createShader(type);
   this.gl_.shaderSource(shader, shaderSrc);
   this.gl_.compileShader(shader);
@@ -107,27 +107,27 @@ RasterProjShaderProgram.prototype.loadShader_ = function(type, shaderSrc) {
   return shader;
 };
 
-RasterProjShaderProgram.prototype.setClearColor = function(color) {
+ShaderProgram.prototype.setClearColor = function(color) {
   this.gl_.clearColor(color.r, color.g, color.b, color.a);
   this.gl_.enable(this.gl_.BLEND);
 };
 
-RasterProjShaderProgram.prototype.clear = function(canvasSize) {
+ShaderProgram.prototype.clear = function(canvasSize) {
   this.gl_.clear(this.gl_.COLOR_BUFFER_BIT);
   this.gl_.viewport(0, 0, canvasSize.width, canvasSize.height);
 };
 
-RasterProjShaderProgram.prototype.initVBO = function(numberOfItems) {
+ShaderProgram.prototype.initVBO = function(numberOfItems) {
   this.vbo_ = this.gl_.createBuffer();
   this.gl_.bindBuffer(this.gl_.ARRAY_BUFFER, this.vbo_);
   this.gl_.bufferData(this.gl_.ARRAY_BUFFER, numberOfItems * 4 * 2, this.gl_.DYNAMIC_DRAW);
 };
 
-RasterProjShaderProgram.prototype.setRenderType = function(type) {
+ShaderProgram.prototype.setRenderType = function(type) {
   this.gl_.uniform1i(this.locRenderType_, type);
 };
 
-RasterProjShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0, alpha, lineColor) {
+ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0, alpha, lineColor) {
   this.gl_.useProgram(this.program_);
 
   this.gl_.uniform1f(this.locAlpha_, alpha);
@@ -141,27 +141,27 @@ RasterProjShaderProgram.prototype.prepareRender = function(viewRect, texCoords, 
     this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自 Original
   }
 
-  var offset = RasterProjShaderProgram.UNIT_RECT_TRIANGLE_STRIP.byteLength;
-  this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, RasterProjShaderProgram.UNIT_RECT_TRIANGLE_STRIP);
+  var offset = ShaderProgram.UNIT_RECT_TRIANGLE_STRIP.byteLength;
+  this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, ShaderProgram.UNIT_RECT_TRIANGLE_STRIP);
   this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, offset, texCoords);
 
   this.gl_.enableVertexAttribArray(0);
-  this.gl_.vertexAttribPointer(0, RasterProjShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, 0);
+  this.gl_.vertexAttribPointer(0, ShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, 0);
   this.gl_.enableVertexAttribArray(1);
-  this.gl_.vertexAttribPointer(1, RasterProjShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, offset);
+  this.gl_.vertexAttribPointer(1, ShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, offset);
 };
 
 
 //  TODO コメントとしてこれは残しておく. I will leave this as a comment
-// RasterProjShaderProgram.prototype.prepareRenderPolyline = function() {
+// ShaderProgram.prototype.prepareRenderPolyline = function() {
 //   this.gl_.enableVertexAttribArray(0);
-//   this.gl_.vertexAttribPointer(0, RasterProjShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, 0);
+//   this.gl_.vertexAttribPointer(0, ShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, 0);
 //   this.gl_.enableVertexAttribArray(1);
-//   this.gl_.vertexAttribPointer(1, RasterProjShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, 0);
+//   this.gl_.vertexAttribPointer(1, ShaderProgram.DIMENSION, this.gl_.FLOAT, this.gl_.FALSE, 0, 0);
 // };
 
 //  TODO 要検討. To study
-RasterProjShaderProgram.prototype.renderIconTexture = function(texture, iconSize, xyPos) {
+ShaderProgram.prototype.renderIconTexture = function(texture, iconSize, xyPos) {
   this.gl_.bindTexture(this.gl_.TEXTURE_2D, texture);
   this.gl_.uniform2f(this.locDataCoord1_, xyPos.x, xyPos.y);
   this.gl_.uniform2f(this.locDataCoord2_, 0, 0);
@@ -169,7 +169,7 @@ RasterProjShaderProgram.prototype.renderIconTexture = function(texture, iconSize
   this.gl_.drawArrays(this.gl_.TRIANGLE_STRIP, 0, 4);
 };
 
-RasterProjShaderProgram.prototype.renderTexture = function(texture, region) {
+ShaderProgram.prototype.renderTexture = function(texture, region) {
   var lam1 = region[0];
   var phi1 = region[1];
   var lam2 = region[2];
@@ -181,16 +181,16 @@ RasterProjShaderProgram.prototype.renderTexture = function(texture, region) {
   this.gl_.drawArrays(this.gl_.TRIANGLE_STRIP, 0, 4);
 };
 
-RasterProjShaderProgram.prototype.renderPolyline = function(points) {
+ShaderProgram.prototype.renderPolyline = function(points) {
   this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, new Float32Array(points));
   this.gl_.drawArrays(this.gl_.LINE_STRIP, 0, points.length / 2);
 };
 
-RasterProjShaderProgram.prototype.setPolylineData = function(points) {
+ShaderProgram.prototype.setPolylineData = function(points) {
   this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, new Float32Array(points));
 };
 
-RasterProjShaderProgram.prototype.renderPolylineData = function(numPoints, ty) {
+ShaderProgram.prototype.renderPolylineData = function(numPoints, ty) {
   if (typeof ty !== 'undefined') {
     this.gl_.uniform1f(this.locTranslateY_, ty);    //  NOTICE uTranslateY, tmerc独自. Original
   }
@@ -198,4 +198,4 @@ RasterProjShaderProgram.prototype.renderPolylineData = function(numPoints, ty) {
 };
 
 /* ------------------------------------------------------------ */
-export { RasterProjShaderProgram };
+export { ShaderProgram };

@@ -5,8 +5,8 @@
  * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
  */
 
-import { RasterProjShaderProgram } from './RasterProjShaderProgram.js';
-import { ProjAEQD } from './ProjAEQD.js';
+import { ShaderProgram } from './ShaderProgram.js';
+import { AEQD } from './AEQD.js';
 
 /* ------------------------------------------------------------ */
 
@@ -17,22 +17,22 @@ import { ProjAEQD } from './ProjAEQD.js';
  * @param {number} canvasHeight
  * @constructor
  */
-const RasterProjAEQD = function() {
+const RasterAEQD = function() {
   this.shader_ = null;
   //
   this.backColor_ = { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
   this.graticuleColor_ = { r: 0.88, g: 0.88, b: 0.88, a: 1.0};
   this.alpha_ = 1.0;
   //
-  this.projection = new ProjAEQD(0.0, 0.0);   // public
+  this.projection = new AEQD(0.0, 0.0);   // public
   //
   this.numberOfPoints = 64;
 };
 
-RasterProjAEQD.prototype.init = function(gl) {
-  this.shader_ = new RasterProjShaderProgram(gl);
+RasterAEQD.prototype.init = function(gl) {
+  this.shader_ = new ShaderProgram(gl);
 
-  var ret = this.shader_.init(RasterProjAEQD.VERTEX_SHADER_STR, RasterProjAEQD.FRAGMENT_SHADER_STR);
+  var ret = this.shader_.init(RasterAEQD.VERTEX_SHADER_STR, RasterAEQD.FRAGMENT_SHADER_STR);
   if ( !ret ) {
     return false;
   }
@@ -43,25 +43,25 @@ RasterProjAEQD.prototype.init = function(gl) {
   return true;
 };
 
-RasterProjAEQD.prototype.setAlpha = function(alpha) {
+RasterAEQD.prototype.setAlpha = function(alpha) {
   this.alpha_ = alpha;
 };
 
-RasterProjAEQD.prototype.setProjCenter = function(lam0, phi0) {
-  this.projection = new ProjAEQD(lam0, phi0);
+RasterAEQD.prototype.setProjCenter = function(lam0, phi0) {
+  this.projection = new AEQD(lam0, phi0);
 };
 
-RasterProjAEQD.prototype.clear = function(canvasSize) {
+RasterAEQD.prototype.clear = function(canvasSize) {
   this.shader_.clear(canvasSize);
 };
 
-RasterProjAEQD.prototype.prepareRender = function(texCoords, viewRect) {
+RasterAEQD.prototype.prepareRender = function(texCoords, viewRect) {
   this.shader_.prepareRender(viewRect, texCoords, this.projection.lam0, this.projection.phi0, this.alpha_, this.graticuleColor_);
 };
 
 // c- Renders textures at locations specified in textureInfos
-RasterProjAEQD.prototype.renderTextures = function(textureInfos) {
-  this.shader_.setRenderType(RasterProjShaderProgram.RENDER_TYPE_TEXTURE);
+RasterAEQD.prototype.renderTextures = function(textureInfos) {
+  this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
   for ( var i = 0; i < textureInfos.length; ++i ) {
     var texture = textureInfos[i][0];
     var region = textureInfos[i][1];
@@ -70,12 +70,12 @@ RasterProjAEQD.prototype.renderTextures = function(textureInfos) {
 };
 
 // c- Renders an icon at the center of the map 
-RasterProjAEQD.prototype.renderOverlays = function(centerIcon, iconSize) {
-  this.shader_.setRenderType(RasterProjShaderProgram.RENDER_TYPE_POINT_TEXTURE);
+RasterAEQD.prototype.renderOverlays = function(centerIcon, iconSize) {
+  this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_POINT_TEXTURE);
   this.shader_.renderIconTexture(centerIcon, iconSize, { x:0.0, y:0.0});
 };
 
-RasterProjAEQD.VERTEX_SHADER_STR = `
+RasterAEQD.VERTEX_SHADER_STR = `
   precision highp float;
   attribute vec2 aPosition;
   attribute vec2 aTexCoord;
@@ -89,7 +89,7 @@ RasterProjAEQD.VERTEX_SHADER_STR = `
 `;
 
 
-RasterProjAEQD.FRAGMENT_SHADER_STR = `
+RasterAEQD.FRAGMENT_SHADER_STR = `
 
   precision highp float;
   uniform sampler2D uTexture;
@@ -178,6 +178,6 @@ RasterProjAEQD.FRAGMENT_SHADER_STR = `
 `;
 
 /* -------------------------------------------------------------------------- */
-export { RasterProjAEQD };
+export { RasterAEQD };
 
 
