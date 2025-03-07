@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-import {  ProjMath } from "./ProjMath.js";
+import {  ProjMath } from "./lib/ProjMath.js";
 import { MapView } from "./MapView.js";
 
 ///////////////////////////////////////////////////////////////////

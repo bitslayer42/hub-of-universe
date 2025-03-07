@@ -6,8 +6,8 @@
  */
 /* ------------------------------------------------------------ */
 
-import { ProjDiscreteMath } from "./ProjDiscreteMath.js";
-import { ProjMath } from "./ProjMath.js";
+import { ProjDiscreteMath } from "./lib/ProjDiscreteMath.js";
+import { ProjMath } from "./lib/ProjMath.js";
 /**
  * Spherical Azimuthal Equidistant Projection
  * @param {number} lam0  latitude of the center [rad].

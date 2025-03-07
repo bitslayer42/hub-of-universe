@@ -4,7 +4,7 @@
  * All rights reserved.
  * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
  */
-import { ProjMath } from "./ProjMath.js";
+import { ProjMath } from "./lib/ProjMath.js";
 
 /**
  * ラスタタイル情報管理 Raster tile information management
