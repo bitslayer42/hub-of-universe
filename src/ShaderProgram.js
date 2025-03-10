@@ -33,7 +33,7 @@ var ShaderProgram = function(gl) {
   this.locFixedTextureSize_ = null;
   this.locRenderColor_ = null;
   this.locRenderType_ = null;
-  //
+  this.locUnifScale_ = null;
   this.locTranslateY_ = null;   //  TODO tmerc独自の処理の調整. Adjust your own processing
 };
 
@@ -83,7 +83,7 @@ ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
   this.locFixedTextureSize_ = this.gl_.getUniformLocation(this.program_, "uFixedTextureSize");
   this.locRenderColor_ = this.gl_.getUniformLocation(this.program_, "uRenderColor");
   this.locRenderType_ = this.gl_.getUniformLocation(this.program_, "uRenderType");
-
+  this.locUnifScale_ = this.gl_.getUniformLocation(this.program_, "uScale");
   //this.gl_.blendFunc(this.gl_.SRC_ALPHA, this.gl_.ONE);
   this.gl_.blendFunc(this.gl_.SRC_ALPHA, this.gl_.ONE_MINUS_SRC_ALPHA);
 
@@ -127,7 +127,7 @@ ShaderProgram.prototype.setRenderType = function(type) {
   this.gl_.uniform1i(this.locRenderType_, type);
 };
 
-ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0, alpha, lineColor) {
+ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0, alpha, lineColor, scale) {
   this.gl_.useProgram(this.program_);
 
   this.gl_.uniform1f(this.locAlpha_, alpha);
@@ -136,6 +136,7 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
   this.gl_.uniform2f(this.locViewXY1_, viewRect[0], viewRect[1]);
   this.gl_.uniform2f(this.locViewXY2_, viewRect[2], viewRect[3]);
   this.gl_.uniform1i(this.locTexture_, 0);
+  this.gl_.uniform1f(this.locUnifScale_, scale);
 
   if ( this.locTranslateY_ != null ) {
     this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自 Original

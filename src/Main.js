@@ -19,10 +19,11 @@ var Main = function () {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomChange: 0,
+    zoomScale: 0.01, // 0 > zoomScale >= 40
     targetLambdaPhi: null,
     interpolater: null,
   };
+  this.imageProj = null;
   window.addEventListener("resize", (event) => { // TODO: memory leak
     this.draw();
   });
@@ -36,16 +37,16 @@ var Main = function () {
     //  default projCenter parameter
     var phi0 = 0.0 // 35.32 * 0.0174533; // +Math.PI/2; //north pole
     var lam0 = 0.0 //-82.48 * 0.0174533;
-    var projCenter = this.getProjCenterParameter();  //map-main ln:77 (if url includes projCenter=35.3206141,-82.4861473)
+    var projCenter = this.getProjCenterParameter();  //(if url includes projCenter=35.3206141,-82.4861473)
     if (projCenter) {
       lam0 = projCenter[0];
       phi0 = projCenter[1];
     }
-    var imageProj = new RasterAEQD();        //rasterproj-aeqd ln:530
+    this.imageProj = new RasterAEQD();
     //imageProj is a RasterAEQD
-    this.startup(imageProj); // sets up this.canvas, webgl, and hammer, and calls init
+    this.startup(this.imageProj); // sets up this.canvas, webgl, and hammer, and calls init
     this.animation(); // starts animation
-    imageProj.setProjCenter(lam0, phi0);         //rasterproj-aeqd ln:561       
+    this.imageProj.setProjCenter(lam0, phi0);      
   };
 
   this.animation = () => {
@@ -55,43 +56,8 @@ var Main = function () {
       this.prevTime = currTime;
     }
     // Zoom
-    if (Math.abs(this.viewStatus.zoomChange) > ProjMath.EPSILON) {
-      // var diff_time = 5 * (currTime - this.prevTime);
-      // var zoomChange = this.viewStatus.zoomChange;
-      // if (Math.abs(this.viewStatus.zoomChange) > diff_time) {
-      //   if (this.viewStatus.zoomChange > 0) {
-      //     zoomChange = Math.abs(this.viewStatus.zoomChange);
-      //   } else {
-      //     zoomChange = -Math.abs(this.viewStatus.zoomChange);
-          
-      //   }
-      // }
-      // console.log("zoomChange", zoomChange);
-      this.mapView.zoomWindow(this.viewStatus.zoomChange);
-      this.viewStatus.zoomChange = 0;
 
-    // function handleWheel(event) {
-    //   let scale = 10.0;
-    //   c = checkAndGetMousePos(event);
-    //   if(null != c) {
-    //     event.preventDefault();
-    //     scale += e.deltaY * -0.01;
-    //     scale = Math.min(Math.max(.01, scale), 40.0);
-    //     RasterProjShaderProgram.setScale(scale);
-    //   }
-    }
-
-//zoom orig
-// if (ProjMath.EPSILON < Math.abs(viewStatus.zoomChange)) {
-//   var b = 5 * (currTime - prevTime);
-//   var c = viewStatus.zoomChange;
-//   b < Math.abs(viewStatus.zoomChange) &&
-//     (c = 0 < viewStatus.zoomChange ? +b : -b);
-//   mapView.zoomWindow(c);
-//   viewStatus.zoomChange = 0;
-// }
-
-
+    // this.imageProj.setScale(this.viewStatus.zoomScale);
 
     // Interpolator
     var d;
@@ -237,7 +203,7 @@ var Main = function () {
     var canv_xy = this.canvas.getBoundingClientRect();
     var left = event.clientX - canv_xy.left;
     var top = event.clientY - canv_xy.top;
-    if(left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) {
+    if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) {
       return null;
     }
     return [left, top];
@@ -256,7 +222,7 @@ var Main = function () {
     if (this.viewStatus.drag) {
       var canv_xy = this.checkAndGetGesturePos(event);
       if (null != canv_xy) {
-        if(this.viewStatus.dragPrevPos) {
+        if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
           var dx = canv_xy[0] - this.viewStatus.dragPrevPos[0];
           var dy = canv_xy[1] - this.viewStatus.dragPrevPos[1];
@@ -291,21 +257,25 @@ var Main = function () {
   };
 
   this.handleWheel = (event) => {
-    var multiplier = 6;
     var canv_xy = this.checkAndGetMousePos(event); //verify on canvas
     if (canv_xy) {
       //event.preventDefault();
-      this.viewStatus.zoomChange -= event.deltaY * multiplier};
+      this.viewStatus.zoomScale += event.deltaY * -0.01;
+      this.viewStatus.zoomScale = Math.min(Math.max(.01, this.viewStatus.zoomScale), 40.0);
+      this.imageProj.setScale(this.viewStatus.zoomScale);
+
+    }
   };
 
-  this.handlePinch = (event) => {
+  this.handlePinch = (event) => { // TODO: make it work with new vals
     var b = this.checkAndGetGesturePos(event);
     if (null != b) {
       event.preventDefault();
       var c = event.gesture.scale;
       var d = null != this.viewStatus.pinchPrevScale ? this.viewStatus.pinchPrevScale : 1;
       var e = this.gl.this.canvas.height * (c - d);
-      (this.viewStatus.zoomChange += e), (this.viewStatus.pinchPrevScale = c);
+      this.viewStatus.zoomScale += e;
+      this.viewStatus.pinchPrevScale = c;
     }
   };
 

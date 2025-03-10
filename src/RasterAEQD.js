@@ -27,11 +27,11 @@ const RasterAEQD = function() {
   this.projection = new AEQD(0.0, 0.0);   // public
   //
   this.numberOfPoints = 64;
+  this.scale = 0.01; // 0 > scale >= 40
 };
 
 RasterAEQD.prototype.init = function(gl) {
   this.shader_ = new ShaderProgram(gl);
-
   var ret = this.shader_.init(RasterAEQD.VERTEX_SHADER_STR, RasterAEQD.FRAGMENT_SHADER_STR);
   if ( !ret ) {
     return false;
@@ -56,7 +56,7 @@ RasterAEQD.prototype.clear = function(canvasSize) {
 };
 
 RasterAEQD.prototype.prepareRender = function(texCoords, viewRect) {
-  this.shader_.prepareRender(viewRect, texCoords, this.projection.lam0, this.projection.phi0, this.alpha_, this.graticuleColor_);
+  this.shader_.prepareRender(viewRect, texCoords, this.projection.lam0, this.projection.phi0, this.alpha_, this.graticuleColor_, this.scale);
 };
 
 // c- Renders textures at locations specified in textureInfos
@@ -74,6 +74,10 @@ RasterAEQD.prototype.renderOverlays = function(centerIcon, iconSize) {
   this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_POINT_TEXTURE);
   this.shader_.renderIconTexture(centerIcon, iconSize, { x:0.0, y:0.0});
 };
+
+RasterAEQD.prototype.setScale = function(scale) {
+  this.scale = scale;
+}
 
 RasterAEQD.VERTEX_SHADER_STR = `
   precision highp float;
@@ -103,12 +107,21 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
   uniform vec2 uFixedTextureSize;    //  アイコンサイズ（画面比） Icon size (screen ratio)
   uniform vec4 uRenderColor;
   uniform float uAlpha;
+  uniform float uScale;       //  スケール scale
 
   const float pi = 3.14159265;
   const float epsilon = 0.00000001;
   const float blurRatio = 0.015;
   const float xyRadius = pi;
   const float e = 2.718281;
+
+  vec2 fisheye(vec2 lp) {
+    float r = length(lp);
+
+    float theta = atan(lp.x, lp.y);
+    float fisheyeR = (exp(r * log(1.0 + uScale * pi) / 1.0) - 1.0) / uScale / pi;
+    return vec2(sin(theta) * fisheyeR, cos(theta) * fisheyeR);// * 0.5 + 0.5;
+  }
 
   // lat/lon from map coords
   vec2 proj_inverse(vec2 center, vec2 xy)
@@ -149,7 +162,9 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
 
     if ( uRenderType == 0 ) {    //  Texture (map)
 
-      vec2 lp = proj_inverse(uProjCenter, xy);
+      vec2 fe = fisheye(xy/pi)*pi;      //  fisheye effect
+      vec2 lp = proj_inverse(uProjCenter, fe);
+
       vec2 ts = (lp - uDataCoord1) / (uDataCoord2 - uDataCoord1);
       float inXY = inner_xy(xy);
       vec2 inData = step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts);
