@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 
   <title>Hub of Universe</title>
   <link rel="stylesheet" href="./index.css" type="text/css" charset="utf-8">
@@ -16,6 +16,10 @@
 <script src="./lib/webgl-utils.js" type="application/javascript"></script>
 
 <script type="module" src="./src/Main.js"></script>
+
+
+<!-- <script src="./lib/touch-emulator.js" type="application/javascript"></script>
+<script> TouchEmulator(); // hold down shift and click to emulate multi touch </script> -->
 
 <body>
   <div class="container">
@@ -31,6 +35,7 @@
     </main>
     <footer>
       <div>hubofuniverse.com</div>
+      <div id="zoomScale"></div>
     </footer>
   </div>
 

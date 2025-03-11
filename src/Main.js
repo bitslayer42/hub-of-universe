@@ -46,7 +46,7 @@ var Main = function () {
     //imageProj is a RasterAEQD
     this.startup(this.imageProj); // sets up this.canvas, webgl, and hammer, and calls init
     this.animation(); // starts animation
-    this.imageProj.setProjCenter(lam0, phi0);      
+    this.imageProj.setProjCenter(lam0, phi0);
   };
 
   this.animation = () => {
@@ -55,11 +55,7 @@ var Main = function () {
     if (null == this.prevTime) {
       this.prevTime = currTime;
     }
-    // Zoom
 
-    // this.imageProj.setScale(this.viewStatus.zoomScale);
-
-    // Interpolator
     var d;
     if (null != this.viewStatus.interpolater) {
       d = this.viewStatus.interpolater.getPos(currTime);
@@ -95,20 +91,27 @@ var Main = function () {
     if (!this.gl) {
       return void alert("Failed to setup WebGL.");
     }
-    // resizeCanvas(this.canvas);
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost, false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored, false);
 
-    var hamm = new Hammer(this.canvas);
-    hamm.get("pinch").set({
+    //var hamm = new Hammer(this.canvas);
+
+    var mc = new Hammer.Manager(this.canvas);
+    var pinch = new Hammer.Pinch();
+    mc.add([pinch]);
+
+    mc.get("pinch").set({
       enable: true,
     });
-
+    mc.on("pinch", this.handlePinch);
+    mc.on("pinchend", this.handlePinchEnd);
+    mc.on("pinchcancel", this.handlePinchEnd);
+    mc.on("pinchstart", this.handlePinchStart);
     $(this.canvas).hammer().on("panmove", this.handlePan);
     $(this.canvas).hammer().on("panstart", this.handlePanStart);
     $(this.canvas).hammer().on("panend pancancel", this.handlePanEnd);
-    $(this.canvas).hammer().on("pinch", this.handlePinch);
-    $(this.canvas).hammer().on("pinchend", this.handlePinchEnd);
+
+    // $(this.canvas).hammer().on("pinchend", this.handlePinchEnd);
     $(this.canvas).on("touchend", function (a) {
       a.preventDefault();
     });
@@ -203,7 +206,7 @@ var Main = function () {
     var canv_xy = this.canvas.getBoundingClientRect();
     var left = event.clientX - canv_xy.left;
     var top = event.clientY - canv_xy.top;
-    if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) {
+    if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
       return null;
     }
     return [left, top];
@@ -212,12 +215,37 @@ var Main = function () {
 
   //returns pixels 0,0 top left of canvas
   this.checkAndGetGesturePos = (event) => {
-    var b = this.canvas.getBoundingClientRect();
-    var c = event.gesture.center.x - b.left;
-    var d = event.gesture.center.y - b.top;
-    return 0 > c || 0 > d ? null : b.width < c || b.height < d ? null : [c, d];
+    var canv_xy = this.canvas.getBoundingClientRect();
+    var left = event.gesture.center.x - canv_xy.left;
+    var top = event.gesture.center.y - canv_xy.top;
+    if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
+      return null;
+    }
+    return [left, top];
+    // return 0 > left || 0 > top ? null : canv_xy.width < left || canv_xy.height < top ? null : [left, top];
   };
 
+  this.handlePinch = (event) => { // TODO: make it work with new vals
+    var canv_xy = this.checkAndGetMousePos(event); //verify on canvas
+    if (canv_xy) {
+      if (event.scale < 1.0) {
+        this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale * event.scale;
+      } else {
+        this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale + event.scale - 1.0;
+      }
+      this.viewStatus.zoomScale = Math.min(Math.max(.01, this.viewStatus.zoomScale), 40.0);
+      this.imageProj.setScale(this.viewStatus.zoomScale);
+    }
+  };
+
+  this.handlePinchStart = (event) => {
+    this.viewStatus.pinchPrevScale = this.viewStatus.pinchPrevScale ? this.viewStatus.pinchPrevScale : 0.0;
+  };
+
+  this.handlePinchEnd = (event) => {
+    this.viewStatus.pinchPrevScale = this.viewStatus.zoomScale
+  };
+  
   this.handlePan = (event) => {
     if (this.viewStatus.drag) {
       var canv_xy = this.checkAndGetGesturePos(event);
@@ -226,6 +254,7 @@ var Main = function () {
           event.preventDefault();
           var dx = canv_xy[0] - this.viewStatus.dragPrevPos[0];
           var dy = canv_xy[1] - this.viewStatus.dragPrevPos[1];
+          // document.querySelector("#zoomScale").innerHTML = ["pan", canv_xy, dx, dy];
           this.mapView.moveWindow(dx, dy);
         }
         this.viewStatus.dragPrevPos = canv_xy;
@@ -238,7 +267,7 @@ var Main = function () {
     var canv_xy = this.checkAndGetGesturePos(event);
     if (canv_xy) {
       event.preventDefault();
-      this.viewStatus.dragStartPos = canv_xy;
+      this.viewStatus.dragPrevPos = canv_xy;
     };
   };
 
@@ -267,21 +296,7 @@ var Main = function () {
     }
   };
 
-  this.handlePinch = (event) => { // TODO: make it work with new vals
-    var b = this.checkAndGetGesturePos(event);
-    if (null != b) {
-      event.preventDefault();
-      var c = event.gesture.scale;
-      var d = null != this.viewStatus.pinchPrevScale ? this.viewStatus.pinchPrevScale : 1;
-      var e = this.gl.this.canvas.height * (c - d);
-      this.viewStatus.zoomScale += e;
-      this.viewStatus.pinchPrevScale = c;
-    }
-  };
 
-  this.handlePinchEnd = (event) => {
-    this.viewStatus.pinchPrevScale = null;
-  };
 
   this.handleContextLost = (event) => {
     event.preventDefault();

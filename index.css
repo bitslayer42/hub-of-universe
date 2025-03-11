@@ -23,7 +23,7 @@ canvas {
         "header"
         "main"
         "footer";
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr 300px;
 }
 
 header {
