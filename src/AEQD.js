@@ -67,6 +67,18 @@ AEQD.prototype.forward = function(lambda, phi) {
 };
 
 /**
+ * fisheye effect
+ * @param {Point} y 
+ * @param {Point}
+ */
+AEQD.prototype.fisheye = function(xy, rho) {
+  let uScale = 1.0;
+  let theta = Math.atan(xy[0], xy[1]);
+  let fisheyeR = (Math.exp(rho * Math.log(1.0 + uScale * Math.PI) / 1.0) - 1.0) / uScale / Math.PI;
+  return [ Math.sin(theta) * fisheyeR, Math.cos(theta) * fisheyeR ];
+}
+
+/**
  * Inverse projection.
  * @param {Float} x
  * @param {Float} y
@@ -80,6 +92,10 @@ AEQD.prototype.inverse = function(x, y) {
   if ( rho < ProjMath.EPSILON )  return { lambda: this.lam0, phi: this.phi0 };
 
   var c_rh = rho;
+  
+  // let pi_to_1 = [x / Math.PI, y / Math.PI];
+  // [x, y] = this.fisheye(pi_to_1, rho);
+  // [x, y] = [x * Math.PI, y * Math.PI];
 
   var sin_c = Math.sin(c_rh);
   var cos_c = Math.cos(c_rh);

@@ -24,30 +24,18 @@ var Main = function () {
     interpolater: null,
   };
   this.imageProj = null;
-  window.addEventListener("resize", (event) => { // TODO: memory leak
-    this.draw();
-  });
   document.addEventListener('DOMContentLoaded', () => {
-    this.draw();
-  });
-
-  this.draw = () => {
     this.canvas = document.getElementById('webglCanvas');
     this.resizeCanvas(this.canvas);
-    //  default projCenter parameter
-    var phi0 = 0.0 // 35.32 * 0.0174533; // +Math.PI/2; //north pole
-    var lam0 = 0.0 //-82.48 * 0.0174533;
-    var projCenter = this.getProjCenterParameter();  //(if url includes projCenter=35.3206141,-82.4861473)
-    if (projCenter) {
-      lam0 = projCenter[0];
-      phi0 = projCenter[1];
-    }
+
     this.imageProj = new RasterAEQD();
     //imageProj is a RasterAEQD
     this.startup(this.imageProj); // sets up this.canvas, webgl, and hammer, and calls init
     this.animation(); // starts animation
+
+    var { lam0, phi0 } = this.getProjCenterParameter();
     this.imageProj.setProjCenter(lam0, phi0);
-  };
+  });
 
   this.animation = () => {
     this.requestId = requestAnimationFrame(this.animation);
@@ -96,13 +84,13 @@ var Main = function () {
 
     var mc = new Hammer.Manager(this.canvas, {
       recognizers: [
-        [Hammer.Pinch,{
+        [Hammer.Pinch, {
           enable: true,
         }],
-        [Hammer.Pan,{
+        [Hammer.Pan, {
           enable: true,
         }],
-        [Hammer.Tap,{
+        [Hammer.Tap, {
           enable: true,
           taps: 2,
         }],
@@ -181,29 +169,41 @@ var Main = function () {
   //   If url includes ?projCenter=lat,log map will be centered there
   //   Returns array of radians [-1.4396548576700308, 0.6164610098713337]
   this.getProjCenterParameter = () => {
-    let params = new URLSearchParams(document.location.search);
-    let latLonStr = params.get("projCenter");
-    if (latLonStr) {
-      var latLon = latLonStr.split(",");
-      if (latLon.length < 2) return null;
-      var latDeg = parseFloat(latLon[0]),
-        lonDeg = parseFloat(latLon[1]);
-      if (isNaN(latDeg) || isNaN(lonDeg)) return null;
-      var latRad = (latDeg * Math.PI) / 180, //degrees to radians
-        lonRad = (lonDeg * Math.PI) / 180;
-      return (
-        [lonRad, latRad]
-      );
+    const checkURL = () => {
+      let params = new URLSearchParams(document.location.search);
+      let latLonStr = params.get("projCenter");
+      if (latLonStr) {
+        var latLon = latLonStr.split(",");
+        if (latLon.length < 2) return null;
+        var latDeg = parseFloat(latLon[0]),
+          lonDeg = parseFloat(latLon[1]);
+        if (isNaN(latDeg) || isNaN(lonDeg)) return null;
+        var latRad = (latDeg * Math.PI) / 180, //degrees to radians
+          lonRad = (lonDeg * Math.PI) / 180;
+        return (
+          [lonRad, latRad]
+        );
+      }
+      // }
+      return null;
+    };
+
+    //  default projCenter parameter
+    var phi0 = 35.32 * 0.0174533; // +Math.PI/2; //north pole
+    var lam0 = -82.48 * 0.0174533;
+    var projCenter = checkURL();  //(if url includes projCenter=35.3206141,-82.4861473)
+    if (projCenter) {
+      lam0 = projCenter[0];
+      phi0 = projCenter[1];
     }
-    // }
-    return null;
+    return { lam0, phi0 };
   };
 
   //returns pixels 0,0 top left of canvas
   this.checkAndGetMousePos = (event) => {
     var canv_xy = this.canvas.getBoundingClientRect();
     var left = event.clientX - canv_xy.left;
-    var top  = event.clientY - canv_xy.top;
+    var top = event.clientY - canv_xy.top;
     if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
       return null;
     }
@@ -215,7 +215,7 @@ var Main = function () {
   this.checkAndGetGesturePos = (event) => {
     var canv_xy = this.canvas.getBoundingClientRect();
     var left = event.center.x - canv_xy.left;
-    var top  = event.center.y - canv_xy.top;
+    var top = event.center.y - canv_xy.top;
     if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
       return null;
     }
@@ -243,7 +243,7 @@ var Main = function () {
   this.handlePinchEnd = (event) => {
     this.viewStatus.pinchPrevScale = this.viewStatus.zoomScale
   };
-  
+
   this.handlePan = (event) => {
     if (this.viewStatus.drag) {
       var canv_xy = this.checkAndGetGesturePos(event);

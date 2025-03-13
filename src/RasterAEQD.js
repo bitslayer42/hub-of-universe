@@ -126,6 +126,7 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
   // lat/lon from map coords
   vec2 proj_inverse(vec2 center, vec2 xy)
   {
+    xy = fisheye(xy/pi)*pi;      //  fisheye effect
     float sinPhi0 = sin(center.y);
     float cosPhi0 = cos(center.y);
 
@@ -162,8 +163,7 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
 
     if ( uRenderType == 0 ) {    //  Texture (map)
 
-      vec2 fe = fisheye(xy/pi)*pi;      //  fisheye effect
-      vec2 lp = proj_inverse(uProjCenter, fe);
+      vec2 lp = proj_inverse(uProjCenter, xy);
 
       vec2 ts = (lp - uDataCoord1) / (uDataCoord2 - uDataCoord1);
       float inXY = inner_xy(xy);
