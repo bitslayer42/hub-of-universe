@@ -4,7 +4,7 @@
  * All rights reserved.
  */
 
-import { ProjMath } from "./lib/ProjMath.js";
+import { Interpolater } from "./lib/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterAEQD } from './RasterAEQD.js';
 
@@ -94,28 +94,28 @@ var Main = function () {
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost, false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored, false);
 
-    //var hamm = new Hammer(this.canvas);
-
-    var mc = new Hammer.Manager(this.canvas);
-    var pinch = new Hammer.Pinch();
-    mc.add([pinch]);
-
-    mc.get("pinch").set({
-      enable: true,
+    var mc = new Hammer.Manager(this.canvas, {
+      recognizers: [
+        [Hammer.Pinch,{
+          enable: true,
+        }],
+        [Hammer.Pan,{
+          enable: true,
+        }],
+        [Hammer.Tap,{
+          enable: true,
+          taps: 2,
+        }],
+      ]
     });
     mc.on("pinch", this.handlePinch);
-    mc.on("pinchend", this.handlePinchEnd);
-    mc.on("pinchcancel", this.handlePinchEnd);
+    mc.on("pinchend pinchcancel", this.handlePinchEnd);
     mc.on("pinchstart", this.handlePinchStart);
-    $(this.canvas).hammer().on("panmove", this.handlePan);
-    $(this.canvas).hammer().on("panstart", this.handlePanStart);
-    $(this.canvas).hammer().on("panend pancancel", this.handlePanEnd);
+    mc.on("pan", this.handlePan);
+    mc.on("panstart", this.handlePanStart);
+    mc.on("panend pancancel", this.handlePanEnd);
+    mc.on("tap", this.handleDoubleTap);
 
-    // $(this.canvas).hammer().on("pinchend", this.handlePinchEnd);
-    $(this.canvas).on("touchend", function (a) {
-      a.preventDefault();
-    });
-    $(this.canvas).hammer().on("doubletap", this.handleDoubleTap);
     window.WheelEvent && document.addEventListener("wheel", this.handleWheel, false);
 
     this.init(imageProj);
@@ -192,8 +192,6 @@ var Main = function () {
       var latRad = (latDeg * Math.PI) / 180, //degrees to radians
         lonRad = (lonDeg * Math.PI) / 180;
       return (
-        // latRad < -Math.PI / 2 && (latRad = -Math.PI / 2),
-        // Math.PI / 2 < latRad && (latRad = Math.PI / 2),
         [lonRad, latRad]
       );
     }
@@ -201,11 +199,11 @@ var Main = function () {
     return null;
   };
 
-  //returns pixels 0,0 top left of canvas (for wheel)
+  //returns pixels 0,0 top left of canvas
   this.checkAndGetMousePos = (event) => {
     var canv_xy = this.canvas.getBoundingClientRect();
     var left = event.clientX - canv_xy.left;
-    var top = event.clientY - canv_xy.top;
+    var top  = event.clientY - canv_xy.top;
     if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
       return null;
     }
@@ -216,8 +214,8 @@ var Main = function () {
   //returns pixels 0,0 top left of canvas
   this.checkAndGetGesturePos = (event) => {
     var canv_xy = this.canvas.getBoundingClientRect();
-    var left = event.gesture.center.x - canv_xy.left;
-    var top = event.gesture.center.y - canv_xy.top;
+    var left = event.center.x - canv_xy.left;
+    var top  = event.center.y - canv_xy.top;
     if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
       return null;
     }
@@ -254,7 +252,6 @@ var Main = function () {
           event.preventDefault();
           var dx = canv_xy[0] - this.viewStatus.dragPrevPos[0];
           var dy = canv_xy[1] - this.viewStatus.dragPrevPos[1];
-          // document.querySelector("#zoomScale").innerHTML = ["pan", canv_xy, dx, dy];
           this.mapView.moveWindow(dx, dy);
         }
         this.viewStatus.dragPrevPos = canv_xy;
@@ -288,15 +285,11 @@ var Main = function () {
   this.handleWheel = (event) => {
     var canv_xy = this.checkAndGetMousePos(event); //verify on canvas
     if (canv_xy) {
-      //event.preventDefault();
       this.viewStatus.zoomScale += event.deltaY * -0.01;
       this.viewStatus.zoomScale = Math.min(Math.max(.01, this.viewStatus.zoomScale), 40.0);
       this.imageProj.setScale(this.viewStatus.zoomScale);
-
     }
   };
-
-
 
   this.handleContextLost = (event) => {
     event.preventDefault();
@@ -307,81 +300,6 @@ var Main = function () {
     init(), (this.requestId = requestAnimationFrame(animation));
   };
 }
-///////////////////////////////////////////////////////////////////
-///////MapMathUtils////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-var MapMathUtils = function () { };
-MapMathUtils.smoothstep = function (a, b, c) {
-  var d = ProjMath.clamp((c - a) / (b - a), 0, 1);
-  return d * d * (3 - 2 * d);
-};
-MapMathUtils.smootherstep = function (a, b, c) {
-  var d = ProjMath.clamp((c - a) / (b - a), 0, 1);
-  return d * d * d * (d * (6 * d - 15) + 10);
-};
-MapMathUtils.toUnitVector3d = function (a, b) {
-  var c = Math.cos(b);
-  return [Math.cos(a) * c, Math.sin(a) * c, Math.sin(b)];
-};
-MapMathUtils.slerp = function (a, b, c) {
-  //Spherical Linear Interpolation
-  var d = ProjMath.clamp(a[0] * b[0] + a[1] * b[1] + a[2] * b[2], -1, 1);
-  if (1 - ProjMath.EPSILON < d)
-    return [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2, (a[2] + b[2]) / 2];
-  d < -(1 - ProjMath.EPSILON);
-  var e = Math.acos(d),
-    f = Math.sin(e),
-    g = Math.sin((1 - c) * e) / f,
-    h = Math.sin(c * e) / f;
-  return [g * a[0] + h * b[0], g * a[1] + h * b[1], g * a[2] + h * b[2]];
-};
-
-///////////////////////////////////////////////////////////////////
-///////Interpolater////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////
-var Interpolater = function (a, b, c, d, e) {
-  this.v1 = MapMathUtils.toUnitVector3d(a.lambda, a.phi);
-  this.v2 = MapMathUtils.toUnitVector3d(b.lambda, b.phi);
-  this.iniViewPos = c;
-  this.finViewPos = d;
-  this.timeSpan = e;
-  this.startTime = null;
-  this.finished = false;
-};
-Interpolater.create = function (a, b, c, d, e) {
-  return ProjMath.neighborPoint(a, b)
-    ? null
-    : (Math.PI - ProjMath.EPSILON < Math.abs(b.phi - a.phi) &&
-      (a = {
-        lambda: a.lambda,
-        phi: a.phi + 1e-4 * (0 < a.phi ? -1 : 1),
-      }),
-      new Interpolater(a, b, c, d, e));
-};
-Interpolater.prototype.getPos = function (a) {
-  var b = 0;
-  if (null == this.startTime) this.startTime = a;
-  else {
-    var c = a - this.startTime;
-    (b = ProjMath.clamp(c / this.timeSpan, 0, 1)),
-      this.startTime + this.timeSpan < a && (this.finished = true);
-  }
-  var d = MapMathUtils.smootherstep(0, 1, b),
-    e = MapMathUtils.slerp(this.v1, this.v2, d),
-    f = ProjMath.toLambdaPhi(e),
-    g = [
-      this.iniViewPos[0] * (1 - d) + this.finViewPos[0] * d,
-      this.iniViewPos[1] * (1 - d) + this.finViewPos[1] * d,
-    ];
-  return {
-    lp: f,
-    viewPos: g,
-  };
-};
-Interpolater.prototype.isFinished = function () {
-  return this.finished;
-};
-
 
 new Main();
 
