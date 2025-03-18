@@ -432,12 +432,7 @@ MapView.prototype.setViewCenterPoint = function(cx, cy) {
 
 MapView.prototype.getLambdaPhiPointFromWindow = function(x, y) {
   var viewPos = this.viewWindowManager_.getViewPointFromWindow(x, y);
-  console.log("viewPos",viewPos);
   var lam_phi = this.imageProj.projection.inverse(viewPos[0], viewPos[1]);
-  var lon = (lam_phi.lambda / Math.PI) * 180;
-  var lat = (lam_phi.phi / Math.PI) * 180
-  console.log("lam_phi",lam_phi, lat, lon);
-
   return lam_phi;
 }; 
 

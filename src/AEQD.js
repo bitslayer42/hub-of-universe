@@ -87,9 +87,7 @@ AEQD.prototype.fisheye = function(x, y) {
  * @param {GeoCoord}
  */
 AEQD.prototype.inverse = function(x, y) {
-  console.log("beforefish",[x, y]);
   [x, y] = this.fisheye(x, y);
-  console.log("afterfish",[x, y]);
 
   var rh2 = x * x + y * y;
   if ( ProjMath.PI_SQ < rh2 )   return null;
