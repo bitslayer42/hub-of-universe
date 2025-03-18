@@ -23,6 +23,7 @@ var AEQD = function(lam0, phi0, opt_divn) {
   this.dMath_ = new ProjDiscreteMath(this.divN_);
   this.sin_phi0_ = Math.sin(phi0);
   this.cos_phi0_ = Math.cos(phi0);
+  this.scale = 0.01;
 };
 
 /**
@@ -71,11 +72,12 @@ AEQD.prototype.forward = function(lambda, phi) {
  * @param {Point} y 
  * @param {Point}
  */
-AEQD.prototype.fisheye = function(xy, rho) {
-  let uScale = 1.0;
-  let theta = Math.atan(xy[0], xy[1]);
-  let fisheyeR = (Math.exp(rho * Math.log(1.0 + uScale * Math.PI) / 1.0) - 1.0) / uScale / Math.PI;
-  return [ Math.sin(theta) * fisheyeR, Math.cos(theta) * fisheyeR ];
+AEQD.prototype.fisheye = function(x, y) { 
+  [x, y] = [x / Math.PI, y / Math.PI];
+  let rho = Math.sqrt(x*x + y*y);
+  let theta = Math.atan2(y, x);
+  let fisheyeR = (Math.exp(rho * Math.log(1.0 + this.scale)) - 1.0) / this.scale;
+  return [ Math.cos(theta) * fisheyeR * Math.PI, Math.sin(theta) * fisheyeR * Math.PI ];
 }
 
 /**
@@ -85,6 +87,10 @@ AEQD.prototype.fisheye = function(xy, rho) {
  * @param {GeoCoord}
  */
 AEQD.prototype.inverse = function(x, y) {
+  console.log("beforefish",[x, y]);
+  [x, y] = this.fisheye(x, y);
+  console.log("afterfish",[x, y]);
+
   var rh2 = x * x + y * y;
   if ( ProjMath.PI_SQ < rh2 )   return null;
 
@@ -92,11 +98,6 @@ AEQD.prototype.inverse = function(x, y) {
   if ( rho < ProjMath.EPSILON )  return { lambda: this.lam0, phi: this.phi0 };
 
   var c_rh = rho;
-  
-  // let pi_to_1 = [x / Math.PI, y / Math.PI];
-  // [x, y] = this.fisheye(pi_to_1, rho);
-  // [x, y] = [x * Math.PI, y * Math.PI];
-
   var sin_c = Math.sin(c_rh);
   var cos_c = Math.cos(c_rh);
 
@@ -412,5 +413,8 @@ AEQD.prototype.inversePhiAtX_ = function(y_idx, x) {
   return [ Math.asin(t_min), Math.asin(t_max) ];
 };
 
+AEQD.prototype.setScale = function(scale) {
+  this.scale = scale;
+}
 /* -------------------------------------------------------------------------- */
 export { AEQD };

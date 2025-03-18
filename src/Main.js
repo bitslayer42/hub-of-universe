@@ -84,16 +84,9 @@ var Main = function () {
 
     var mc = new Hammer.Manager(this.canvas, {
       recognizers: [
-        [Hammer.Pinch, {
-          enable: true,
-        }],
-        [Hammer.Pan, {
-          enable: true,
-        }],
-        [Hammer.Tap, {
-          enable: true,
-          taps: 2,
-        }],
+        [Hammer.Pinch, { enable: true, }],
+        [Hammer.Pan, { enable: true, }],
+        [Hammer.Tap, { enable: true, taps: 2, }],
       ]
     });
     mc.on("pinch", this.handlePinch);
@@ -105,7 +98,12 @@ var Main = function () {
     mc.on("tap", this.handleDoubleTap);
 
     window.WheelEvent && document.addEventListener("wheel", this.handleWheel, false);
-
+    document.querySelector("header").addEventListener("click", (e) => {
+      e.preventDefault();
+      var phi0 = 0.0; //35.32 * 0.0174533; // +Math.PI/2; //north pole
+      var lam0 = 0.0; //-82.48 * 0.0174533;
+      this.viewStatus.targetLambdaPhi = {lambda: lam0, phi: phi0}
+    });
     this.init(imageProj);
   };
 

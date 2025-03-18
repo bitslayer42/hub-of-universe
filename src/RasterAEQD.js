@@ -77,6 +77,7 @@ RasterAEQD.prototype.renderOverlays = function(centerIcon, iconSize) {
 
 RasterAEQD.prototype.setScale = function(scale) {
   this.scale = scale;
+  this.projection.setScale(scale);
 }
 
 RasterAEQD.VERTEX_SHADER_STR = `
@@ -107,7 +108,7 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
   uniform vec2 uFixedTextureSize;    //  アイコンサイズ（画面比） Icon size (screen ratio)
   uniform vec4 uRenderColor;
   uniform float uAlpha;
-  uniform float uScale;       //  スケール scale
+  uniform float uScale;       //  スケール zoom in scale
 
   const float pi = 3.14159265;
   const float epsilon = 0.00000001;
@@ -115,18 +116,19 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
   const float xyRadius = pi;
   const float e = 2.718281;
 
-  vec2 fisheye(vec2 lp) {
-    float r = length(lp);
+  vec2 fisheye(vec2 xy) {
+    xy = xy / pi; // circle radius 1.0
+    float rho = length(xy);
 
-    float theta = atan(lp.x, lp.y);
-    float fisheyeR = (exp(r * log(1.0 + uScale * pi) / 1.0) - 1.0) / uScale / pi;
-    return vec2(sin(theta) * fisheyeR, cos(theta) * fisheyeR);// * 0.5 + 0.5;
+    float theta = atan(xy.y, xy.x);
+    float fisheyeR = (exp(rho * log(1.0 + uScale)) - 1.0) / uScale;
+    return vec2(cos(theta) * fisheyeR * pi, sin(theta) * fisheyeR * pi);
   }
 
   // lat/lon from map coords
   vec2 proj_inverse(vec2 center, vec2 xy)
   {
-    xy = fisheye(xy/pi)*pi;      //  fisheye effect
+    xy = fisheye(xy);      //  fisheye effect
     float sinPhi0 = sin(center.y);
     float cosPhi0 = cos(center.y);
 
