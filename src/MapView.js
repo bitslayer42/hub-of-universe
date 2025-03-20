@@ -61,7 +61,7 @@ TileManager.prototype.getTileY_ = function(numY, phi) {
 
 TileManager.prototype.getTileNum_ = function(level) {
   var p = Math.round(ProjMath.clamp(level, 0, this.numLevels-1));
-  var s = (1 << p);
+  var s = (1 << p); // s = 2^p
   return [ s * this.rootNumX, s * this.rootNumY ];
 };
 
@@ -361,8 +361,8 @@ var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.imageProj = imgProj;
   //
   var viewWindowOpts = {
-    zoomInLimit: Math.PI / 20.0,
-    zoomOutLimit: Math.PI * 20
+    zoomInLimit: Math.PI / 40.0,
+    zoomOutLimit: Math.PI // * 20
   };
   var rangeRect = this.imageProj.projection.getRange();
   this.viewWindowManager_ = new ViewWindowManager(rangeRect, canvasSize, viewWindowOpts);

@@ -44,28 +44,28 @@ var Main = function () {
       this.prevTime = currTime;
     }
 
-    var d;
+    var currPos;
     if (null != this.viewStatus.interpolater) {
-      d = this.viewStatus.interpolater.getPos(currTime);
-      this.mapView.setProjCenter(d.lp.lambda, d.lp.phi);
-      this.mapView.setViewCenterPoint(d.viewPos[0], d.viewPos[1]);
+      currPos = this.viewStatus.interpolater.getPos(currTime);
+      this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
+      this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
       this.viewStatus.interpolater.isFinished() && (this.viewStatus.interpolater = null);
     } else if (null != this.viewStatus.targetLambdaPhi) {
-      var e = this.mapView.getViewCenterPoint();
-      var f = this.mapView.getProjCenter();
-      var g = this.viewStatus.targetLambdaPhi;
+      var center = this.mapView.getViewCenterPoint();
+      var currLambdaPhi = this.mapView.getProjCenter();
+      var targLambdaPhi = this.viewStatus.targetLambdaPhi;
       this.viewStatus.interpolater = Interpolater.create(
-        f,
-        g,
-        e,
+        currLambdaPhi,
+        targLambdaPhi,
+        center,
         [0, 0],
         this.interpolateTimeSpan
       );
       this.viewStatus.targetLambdaPhi = null;
       if (null != this.viewStatus.interpolater) {
-        d = this.viewStatus.interpolater.getPos(currTime);
-        this.mapView.setProjCenter(d.lp.lambda, d.lp.phi);
-        this.mapView.setViewCenterPoint(d.viewPos[0], d.viewPos[1]);
+        currPos = this.viewStatus.interpolater.getPos(currTime);
+        this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
+        this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
       }
     }
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
@@ -119,7 +119,7 @@ var Main = function () {
       rootNumY: 1,
       rootTileSizeX: Math.PI,
       rootTileSizeY: Math.PI,
-      numLevels: 4,
+      numLevels: 6,
       tileOrigin: [-Math.PI, -Math.PI / 2],
       inverseY: false,
     };
@@ -140,8 +140,22 @@ var Main = function () {
       var c = window[2] - window[0];
       var d = window[3] - window[1];
       var e = Math.sqrt(c * d);
-      return Math.PI <= e ? 0 : Math.PI / 2 <= e ? 1 : Math.PI / 4 <= e ? 2 : 3;
-    };
+      if (e > Math.PI) {
+        return 0;
+      } else if (e > Math.PI / 2) {
+        return 1;
+      } else if (e > Math.PI / 4) {
+        return 2;
+      } else if (e > Math.PI / 8) {
+        return 3;
+      } else if (e > Math.PI / 16) {
+        return 4;
+      } else {
+        return 5;
+      }
+    }
+    //   return Math.PI <= e ? 0 : Math.PI / 2 <= e ? 1 : Math.PI / 4 <= e ? 2 : 3;
+    // };
 
     var j = this.mapView.getViewRect();
     var k = (j[2] - j[0]) / 2; //radius (pi)
