@@ -127,7 +127,7 @@ ShaderProgram.prototype.setRenderType = function(type) {
   this.gl_.uniform1i(this.locRenderType_, type);
 };
 
-ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0, alpha, lineColor, scale) {
+ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0, alpha, lineColor, zoomScale) {
   this.gl_.useProgram(this.program_);
 
   this.gl_.uniform1f(this.locAlpha_, alpha);
@@ -136,7 +136,7 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
   this.gl_.uniform2f(this.locViewXY1_, viewRect[0], viewRect[1]);
   this.gl_.uniform2f(this.locViewXY2_, viewRect[2], viewRect[3]);
   this.gl_.uniform1i(this.locTexture_, 0);
-  this.gl_.uniform1f(this.locUnifScale_, scale);
+  this.gl_.uniform1f(this.locUnifScale_, zoomScale);
 
   if ( this.locTranslateY_ != null ) {
     this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自 Original

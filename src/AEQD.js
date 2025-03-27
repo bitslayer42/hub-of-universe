@@ -23,7 +23,7 @@ var AEQD = function(lam0, phi0, opt_divn) {
   this.dMath_ = new ProjDiscreteMath(this.divN_);
   this.sin_phi0_ = Math.sin(phi0);
   this.cos_phi0_ = Math.cos(phi0);
-  this.scale = 0.01;
+  this.zoomScale = 0.01;
 };
 
 /**
@@ -76,7 +76,7 @@ AEQD.prototype.fisheye = function(x, y) {
   [x, y] = [x / Math.PI, y / Math.PI];
   let rho = Math.sqrt(x*x + y*y);
   let theta = Math.atan2(y, x);
-  let fisheyeR = (Math.exp(rho * Math.log(1.0 + this.scale)) - 1.0) / this.scale;
+  let fisheyeR = (Math.exp(rho * Math.log(1.0 + this.zoomScale)) - 1.0) / this.zoomScale;
   return [ Math.cos(theta) * fisheyeR * Math.PI, Math.sin(theta) * fisheyeR * Math.PI ];
 }
 
@@ -411,8 +411,8 @@ AEQD.prototype.inversePhiAtX_ = function(y_idx, x) {
   return [ Math.asin(t_min), Math.asin(t_max) ];
 };
 
-AEQD.prototype.setScale = function(scale) {
-  this.scale = scale;
+AEQD.prototype.setScale = function(zoomScale) {
+  this.zoomScale = zoomScale;
 }
 /* -------------------------------------------------------------------------- */
 export { AEQD };

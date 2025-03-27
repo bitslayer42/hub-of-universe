@@ -107,5 +107,22 @@ ProjMath.neighborPoint = function(pt1, pt2) {
   return Math.abs(lam1 - lam2) < ProjMath.EPSILON;
 };
 
+
+ProjMath.sphericalDistance = function(pt1, pt2) {
+  let distance = Math.acos(
+    (Math.sin(pt1.phi) * Math.sin(pt2.phi)) +
+    (Math.cos(pt1.phi) * Math.cos(pt2.phi) *
+     Math.cos( ProjMath.normalizeLambda(pt2.lambda - pt1.lambda) )) 
+  );
+  return distance;
+  // var dphi = Math.abs(pt1.phi - pt2.phi);
+  // var dlam = Math.abs( ProjMath.normalizeLambda(pt1.lambda - pt2.lambda) );
+  // if (dphi < ProjMath.EPSILON && dlam < ProjMath.EPSILON) {
+  //   return 0.0;
+  // }
+  // return Math.sqrt( dphi * dphi + Math.cos(pt1.phi) * Math.cos(pt2.phi) * dlam * dlam );
+};
 /* -------------------------------------------------------------------------- */
 export { ProjMath };
+
+// d  =  r · arccos (sin φA sin φB + cos φA cos φB cos (λB - λA))

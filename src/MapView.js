@@ -14,21 +14,20 @@ import { ImageCache } from "./lib/ImageCache.js";
  * Map View
  * @param {object} gl
  * @param {object} RasterAEQD or RasterProjLAEA
- * @param {number} numLevels
+ * @param {number} ??
  * @constructor
  */
 var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.gl = gl;
   this.imageProj = imgProj;
-  //
+
   var viewWindowOpts = {
-    zoomInLimit: Math.PI / 40.0,
-    zoomOutLimit: Math.PI // * 20
+    // not used
   };
   var rangeRect = this.imageProj.projection.getRange();
   this.viewWindowManager_ = new ViewWindowManager(rangeRect, canvasSize, viewWindowOpts);
   //
-  this.tileManager = new TileManager(tile_opts);
+  this.tileManager = new TileManager(tile_opts, this.imageProj);
   this.prevTileInfos_ = null;
   this.prevWindow_ = null;
   //
@@ -42,8 +41,9 @@ var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.centerIconSize_ = null;  //  iconSize: { width:, height: } [pixel]
   //
   this.graticuleInterval = 0;   //  (default 20) If it is 0 or less do not draw latitude and longitude lines 0以下の場合は緯度経度線を描画しない
-  this.createUrl = null;
+  this.getURL = null;
   this.calculateLevel = null;
+  this.currTileLevel = 0;
 };
 
 MapView.prototype.clearTileInfoCache_ = function() {
@@ -78,13 +78,13 @@ MapView.prototype.moveWindow = function(dx, dy) {
   this.viewWindowManager_.moveWindow(dx, dy);
 };
 
-MapView.prototype.zoomWindow = function(dz) {
-  this.viewWindowManager_.zoomWindow(dz);
+MapView.prototype.setTileLevel = function(currTileLevel) {
+  this.currTileLevel = currTileLevel;
 };
 
-MapView.prototype.getViewCenterPoint = function() {
-  return this.viewWindowManager_.getViewWindowCenter();
-};
+// MapView.prototype.getViewCenterPoint = function() {
+//   return this.viewWindowManager_.getViewWindowCenter();
+// };
 
 MapView.prototype.setViewCenterPoint = function(cx, cy) {
   this.viewWindowManager_.setViewWindowCenter(cx, cy);
@@ -102,17 +102,17 @@ MapView.prototype.resetImages = function() {
   this.imageCache.clearOngoingImageLoads();
 };
 
-
+// Called from init
 MapView.prototype.requestImagesIfNecessary = function() {
-  if ( this.createUrl == null )   return -1;
+  if ( this.getURL == null )   return -1;
   var tileInfos = this.getTileInfos_();
   var count = this.requestImages_(tileInfos);
   return count;
 };
 
-
+// Called from animation
 MapView.prototype.render = function() {
-  if ( this.createUrl == null )   return;
+  if ( this.getURL == null )   return;
   var tileInfos = this.getTileInfos_();
   this.requestImages_(tileInfos);
   this.render_(tileInfos);
@@ -146,10 +146,10 @@ MapView.prototype.getTileInfos_ = function() {
     }
     this.prevTileInfos_ = null;
     this.prevWindow_ = null;
-  }
+  } 
   var dataRect = this.imageProj.projection.inverseBoundingBox(window[0], window[1], window[2], window[3]);
-  var level = (this.calculateLevel != null) ? this.calculateLevel(window, dataRect) : 0;
-  var tileInfos = this.tileManager.getTileInfos(dataRect.lambda, dataRect.phi, level, this.createUrl);
+  // var tileInfos = this.tileManager.getTileInfosBAK(dataRect.lambda, dataRect.phi, 0, this.getURL);
+  var tileInfos = this.tileManager.getTileInfos(dataRect.lambda, dataRect.phi, this.currTileLevel, this.getURL);
   this.prevWindow_ = window;
   this.prevTileInfos_ = tileInfos;
   return tileInfos;
@@ -183,15 +183,15 @@ MapView.prototype.render_ = function(tileInfos) {
   if ( 0 < targetTextures.length ) {
     this.imageProj.renderTextures(targetTextures);
   }
-  if ( 0 < this.graticuleInterval ) {
-    this.imageProj.renderGraticule(this.viewWindowManager_.rect, this.graticuleInterval);
-  }
-  //
-  if ( this.centerIcon_ ) {
-    var iconSize = this.viewWindowManager_.getNormalizedSize(this.centerIconSize_);
-    this.imageProj.prepareRender(texCoords, this.viewWindowManager_.rect);
-    this.imageProj.renderOverlays(this.centerIcon_, iconSize);
-  }
+  // if ( 0 < this.graticuleInterval ) {
+  //   this.imageProj.renderGraticule(this.viewWindowManager_.rect, this.graticuleInterval);
+  // }
+  // //
+  // if ( this.centerIcon_ ) {
+  //   var iconSize = this.viewWindowManager_.getNormalizedSize(this.centerIconSize_);
+  //   this.imageProj.prepareRender(texCoords, this.viewWindowManager_.rect);
+  //   this.imageProj.renderOverlays(this.centerIcon_, iconSize);
+  // }
 };
 
 

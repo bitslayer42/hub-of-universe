@@ -55,17 +55,6 @@ var ViewWindowManager = function(viewRect, canvasSize, opts) {
   this.canvasSize = { width: canvasSize.width, height: canvasSize.height };  //  TODO assert?
   //
   this.viewRect_ = viewRect;   // 投影後の全体領域, projに依存する定数 Constant depending on the entire region after projection 
-  this.zoomInLimit_ = null;
-  this.zoomOutLimit_ = null;
-  //
-  if (typeof opts !== 'undefined') {
-    if ('zoomInLimit' in opts) {
-      this.zoomInLimit_ = opts.zoomInLimit;
-    }
-    if ('zoomOutLimit' in opts) {
-      this.zoomOutLimit_ = opts.zoomOutLimit;
-    }
-  }
   //
   this.rect = this.getViewRect();
 };
@@ -97,11 +86,11 @@ ViewWindowManager.prototype.setViewWindowCenter = function(cx, cy) {
   this.rect = [ cx-w, cy-h, cx+w, cy+h ];
 };
 
-ViewWindowManager.prototype.getViewWindowCenter = function() {
-  var x = (this.rect[2] + this.rect[0]) / 2;
-  var y = (this.rect[3] + this.rect[1]) / 2;
-  return [x, y];
-};
+// ViewWindowManager.prototype.getViewWindowCenter = function() {
+//   var x = (this.rect[2] + this.rect[0]) / 2;
+//   var y = (this.rect[3] + this.rect[1]) / 2;
+//   return [x, y];
+// };
 
 ViewWindowManager.prototype.moveWindow = function(dx, dy) {    //pan
   var tx = - dx * (this.rect[2] - this.rect[0]) / this.canvasSize.width;
@@ -113,22 +102,19 @@ ViewWindowManager.prototype.moveWindow = function(dx, dy) {    //pan
   this.rect = [ x1, y1, x2, y2 ];
 };
 
-ViewWindowManager.prototype.zoomWindow = function(dz) {
-  //  画面上でのY方向の長さをdzピクセル分だけ絞り込んだ部分の領域に拡大表示する。
-  //  X方向はそれに合わせて等縮尺で拡大する。
-  //. Zoom in the Y direction length on the screen to the area of ​​the portion that is narrowed down by dz pixels
-  //  The X direction is enlarged on an equal scale correspondingly.
-  var s = (this.canvasSize.height - dz) / this.canvasSize.height;
-  var w = s * (this.rect[2] - this.rect[0]) / 2;
-  var h = s * (this.rect[3] - this.rect[1]) / 2;
-  var cx = (this.rect[2] + this.rect[0]) / 2;
-  var cy = (this.rect[3] + this.rect[1]) / 2;
+// ViewWindowManager.prototype.zoomWindow = function(dz) {
+//   //  画面上でのY方向の長さをdzピクセル分だけ絞り込んだ部分の領域に拡大表示する。
+//   //  X方向はそれに合わせて等縮尺で拡大する。
+//   //. Zoom in the Y direction length on the screen to the area of ​​the portion that is narrowed down by dz pixels
+//   //  The X direction is enlarged on an equal scale correspondingly.
+//   var s = (this.canvasSize.height - dz) / this.canvasSize.height;
+//   var w = s * (this.rect[2] - this.rect[0]) / 2;
+//   var h = s * (this.rect[3] - this.rect[1]) / 2;
+//   var cx = (this.rect[2] + this.rect[0]) / 2;
+//   var cy = (this.rect[3] + this.rect[1]) / 2;
 
-  if ( this.zoomInLimit_ != null && (w < this.zoomInLimit_ || h < this.zoomInLimit_) )  return;
-  if ( this.zoomOutLimit_ != null && (this.zoomOutLimit_ < w || this.zoomOutLimit_ < h) )  return;
-
-  this.rect = [ cx-w, cy-h, cx+w, cy+h ];
-};
+//   this.rect = [ cx-w, cy-h, cx+w, cy+h ];
+// };
 
 ViewWindowManager.prototype.getViewPointFromWindow = function(x, y) {
   var trans = new CoordTransform([0, this.canvasSize.height, this.canvasSize.width, 0], this.rect);

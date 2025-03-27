@@ -24,10 +24,10 @@ const RasterAEQD = function() {
   this.graticuleColor_ = { r: 0.88, g: 0.88, b: 0.88, a: 1.0};
   this.alpha_ = 1.0;
   //
-  this.projection = new AEQD(0.0, 0.0);   // public
+  this.projection = new AEQD(0.0, 0.0);   // public JON: why is this here?
   //
   this.numberOfPoints = 64;
-  this.scale = 0.01; // 0 > scale >= 40
+  this.zoomScale = 0.01; // 0 > zoomScale >= 40
 };
 
 RasterAEQD.prototype.init = function(gl) {
@@ -56,7 +56,7 @@ RasterAEQD.prototype.clear = function(canvasSize) {
 };
 
 RasterAEQD.prototype.prepareRender = function(texCoords, viewRect) {
-  this.shader_.prepareRender(viewRect, texCoords, this.projection.lam0, this.projection.phi0, this.alpha_, this.graticuleColor_, this.scale);
+  this.shader_.prepareRender(viewRect, texCoords, this.projection.lam0, this.projection.phi0, this.alpha_, this.graticuleColor_, this.zoomScale);
 };
 
 // c- Renders textures at locations specified in textureInfos
@@ -75,9 +75,9 @@ RasterAEQD.prototype.renderOverlays = function(centerIcon, iconSize) {
   this.shader_.renderIconTexture(centerIcon, iconSize, { x:0.0, y:0.0});
 };
 
-RasterAEQD.prototype.setScale = function(scale) {
-  this.scale = scale;
-  this.projection.setScale(scale);
+RasterAEQD.prototype.setScale = function(zoomScale) {
+  this.zoomScale = zoomScale;
+  this.projection.setScale(zoomScale);
 }
 
 RasterAEQD.VERTEX_SHADER_STR = `
@@ -108,7 +108,7 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
   uniform vec2 uFixedTextureSize;    //  アイコンサイズ（画面比） Icon size (screen ratio)
   uniform vec4 uRenderColor;
   uniform float uAlpha;
-  uniform float uScale;       //  スケール zoom in scale
+  uniform float uScale;       //  スケール zoomScale
 
   const float pi = 3.14159265;
   const float epsilon = 0.00000001;
