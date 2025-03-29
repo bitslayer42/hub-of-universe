@@ -31,17 +31,19 @@ var Main = function () {
   this.zoomMax = 40.0;
   this.maxTileLevel = 6; // tile levels 0 to maxTileLevel
   this.imageProj = null;
+
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
     this.resizeCanvas(this.canvas);
 
     this.imageProj = new RasterAEQD();
+    // this.imageProj.setCenterAndZoom(this.lam0, this.phi0, this.viewStatus.zoomScale);
+    this.imageProj.setScale(this.viewStatus.zoomScale);
     //imageProj is a RasterAEQD
     this.startup(this.imageProj); // sets up this.canvas, webgl, and hammer, and calls init
     this.animation(); // starts animation
 
     this.getProjCenterParameter(); // check for url params
-    this.imageProj.setProjCenter(this.lam0, this.phi0);
   });
 
   this.animation = () => {
@@ -52,9 +54,6 @@ var Main = function () {
     }
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
-
-    // console.log("currTileLevel: " + this.viewStatus.currTileLevel);
-    // console.log("zoomScale: " + this.viewStatus.zoomScale);
 
     var currPos;
     if (this.viewStatus.interpolater != null) { // Interpolater is running
@@ -112,19 +111,17 @@ var Main = function () {
     mc.on("tap", this.handleDoubleTap);
 
     window.WheelEvent && document.addEventListener("wheel", this.handleWheel, false);
-    document.querySelector("header").addEventListener("click", (e) => {
-      e.preventDefault();
-      var phi0 = 0.0; //35.32 * 0.0174533; // +Math.PI/2; //north pole
-      var lam0 = 0.0; //-82.48 * 0.0174533;
-      this.viewStatus.targetLambdaPhi = { lambda: lam0, phi: phi0 }
-    });
+    // document.querySelector("header").addEventListener("click", (e) => {
+    //   e.preventDefault();
+    //   var phi0 = 0.0; //35.32 * 0.0174533; // +Math.PI/2; //north pole
+    //   var lam0 = 0.0; //-82.48 * 0.0174533;
+    //   this.viewStatus.targetLambdaPhi = { lambda: lam0, phi: phi0 }
+    // });
     this.init(imageProj);
   };
 
   this.init = (imageProj) => {
     //imageProj is a RasterAEQD
-    // var lam0 = 0; //map center longitude
-    // var phi0 = Math.PI / 2; //map center latitude
     var canvasInfo = this.canvas.getBoundingClientRect(); //read-only left, top, right, bottom, x, y, width, height properties of this.canvas
     var tile_opts = {
       rootNumX: 2,
@@ -139,7 +136,6 @@ var Main = function () {
       num: 50,
     };
 
-    imageProj.setScale(this.viewStatus.zoomScale);
     imageProj.init(this.gl);
     imageProj.setProjCenter(this.lam0, this.phi0);
     var canvasSize = {
@@ -175,14 +171,14 @@ var Main = function () {
   //  If url includes ?projCenter=lat,log in degrees map will be centered there
   // //  e.g. http://localhost:8080/?projCenter=35.32,-82.48
   this.getProjCenterParameter = () => {
-    let params = new URLSearchParams(document.location.search);
-    let latLonStr = params.get("projCenter");
-    if (latLonStr) {
-      var latLon = latLonStr.split(",");
-      if (latLon.length < 2) return null;
-      var latDeg = parseFloat(latLon[0]),
-        lonDeg = parseFloat(latLon[1]);
-      if (isNaN(latDeg) || isNaN(lonDeg)) return null;
+      let params = new URLSearchParams(document.location.search);
+      let latLonStr = params.get("projCenter");
+      if (latLonStr) {
+        var latLon = latLonStr.split(",");
+        if (latLon.length < 2) return null;
+        var latDeg = parseFloat(latLon[0]),
+          lonDeg = parseFloat(latLon[1]);
+        if (isNaN(latDeg) || isNaN(lonDeg)) return null;
       this.phi0 = (latDeg * Math.PI) / 180; //degrees to radians
       this.lam0 = (lonDeg * Math.PI) / 180;
     }

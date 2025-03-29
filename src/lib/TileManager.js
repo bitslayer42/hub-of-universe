@@ -176,7 +176,7 @@ TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel
       });
     }
   }
-  var tileTree = this.zoomInTiles(tileInfos, currTileLevel);
+  var tileTree = tileInfos; // this.zoomInTiles(tileInfos, currTileLevel);
   let arrTiles = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
   return arrTiles;
 };

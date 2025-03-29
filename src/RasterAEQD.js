@@ -24,7 +24,7 @@ const RasterAEQD = function() {
   this.graticuleColor_ = { r: 0.88, g: 0.88, b: 0.88, a: 1.0};
   this.alpha_ = 1.0;
   //
-  this.projection = new AEQD(0.0, 0.0);   // public JON: why is this here?
+  this.projection = new AEQD(0.0, 0.0);   // public
   //
   this.numberOfPoints = 64;
   this.zoomScale = 0.01; // 0 > zoomScale >= 40
@@ -108,7 +108,7 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
   uniform vec2 uFixedTextureSize;    //  アイコンサイズ（画面比） Icon size (screen ratio)
   uniform vec4 uRenderColor;
   uniform float uAlpha;
-  uniform float uScale;       //  スケール zoomScale
+  uniform float uScale;       //  スケール zoom in zoomScale
 
   const float pi = 3.14159265;
   const float epsilon = 0.00000001;
