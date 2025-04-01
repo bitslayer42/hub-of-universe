@@ -24,7 +24,7 @@ const RasterAEQD = function() {
   this.graticuleColor_ = { r: 0.88, g: 0.88, b: 0.88, a: 1.0};
   this.alpha_ = 1.0;
   //
-  this.projection = new AEQD(0.0, 0.0);   // public
+  this.projection = new AEQD(0.0, 0.0, 0.01);   // public
   //
   this.numberOfPoints = 64;
   this.zoomScale = 0.01; // 0 > zoomScale >= 40
@@ -48,7 +48,7 @@ RasterAEQD.prototype.setAlpha = function(alpha) {
 };
 
 RasterAEQD.prototype.setProjCenter = function(lam0, phi0) {
-  this.projection = new AEQD(lam0, phi0);
+  this.projection = new AEQD(lam0, phi0, this.zoomScale);
 };
 
 RasterAEQD.prototype.clear = function(canvasSize) {

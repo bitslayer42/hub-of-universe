@@ -18,7 +18,6 @@ var TileManager = function (tile_opts, imgProj) {
   this.rootNumY = 1;
   this.rootTileSizeX = Math.PI;
   this.rootTileSizeY = Math.PI;
-  this.maxTileLevel = 1;
   this.inverseY = false;
   this.tileOrigin = [-Math.PI, -Math.PI / 2];     // lower left
   this.imageProj = imgProj;
@@ -37,9 +36,6 @@ var TileManager = function (tile_opts, imgProj) {
     }
     if ('tileSizeY' in tile_opts) {
       this.rootTileSizeY = tile_opts.rootTileSizeY;
-    }
-    if ('maxTileLevel' in tile_opts) {
-      this.maxTileLevel = tile_opts.maxTileLevel;
     }
     if ('inverseY' in tile_opts) {
       this.inverseY = tile_opts.inverseY;   //  TODO booleanへの型変換. Type conversion
@@ -176,7 +172,7 @@ TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel
       });
     }
   }
-  var tileTree = tileInfos; // this.zoomInTiles(tileInfos, currTileLevel);
+  var tileTree = this.zoomInTiles(tileInfos, currTileLevel);
   let arrTiles = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
   return arrTiles;
 };

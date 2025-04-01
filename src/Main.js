@@ -22,14 +22,14 @@ var Main = function () {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 20.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 0.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
   this.zoomMax = 40.0;
-  this.maxTileLevel = 6; // tile levels 0 to maxTileLevel
+  this.maxTileLevel = 3; // tile levels 0 to maxTileLevel
   this.imageProj = null;
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -128,7 +128,7 @@ var Main = function () {
       rootNumY: 1,
       rootTileSizeX: Math.PI,
       rootTileSizeY: Math.PI,
-      maxTileLevel: this.maxTileLevel,
+      // maxTileLevel: this.maxTileLevel,
       tileOrigin: [-Math.PI, -Math.PI / 2],
       inverseY: false,
     };
@@ -171,14 +171,14 @@ var Main = function () {
   //  If url includes ?projCenter=lat,log in degrees map will be centered there
   // //  e.g. http://localhost:8080/?projCenter=35.32,-82.48
   this.getProjCenterParameter = () => {
-      let params = new URLSearchParams(document.location.search);
-      let latLonStr = params.get("projCenter");
-      if (latLonStr) {
-        var latLon = latLonStr.split(",");
-        if (latLon.length < 2) return null;
-        var latDeg = parseFloat(latLon[0]),
-          lonDeg = parseFloat(latLon[1]);
-        if (isNaN(latDeg) || isNaN(lonDeg)) return null;
+    let params = new URLSearchParams(document.location.search);
+    let latLonStr = params.get("projCenter");
+    if (latLonStr) {
+      var latLon = latLonStr.split(",");
+      if (latLon.length < 2) return null;
+      var latDeg = parseFloat(latLon[0]),
+        lonDeg = parseFloat(latLon[1]);
+      if (isNaN(latDeg) || isNaN(lonDeg)) return null;
       this.phi0 = (latDeg * Math.PI) / 180; //degrees to radians
       this.lam0 = (lonDeg * Math.PI) / 180;
     }

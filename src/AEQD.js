@@ -15,7 +15,8 @@ import { ProjMath } from "./lib/ProjMath.js";
  * @param {object} option (divN)
  * @constructor
  */
-var AEQD = function(lam0, phi0, opt_divn) {
+var AEQD = function(lam0, phi0, zoomScale, opt_divn) {
+  this.rando = Math.random();
   this.lam0 = lam0;
   this.phi0 = phi0;
   this.divN_ = (typeof opt_divn !== 'undefined') ? opt_divn : 180;
@@ -23,7 +24,7 @@ var AEQD = function(lam0, phi0, opt_divn) {
   this.dMath_ = new ProjDiscreteMath(this.divN_);
   this.sin_phi0_ = Math.sin(phi0);
   this.cos_phi0_ = Math.cos(phi0);
-  this.zoomScale = 0.01;
+  this.zoomScale = zoomScale;
 };
 
 /**
@@ -38,6 +39,22 @@ AEQD.prototype.getRange = function() {
 AEQD.prototype.getProjCenter = function() {
   return { lambda: this.lam0, phi: this.phi0 };
 };
+
+AEQD.prototype.setProjCenter = function(lam0, phi0) {
+  this.lam0 = lam0;
+  this.phi0 = phi0;
+  this.sin_phi0_ = Math.sin(phi0);
+  this.cos_phi0_ = Math.cos(phi0);
+}
+
+AEQD.prototype.setScale = function(zoomScale) {
+  this.zoomScale = zoomScale;
+}
+
+// AEQD.prototype.setCenterAndZoom = function(lam0, phi0, zoomScale) {
+//   this.setScale(zoomScale);
+//   this.setProjCenter(lam0, phi0);
+// };
 
 /**
  * Forward projection.
