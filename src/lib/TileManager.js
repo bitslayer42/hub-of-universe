@@ -64,29 +64,33 @@ TileManager.prototype.subdivideTile = function (tile) {
   var y1 = tile.rect[1];
   var x2 = tile.rect[2];
   var y2 = tile.rect[3];
-  var xMid = (x1 + x2) / 2;
-  var yMid = (y1 + y2) / 2;
+  var xHalf = (x1 + x2) / 2;
+  var yHalf = (y1 + y2) / 2;
   var [ix, iy, iz] = [tile.xyz.x, tile.xyz.y, tile.xyz.z];
   //  subdivide tile into 4 tiles
   arrTiles.push({
     xyz: {x: ix * 2, y: iy * 2, z: iz + 1},
-    rect: [x1, y1, xMid, yMid],
-    url: this.getUrl(iz + 1, ix * 2, iy * 2)
+    rect: [x1, y1, xHalf, yHalf],
+    url: this.getUrl(iz + 1, ix * 2, iy * 2),
+    mid: { lam:(x1 + xHalf) / 2, phi: (y1 + yHalf) / 2 },
   });
   arrTiles.push({
     xyz: {x: ix * 2 + 1, y: iy * 2, z: iz + 1},
-    rect: [xMid, y1, x2, yMid],
-    url: this.getUrl(iz + 1, ix * 2 + 1, iy * 2)
+    rect: [xHalf, y1, x2, yHalf],
+    url: this.getUrl(iz + 1, ix * 2 + 1, iy * 2),
+    mid: { lam:(xHalf + x2) / 2, phi: (y1 + yHalf) / 2 },
   });
   arrTiles.push({
     xyz: {x: ix * 2, y: iy * 2 + 1, z: iz + 1},
-    rect: [x1, yMid, xMid, y2],
-    url: this.getUrl(iz + 1, ix * 2, iy * 2 + 1)
+    rect: [x1, yHalf, xHalf, y2],
+    url: this.getUrl(iz + 1, ix * 2, iy * 2 + 1),
+    mid: { lam:(x1 + xHalf) / 2, phi: (yHalf + y2) / 2 },
   });
   arrTiles.push({
     xyz: {x: ix * 2 + 1, y: iy * 2 + 1, z: iz + 1},
-    rect: [xMid, yMid, x2, y2],
-    url: this.getUrl(iz + 1, ix * 2 + 1, iy * 2 + 1)
+    rect: [xHalf, yHalf, x2, y2],
+    url: this.getUrl(iz + 1, ix * 2 + 1, iy * 2 + 1),
+    mid: { lam:(xHalf + x2) / 2, phi: (yHalf + y2) / 2 },
   });
 
   tile.children = arrTiles;
@@ -97,12 +101,10 @@ TileManager.prototype.subdivideTile = function (tile) {
 TileManager.prototype.zoomInTiles = function (tileInfos) { 
   let retTiles = [];
   for (const tile of tileInfos) {
-    let tileMidLam = (tile.rect[0] + tile.rect[2]) / 2;
-    let tileMidPhi = (tile.rect[1] + tile.rect[3]) / 2;
-    let xy = this.imageProj.projection.forward(tileMidLam, tileMidPhi);
+    let xy = this.imageProj.projection.forward(tile.mid.lam, tile.mid.phi);
     let radius = Math.sqrt(xy.x * xy.x + xy.y * xy.y);
 
-    if (radius < Math.PI / (tile.xyz.z + 2) && tile.xyz.z < this.currTileLevel) {
+    if (radius < Math.PI / (tile.xyz.z + 0) && tile.xyz.z < this.currTileLevel) {
       let tilewkids = this.subdivideTile(tile);
         retTiles.push(this.zoomInTiles(tilewkids.children));
     } else {
@@ -164,6 +166,7 @@ TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel
         url: str,
         rect: [x1, y1, x2, y2],
         xyz: {x:ix, y:iy, z:startLevel},
+        mid: { lam:(x1 + x2) / 2, phi: (y1 + y2) / 2 },
       });
     }
   }

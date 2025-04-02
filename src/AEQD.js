@@ -89,7 +89,7 @@ AEQD.prototype.forward = function(lambda, phi) {
   var k = c / sin_c;
   var x = k * cos_phi * sin_lam;
   var y = k * ( this.cos_phi0_ * sin_phi - this.sin_phi0_ * cos_phi * cos_lam );
-  // [x, y] = this.fwd_fisheye(x, y);
+  [x, y] = this.fwd_fisheye(x, y);
   return { x:x, y:y };
 };
 
