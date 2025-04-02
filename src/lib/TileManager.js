@@ -97,23 +97,18 @@ TileManager.prototype.subdivideTile = function (tile) {
 TileManager.prototype.zoomInTiles = function (tileInfos) { 
   let retTiles = [];
   for (const tile of tileInfos) {
-    let tileCenterX = (tile.rect[0] + tile.rect[2]) / 2;
-    let tileCenterY = (tile.rect[1] + tile.rect[3]) / 2;
-    console.log("tileCenter", tileCenterX, tileCenterY);
-    let lambdaPhi = this.imageProj.projection.inverse(tileCenterX, tileCenterY);
-    // let projCenter = this.imageProj.projection.getProjCenter();
-    console.assert(lambdaPhi !== null, [tileCenterX, tileCenterY]);
-    // let radius = ProjMath.sphericalDistance(projCenter, lambdaPhi);
-    let radius = Math.sqrt(lambdaPhi.lambda * lambdaPhi.lambda + lambdaPhi.phi * lambdaPhi.phi);
+    let tileMidLam = (tile.rect[0] + tile.rect[2]) / 2;
+    let tileMidPhi = (tile.rect[1] + tile.rect[3]) / 2;
+    let xy = this.imageProj.projection.forward(tileMidLam, tileMidPhi);
+    let radius = Math.sqrt(xy.x * xy.x + xy.y * xy.y);
 
-    if (radius > Math.PI / (tile.xyz.z + 2) && tile.xyz.z < this.currTileLevel) { //// should be < ???!!!!!!!!!!!!!!!!!!
+    if (radius < Math.PI / (tile.xyz.z + 2) && tile.xyz.z < this.currTileLevel) {
       let tilewkids = this.subdivideTile(tile);
         retTiles.push(this.zoomInTiles(tilewkids.children));
     } else {
       retTiles.push(tile);
     }
   };
-      console.log("zoom", retTiles.map(t=>t.xyz?`${t.xyz.x}-${t.xyz.y}-${t.xyz.z}`:t), this.currTileLevel, new Date().getTime());
   return retTiles;
 };
 
@@ -172,7 +167,7 @@ TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel
       });
     }
   }
-  var tileTree = this.zoomInTiles(tileInfos, currTileLevel);
+  var tileTree = this.zoomInTiles(tileInfos);
   let arrTiles = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
   return arrTiles;
 };

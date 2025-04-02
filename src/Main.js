@@ -22,14 +22,14 @@ var Main = function () {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 0.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 20.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
   this.zoomMax = 40.0;
-  this.maxTileLevel = 3; // tile levels 0 to maxTileLevel
+  this.maxTileLevel = 5; // tile levels 0 to maxTileLevel
   this.imageProj = null;
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -37,7 +37,6 @@ var Main = function () {
     this.resizeCanvas(this.canvas);
 
     this.imageProj = new RasterAEQD();
-    // this.imageProj.setCenterAndZoom(this.lam0, this.phi0, this.viewStatus.zoomScale);
     this.imageProj.setScale(this.viewStatus.zoomScale);
     //imageProj is a RasterAEQD
     this.startup(this.imageProj); // sets up this.canvas, webgl, and hammer, and calls init
@@ -53,6 +52,7 @@ var Main = function () {
       this.prevTime = currTime;
     }
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
+    console.log("Current Tile Level: " + this.viewStatus.currTileLevel + " CurrZoomScale: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
 
     var currPos;

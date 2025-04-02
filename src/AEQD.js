@@ -51,10 +51,18 @@ AEQD.prototype.setScale = function(zoomScale) {
   this.zoomScale = zoomScale;
 }
 
-// AEQD.prototype.setCenterAndZoom = function(lam0, phi0, zoomScale) {
-//   this.setScale(zoomScale);
-//   this.setProjCenter(lam0, phi0);
-// };
+/**
+ * fisheye effect
+ * @param {} x 
+ * @param {} y
+ */
+AEQD.prototype.fwd_fisheye = function(x, y) { 
+  [x, y] = [x / Math.PI, y / Math.PI];
+  let rho = Math.sqrt(x*x + y*y);
+  let theta = Math.atan2(y, x);
+  let fisheyeR = Math.log(1 + this.zoomScale * rho) / Math.log(1 + this.zoomScale);
+  return [ Math.cos(theta) * fisheyeR * Math.PI, Math.sin(theta) * fisheyeR * Math.PI ];
+}
 
 /**
  * Forward projection.
@@ -81,15 +89,16 @@ AEQD.prototype.forward = function(lambda, phi) {
   var k = c / sin_c;
   var x = k * cos_phi * sin_lam;
   var y = k * ( this.cos_phi0_ * sin_phi - this.sin_phi0_ * cos_phi * cos_lam );
+  // [x, y] = this.fwd_fisheye(x, y);
   return { x:x, y:y };
 };
 
 /**
  * fisheye effect
- * @param {Point} y 
- * @param {Point}
+ * @param {} x 
+ * @param {} y
  */
-AEQD.prototype.fisheye = function(x, y) { 
+AEQD.prototype.inv_fisheye = function(x, y) { 
   [x, y] = [x / Math.PI, y / Math.PI];
   let rho = Math.sqrt(x*x + y*y);
   let theta = Math.atan2(y, x);
@@ -104,7 +113,7 @@ AEQD.prototype.fisheye = function(x, y) {
  * @param {GeoCoord}
  */
 AEQD.prototype.inverse = function(x, y) {
-  [x, y] = this.fisheye(x, y);
+  [x, y] = this.inv_fisheye(x, y);
 
   var rh2 = x * x + y * y;
   if ( ProjMath.PI_SQ < rh2 )   return null;

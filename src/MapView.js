@@ -148,7 +148,6 @@ MapView.prototype.getTileInfos_ = function() {
     this.prevWindow_ = null;
   } 
   var dataRect = this.imageProj.projection.inverseBoundingBox(window[0], window[1], window[2], window[3]);
-  // var tileInfos = this.tileManager.getTileInfosBAK(dataRect.lambda, dataRect.phi, 0, this.getURL);
   var tileInfos = this.tileManager.getTileInfos(dataRect.lambda, dataRect.phi, this.currTileLevel, this.getURL);
   this.prevWindow_ = window;
   this.prevTileInfos_ = tileInfos;
