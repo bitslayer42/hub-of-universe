@@ -15,6 +15,7 @@ var Main = function () {
   this.mapView = null;
   this.requestId = null;
   this.prevTime = null;
+  this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians
   this.lam0 = 45 * 0.0174533;
   this.phi0 = 0.0 * 0.0174533;
@@ -80,6 +81,11 @@ var Main = function () {
         this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
         this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
       }
+    }
+    if (this.prevScale != this.viewStatus.zoomScale) {
+      this.imageProj.setScale(this.viewStatus.zoomScale);
+      this.prevScale = this.viewStatus.zoomScale;
+      this.mapView.render();
     }
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
     this.mapView.render();
@@ -215,7 +221,7 @@ var Main = function () {
         this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale + event.scale - 1.0;
       }
       this.viewStatus.zoomScale = Math.min(Math.max(this.viewStatus.zoomMin, this.viewStatus.zoomScale), this.viewStatus.zoomMax);
-      this.imageProj.setScale(this.viewStatus.zoomScale);
+      // this.imageProj.setScale(this.viewStatus.zoomScale);
     }
   };
 
@@ -270,7 +276,7 @@ var Main = function () {
     if (canv_xy) {
       this.viewStatus.zoomScale += event.deltaY * -0.01;
       this.viewStatus.zoomScale = Math.min(Math.max(.01, this.viewStatus.zoomScale), 40.0);
-      this.imageProj.setScale(this.viewStatus.zoomScale);
+      // this.imageProj.setScale(this.viewStatus.zoomScale);
     }
   };
 

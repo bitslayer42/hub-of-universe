@@ -44,6 +44,7 @@ var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.getURL = null;
   this.calculateLevel = null;
   this.currTileLevel = 0;
+  this.prevTileLevel = null;
 };
 
 MapView.prototype.clearTileInfoCache_ = function() {
@@ -141,16 +142,19 @@ MapView.prototype.getTileInfos_ = function() {
   var window = this.viewWindowManager_.getViewWindow();
   if ( this.prevTileInfos_ != null && this.prevWindow_ != null ) {
     if (window[0] == this.prevWindow_[0] && window[1] == this.prevWindow_[1] &&
-      window[2] == this.prevWindow_[2] && window[3] == this.prevWindow_[3]) {
+      window[2] == this.prevWindow_[2] && window[3] == this.prevWindow_[3] &&
+      this.prevTileLevel == this.currTileLevel ) {
         return this.prevTileInfos_;  //  TODO clone?
     }
     this.prevTileInfos_ = null;
     this.prevWindow_ = null;
+    this.prevTileLevel = null;
   } 
   var dataRect = this.imageProj.projection.inverseBoundingBox(window[0], window[1], window[2], window[3]);
   var tileInfos = this.tileManager.getTileInfos(dataRect.lambda, dataRect.phi, this.currTileLevel, this.getURL);
   this.prevWindow_ = window;
   this.prevTileInfos_ = tileInfos;
+  this.prevTileLevel = this.currTileLevel;
   return tileInfos;
 };
 
