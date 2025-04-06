@@ -32,6 +32,7 @@ var Main = function () {
   this.zoomMax = 40.0;
   this.maxTileLevel = 5; // tile levels 0 to maxTileLevel
   this.imageProj = null;
+  this.debug = false;
 
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
@@ -140,6 +141,7 @@ var Main = function () {
     };
     var cache_opts = {
       num: 50,
+      debug: this.debug,
     };
 
     imageProj.init(this.gl);

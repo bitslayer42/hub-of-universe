@@ -27,13 +27,13 @@ var CoordTransform = function(src_coord_rect, dst_coord_rect) {
   this.scaleY_ = (dst_coord_rect[3] - dst_coord_rect[1]) / (src_coord_rect[3] - src_coord_rect[1]);
 };
 
-CoordTransform.prototype.scaleX = function() {
-  return this.scaleX_;
-};
+// CoordTransform.prototype.scaleX = function() {
+//   return this.scaleX_;
+// };
 
-CoordTransform.prototype.scaleY = function() {
-  return this.scaleY_;
-};
+// CoordTransform.prototype.scaleY = function() {
+//   return this.scaleY_;
+// };
 
 CoordTransform.prototype.forwardPoint = function(src_pos) {
   var x = this.dst_x1_ + (src_pos[0] - this.src_x1_) * this.scaleX_;
@@ -42,11 +42,11 @@ CoordTransform.prototype.forwardPoint = function(src_pos) {
 };
 
 
-CoordTransform.prototype.forwardRect = function(src_rect) {
-  var pt1 = this.forwardPoint([src_rect[0], src_rect[1]]);
-  var pt2 = this.forwardPoint([src_rect[2], src_rect[3]]);
-  return [pt1[0], pt1[1], pt2[0], pt2[1]];
-};
+// CoordTransform.prototype.forwardRect = function(src_rect) {
+//   var pt1 = this.forwardPoint([src_rect[0], src_rect[1]]);
+//   var pt2 = this.forwardPoint([src_rect[2], src_rect[3]]);
+//   return [pt1[0], pt1[1], pt2[0], pt2[1]];
+// };
 
 
 /* ------------------------------------------------------------ */
@@ -59,14 +59,14 @@ var ViewWindowManager = function(viewRect, canvasSize, opts) {
   this.rect = this.getViewRect();
 };
 
-ViewWindowManager.prototype.setCanvasSize = function(canvasWidth, canvasHeight) {
-  this.canvasSize.width = canvasWidth;
-  this.canvasSize.height = canvasHeight;
-};
+// ViewWindowManager.prototype.setCanvasSize = function(canvasWidth, canvasHeight) {
+//   this.canvasSize.width = canvasWidth;
+//   this.canvasSize.height = canvasHeight;
+// };
 
-ViewWindowManager.prototype.getCanvasSize = function() {
-  return { width: this.canvasSize.width, height: this.canvasSize.height };  //  copy
-};
+// ViewWindowManager.prototype.getCanvasSize = function() {
+//   return { width: this.canvasSize.width, height: this.canvasSize.height };  //  copy
+// };
 
 ViewWindowManager.prototype.getViewRect = function() {
   return this.viewRect_.slice(0);  //  投影後の全体領域 Absolute area after projection
@@ -92,7 +92,7 @@ ViewWindowManager.prototype.setViewWindowCenter = function(cx, cy) {
 //   return [x, y];
 // };
 
-ViewWindowManager.prototype.moveWindow = function(dx, dy) {    //pan
+ViewWindowManager.prototype.moveWindow = function(dx, dy) {    //THIS WILL GO AWAY
   var tx = - dx * (this.rect[2] - this.rect[0]) / this.canvasSize.width;
   var ty = dy * (this.rect[3] - this.rect[1]) / this.canvasSize.height;  //  画面座標の上下は逆 Upside down of screen coordinates
   var x1 = this.rect[0] + tx;
@@ -121,9 +121,9 @@ ViewWindowManager.prototype.getViewPointFromWindow = function(x, y) {
   return trans.forwardPoint([x, y]);
 };
 
-ViewWindowManager.prototype.getNormalizedSize = function(size) {
-  return { width: size.width / this.canvasSize.width, height: size.height / this.canvasSize.height };
-};
+// ViewWindowManager.prototype.getNormalizedSize = function(size) {
+//   return { width: size.width / this.canvasSize.width, height: size.height / this.canvasSize.height };
+// };
 
 /**
  * 
