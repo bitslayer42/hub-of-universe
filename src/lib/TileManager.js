@@ -121,54 +121,47 @@ TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel
   this.currTileLevel = currTileLevel;
   this.getUrl = getUrl;
   var startLevel = 0;
-  var tileNum = [this.rootNumX, this.rootNumY]; // this.getTileNum_(startLevel);
-  var numX = tileNum[0];
-  var numY = tileNum[1];
-  var idxX1 = this.getTileX_(numX, lamRange[0]);
-  var idxX2 = this.getTileX_(numX, lamRange[1]);
-
-  var idxY1, idxY2;
-  if (!this.inverseY) {
-    idxY1 = this.getTileY_(numY, phiRange[0]);
-    idxY2 = this.getTileY_(numY, phiRange[1]);
-  } else {
-    idxY1 = this.getTileY_(numY, phiRange[1]);
-    idxY2 = this.getTileY_(numY, phiRange[0]);
-  }
-
-  var tileInfos = [];
-
-  var iyMin = numY + 1;
-  for (var idxY = idxY1; idxY <= idxY2; ++idxY) {
-    var iy = idxY % numY;   //  正規化 normalization
-    if (iyMin == iy) break;
-    if (iy < iyMin) iyMin = iy;
-
-    var ixMin = numX + 1;
-    for (var idxX = idxX1; idxX <= idxX2; ++idxX) {
-      var ix = idxX % numX;   //  正規化 normalization
-      if (ixMin == ix) break;
-      if (ix < ixMin) ixMin = ix;
-
-      var str = this.getUrl(startLevel, ix, iy);
-      var x1 = (this.rootSizeX * ix / numX) + this.tileOrigin[0];
-      var x2 = (this.rootSizeX * (ix + 1) / numX) + this.tileOrigin[0];
-
-      var y1, y2;
-      if (!this.inverseY) {
-        y1 = (this.rootSizeY * iy / numY) + this.tileOrigin[1];
-        y2 = (this.rootSizeY * (iy + 1) / numY) + this.tileOrigin[1];
-      } else {
-        y1 = (-this.rootSizeY * (iy + 1) / numY) + this.tileOrigin[1];
-        y2 = (-this.rootSizeY * iy / numY) + this.tileOrigin[1];
+  var tileInfos = [
+    {
+      "url": "",
+      "rect": [
+        -3.141592653589793,
+        -1.5707963267948966,
+        0,
+        1.5707963267948966
+      ],
+      "xyz": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "mid": {
+        "lam": -1.5707963267948966,
+        "phi": 0
       }
-      tileInfos.push({
-        url: str,
-        rect: [x1, y1, x2, y2],
-        xyz: {x:ix, y:iy, z:startLevel},
-        mid: { lam:(x1 + x2) / 2, phi: (y1 + y2) / 2 },
-      });
+    },
+    {
+      "url": "",
+      "rect": [
+        0,
+        -1.5707963267948966,
+        3.141592653589793,
+        1.5707963267948966
+      ],
+      "xyz": {
+        "x": 1,
+        "y": 0,
+        "z": 0
+      },
+      "mid": {
+        "lam": 1.5707963267948966,
+        "phi": 0
+      }
     }
+  ];
+  for (const tile of tileInfos) {
+    var str = this.getUrl(startLevel, tile.xyz.x, tile.xyz.y);
+    tile.url = str;
   }
   var tileTree = this.zoomInTiles(tileInfos);
   let arrTiles = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
