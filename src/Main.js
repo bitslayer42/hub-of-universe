@@ -23,7 +23,7 @@ var Main = function () {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 20.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 0.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
@@ -48,13 +48,13 @@ var Main = function () {
   });
 
   this.animation = () => {
-    this.requestId = requestAnimationFrame(this.animation);
+  this.requestId = requestAnimationFrame(this.animation);
     var currTime = new Date().getTime();
     if (null == this.prevTime) {
       this.prevTime = currTime;
     }
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
-    console.log("Current Tile Level: " + this.viewStatus.currTileLevel + " CurrZoomScale: " + this.viewStatus.zoomScale);
+    console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
 
     var currPos;
@@ -158,7 +158,7 @@ var Main = function () {
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
       //return "http://www.flatearthlab.com/data/20120925/adb12292ed/NE2_50M_SR_W/" + z + "/" + x + "/" + y + ".png"
-      //https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/256/0/0/0?access_token=access_token
+      // return "https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/256/0/0/0?access_token=access_token"
       return "./images/" + z + "/" + x + "/" + y + ".png";
     };
 

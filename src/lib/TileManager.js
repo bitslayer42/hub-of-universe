@@ -69,36 +69,68 @@ TileManager.prototype.subdivideTile = function (tile) {
   var [ix, iy, iz] = [tile.xyz.x, tile.xyz.y, tile.xyz.z];
   //  subdivide tile into 4 tiles
   arrTiles.push({
-    xyz: {x: ix * 2, y: iy * 2, z: iz + 1},
-    rect: [x1, y1, xHalf, yHalf],
-    url: this.getUrl(iz + 1, ix * 2, iy * 2),
-    mid: { lam:(x1 + xHalf) / 2, phi: (y1 + yHalf) / 2 },
+    "url": "",
+    "xyz": {
+      "x": ix * 2,
+      "y": iy * 2,
+      "z": iz + 1
+    },
+    "rect": [x1, yHalf, xHalf, y2],
+    "mid": {
+      "lam": (x1 + xHalf) / 2,
+      "phi": (yHalf + y2) / 2
+    }
   });
   arrTiles.push({
-    xyz: {x: ix * 2 + 1, y: iy * 2, z: iz + 1},
-    rect: [xHalf, y1, x2, yHalf],
-    url: this.getUrl(iz + 1, ix * 2 + 1, iy * 2),
-    mid: { lam:(xHalf + x2) / 2, phi: (y1 + yHalf) / 2 },
+    "url": "",
+    "xyz": {
+      "x": ix * 2 + 1,
+      "y": iy * 2,
+      "z": iz + 1
+    },
+    "rect": [xHalf, yHalf, x2, y2],
+    "mid": {
+      "lam": (xHalf + x2) / 2,
+      "phi": (yHalf + y2) / 2
+    }
   });
   arrTiles.push({
-    xyz: {x: ix * 2, y: iy * 2 + 1, z: iz + 1},
-    rect: [x1, yHalf, xHalf, y2],
-    url: this.getUrl(iz + 1, ix * 2, iy * 2 + 1),
-    mid: { lam:(x1 + xHalf) / 2, phi: (yHalf + y2) / 2 },
+    "url": "",
+    "xyz": {
+      "x": ix * 2,
+      "y": iy * 2 + 1,
+      "z": iz + 1
+    },
+    "rect": [x1, y1, xHalf, yHalf],
+    "mid": {
+      "lam": (x1 + xHalf) / 2,
+      "phi": (y1 + yHalf) / 2
+    },
   });
   arrTiles.push({
-    xyz: {x: ix * 2 + 1, y: iy * 2 + 1, z: iz + 1},
-    rect: [xHalf, yHalf, x2, y2],
-    url: this.getUrl(iz + 1, ix * 2 + 1, iy * 2 + 1),
-    mid: { lam:(xHalf + x2) / 2, phi: (yHalf + y2) / 2 },
+    "url": "",
+    "xyz": {
+      "x": ix * 2 + 1,
+      "y": iy * 2 + 1,
+      "z": iz + 1
+    },
+    "rect": [xHalf, y1, x2, yHalf],
+    "mid": {
+      "lam": (xHalf + x2) / 2,
+      "phi": (y1 + yHalf) / 2
+    }
   });
-
+  //  set url
+  for (const tile of arrTiles) {
+    var str = this.getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
+    tile.url = str;
+  }
   tile.children = arrTiles;
   return tile;
 }
 
 // 
-TileManager.prototype.zoomInTiles = function (tileInfos) { 
+TileManager.prototype.zoomInTiles = function (tileInfos) {
   let retTiles = [];
   for (const tile of tileInfos) {
     let xy = this.imageProj.projection.forward(tile.mid.lam, tile.mid.phi);
@@ -106,7 +138,7 @@ TileManager.prototype.zoomInTiles = function (tileInfos) {
 
     if (radius < Math.PI / (tile.xyz.z + 0) && tile.xyz.z < this.currTileLevel) {
       let tilewkids = this.subdivideTile(tile);
-        retTiles.push(this.zoomInTiles(tilewkids.children));
+      retTiles.push(this.zoomInTiles(tilewkids.children));
     } else {
       retTiles.push(tile);
     }
@@ -120,15 +152,14 @@ TileManager.prototype.zoomInTiles = function (tileInfos) {
 TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel, getUrl) {
   this.currTileLevel = currTileLevel;
   this.getUrl = getUrl;
-  var startLevel = 0;
   var tileInfos = [
     {
       "url": "",
       "rect": [
-        -3.141592653589793,
-        -1.5707963267948966,
-        0,
-        1.5707963267948966
+        lamRange[0],
+        phiRange[0],
+        lamRange[1],
+        phiRange[1]
       ],
       "xyz": {
         "x": 0,
@@ -136,31 +167,13 @@ TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel
         "z": 0
       },
       "mid": {
-        "lam": -1.5707963267948966,
+        "lam": 0,
         "phi": 0
       }
     },
-    {
-      "url": "",
-      "rect": [
-        0,
-        -1.5707963267948966,
-        3.141592653589793,
-        1.5707963267948966
-      ],
-      "xyz": {
-        "x": 1,
-        "y": 0,
-        "z": 0
-      },
-      "mid": {
-        "lam": 1.5707963267948966,
-        "phi": 0
-      }
-    }
   ];
   for (const tile of tileInfos) {
-    var str = this.getUrl(startLevel, tile.xyz.x, tile.xyz.y);
+    var str = this.getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
     tile.url = str;
   }
   var tileTree = this.zoomInTiles(tileInfos);
