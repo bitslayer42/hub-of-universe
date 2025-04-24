@@ -80,25 +80,24 @@ RasterAEQD.prototype.setScale = function(zoomScale) {
   this.projection.setScale(zoomScale);
 }
 
-RasterAEQD.VERTEX_SHADER_STR = `
+RasterAEQD.VERTEX_SHADER_STR = /*glsl*/`#version 300 es
   precision highp float;
-  attribute vec2 aPosition;
-  attribute vec2 aTexCoord;
-  varying vec2 vTexCoord;
+  in vec2 aPosition;
+  in vec2 aTexCoord;
+  out vec2 vTexCoord;
 
-  void main()
-  {
+  void main() {
     gl_Position = vec4(aPosition.x, aPosition.y, 1.0, 1.0);
     vTexCoord = aTexCoord;
   }
 `;
 
 
-RasterAEQD.FRAGMENT_SHADER_STR = `
+RasterAEQD.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
 
   precision highp float;
   uniform sampler2D uTexture;
-  varying vec2 vTexCoord;
+  in vec2 vTexCoord;
   uniform lowp int uRenderType;
   uniform vec2 uProjCenter;
   uniform vec2 uViewXY1;
@@ -114,9 +113,18 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
   const float epsilon = 0.00000001;
   const float blurRatio = 0.015;
   const float xyRadius = pi;
-  const float e = 2.718281;
+  const float atanSinhPi = 1.48442222; // atan(sinh(pi)) = max phi for web merc
 
-  vec2 fisheye(vec2 xy) {
+  out vec4 fragColor;
+
+  vec2 web_merc(float lambda, float phi) {      //  Web Mercator
+    if (abs(phi) < atanSinhPi) {
+      phi = asinh(tan(phi)) * atanSinhPi / pi;
+    }
+    return vec2(lambda, phi);
+  }
+
+  vec2 fisheye(vec2 xy) {      //  fisheye effect
     xy = xy / pi; // circle radius 1.0
     float rho = length(xy);
 
@@ -125,10 +133,8 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
     return vec2(cos(theta) * fisheyeR * pi, sin(theta) * fisheyeR * pi);
   }
 
-  // lat/lon from map coords
-  vec2 proj_inverse(vec2 center, vec2 xy)
-  {
-    xy = fisheye(xy);      //  fisheye effect
+  vec2 proj_inverse(vec2 center, vec2 xy) {  // lat/lon from map coords
+    xy = fisheye(xy);
     float sinPhi0 = sin(center.y);
     float cosPhi0 = cos(center.y);
 
@@ -148,17 +154,16 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
 
     float phi = asin( clamp( cos_c * sinPhi0 + xy.y * sin_c * cosPhi0 / rho, -1.0, 1.0 ) );
     float lam = mod( center.x + atan( xy.x * sin_c, rho * cosPhi0 * cos_c - xy.y * sinPhi0 * sin_c ) + pi, 2.0 * pi ) - pi;
+    vec2 lamphi = web_merc(lam,phi);
 
-    return vec2(lam, phi);
+    return lamphi;
   }
 
-  float inner_xy(vec2 xy)
-  {
+  float inner_xy(vec2 xy) { // returns zero outside of circle
     return 1.0 - smoothstep( (1.0 - blurRatio) * xyRadius, (1.0 + blurRatio) * xyRadius, length(xy) );
   }
 
-  void main()
-  {
+  void main() {
   //  画面上の点 vTexCoord ([-1,-1]-[1,1]) をXY平面上の点にマッピング 
   //. Map the point vTexCoord ([-1, -1] - [1, 1]) on the screen to a point on the XY plane
     vec2 xy = mix(uViewXY1, uViewXY2, vTexCoord);
@@ -170,24 +175,24 @@ RasterAEQD.FRAGMENT_SHADER_STR = `
       vec2 ts = (lp - uDataCoord1) / (uDataCoord2 - uDataCoord1);
       float inXY = inner_xy(xy);
       vec2 inData = step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts);
-      vec4 OutputColor = texture2D(uTexture, ts) * inData.x * inData.y * inXY;
+      vec4 OutputColor = texture(uTexture, ts) * inData.x * inData.y * inXY;
       OutputColor.a *= clamp(uAlpha, 0.0, 1.0);
-      gl_FragColor = OutputColor;
+      fragColor = OutputColor;
 
-    } else if ( uRenderType == 1 ) {  //  PointTexture (icon)
+  //   } else if ( uRenderType == 1 ) {  //  PointTexture (icon)
 
-  //   XY平面上の点を画像上の点[0,0]-[1,1]にマッピングする 
-  //.  Map a point on the XY plane to a point [0, 0] - [1, 1] on the image
-      vec2 fixedTextureSizeXY = uFixedTextureSize * (uViewXY2 - uViewXY1);
-      vec2 r1 = vec2(uDataCoord1.x - 0.5 * fixedTextureSizeXY.x, uDataCoord1.x - 0.5 * fixedTextureSizeXY.y);
-      vec2 ts = (xy - r1) / fixedTextureSizeXY;
-      vec2 inData = (step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts));
-      vec4 OutputColor = texture2D(uTexture, ts) * inData.x * inData.y;
-      gl_FragColor = OutputColor;
+  // //   XY平面上の点を画像上の点[0,0]-[1,1]にマッピングする 
+  // //.  Map a point on the XY plane to a point [0, 0] - [1, 1] on the image
+  //     vec2 fixedTextureSizeXY = uFixedTextureSize * (uViewXY2 - uViewXY1);
+  //     vec2 r1 = vec2(uDataCoord1.x - 0.5 * fixedTextureSizeXY.x, uDataCoord1.x - 0.5 * fixedTextureSizeXY.y);
+  //     vec2 ts = (xy - r1) / fixedTextureSizeXY;
+  //     vec2 inData = (step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts));
+  //     vec4 OutputColor = texture(uTexture, ts) * inData.x * inData.y;
+  //     fragColor = OutputColor;
 
-    } else if ( uRenderType == 2 ) {  //  Polyline (Graticules)
+  //   } else if ( uRenderType == 2 ) {  //  Polyline (Graticules)
   
-        gl_FragColor = uRenderColor;
+  //       fragColor = uRenderColor;
   
       }
     }

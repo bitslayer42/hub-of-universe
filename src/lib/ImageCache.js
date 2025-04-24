@@ -17,7 +17,7 @@ var ImageCache = function (cache_opts) {
   this.loading = {};
   this.ongoingImageLoads = [];
   this.debug = false;
-  //
+
   if (typeof cache_opts !== 'undefined') {
     if ('num' in cache_opts) {
       this.num = cache_opts.num;

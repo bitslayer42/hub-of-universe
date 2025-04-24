@@ -76,12 +76,16 @@ footer {
         grid-template-columns: auto 1fr;
         grid-template-rows: 1fr 1fr;
     }
+
+    header,
+    footer {
+        writing-mode: vertical-rl;
+        text-orientation: mixed;
+    }
 }
 
 header,
 footer {
-    /* writing-mode: vertical-rl;
-        text-orientation: mixed; */
     background-color: black;
     color: white;
 }

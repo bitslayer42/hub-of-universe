@@ -48,11 +48,13 @@ var Main = function () {
   });
 
   this.animation = () => {
-  this.requestId = requestAnimationFrame(this.animation);
+    this.requestId = requestAnimationFrame(this.animation);
     var currTime = new Date().getTime();
     if (null == this.prevTime) {
       this.prevTime = currTime;
     }
+    // var baseTileLevel = Math.floor(this.gl.canvas.width / 256);
+    // this.viewStatus.currTileLevel = baseTileLevel + Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
@@ -77,11 +79,11 @@ var Main = function () {
         this.interpolateTimeSpan
       );
       this.viewStatus.targetLambdaPhi = null;
-      if (this.viewStatus.interpolater != null) { // NOTE why was this duplicated? First time thru?
-        currPos = this.viewStatus.interpolater.getPos(currTime);
-        this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
-        this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
-      }
+      // if (this.viewStatus.interpolater != null) { // NOTE why was this duplicated? First time thru?
+      //   currPos = this.viewStatus.interpolater.getPos(currTime);
+      //   this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
+      //   this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
+      // }
     }
     if (this.prevScale != this.viewStatus.zoomScale) {
       this.imageProj.setScale(this.viewStatus.zoomScale);
@@ -95,7 +97,8 @@ var Main = function () {
 
   this.startup = (imageProj) => {
     this.canvas = document.getElementById("webglCanvas");
-    this.gl = WebGLUtils.setupWebGL(this.canvas);
+    this.gl = this.canvas.getContext("webgl2");
+    // this.gl = WebGLUtils.setupWebGL(this.canvas);
     if (!this.gl) {
       return void alert("Failed to setup WebGL.");
     }
@@ -118,12 +121,6 @@ var Main = function () {
     mc.on("tap", this.handleDoubleTap);
 
     window.WheelEvent && document.addEventListener("wheel", this.handleWheel, false);
-    // document.querySelector("header").addEventListener("click", (e) => {
-    //   e.preventDefault();
-    //   var phi0 = 0.0; //35.32 * 0.0174533; // +Math.PI/2; //north pole
-    //   var lam0 = 0.0; //-82.48 * 0.0174533;
-    //   this.viewStatus.targetLambdaPhi = { lambda: lam0, phi: phi0 }
-    // });
     this.init(imageProj);
   };
 
@@ -166,6 +163,7 @@ var Main = function () {
     this.mapView.setTileLevel(currTileLevel);
 
     this.mapView.setWindow(-radius, -radius, radius, radius);
+
     this.mapView.requestImagesIfNecessary();
   };
 
