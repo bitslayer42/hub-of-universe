@@ -51,6 +51,17 @@ AEQD.prototype.setScale = function(zoomScale) {
   this.zoomScale = zoomScale;
 }
 
+AEQD.prototype.frw_web_merc = function(lam, phi) {      //  Web Mercator
+  const atanSinhPi = 1.48442222;
+
+  phi = Math.atan(Math.sinh(phi * Math.PI / atanSinhPi));
+
+  // if (Math.abs(phi) < atanSinhPi) {
+  //   phi = Math.asinh(Math.tan(phi)) * atanSinhPi / Math.PI;
+  // }
+  return { lam, phi };
+};
+
 /**
  * fisheye effect
  * @param {} x 
@@ -71,10 +82,11 @@ AEQD.prototype.fwd_fisheye = function(x, y) {
  * @return {Point}
  */
 AEQD.prototype.forward = function(lambda, phi) {
-  var sin_phi = Math.sin(phi);
-  var cos_phi = Math.cos(phi);
-  var sin_lam = Math.sin(lambda - this.lam0);
-  var cos_lam = Math.cos(lambda - this.lam0);
+  let wm = this.frw_web_merc(lambda, phi);
+  var sin_phi = Math.sin(wm.phi);
+  var cos_phi = Math.cos(wm.phi);
+  var sin_lam = Math.sin(wm.lam - this.lam0);
+  var cos_lam = Math.cos(wm.lam - this.lam0);
 
   var c = Math.acos( this.sin_phi0_ * sin_phi + this.cos_phi0_ * cos_phi * cos_lam );
   if ( Math.abs(c) < ProjMath.EPSILON ) {
@@ -91,6 +103,14 @@ AEQD.prototype.forward = function(lambda, phi) {
   var y = k * ( this.cos_phi0_ * sin_phi - this.sin_phi0_ * cos_phi * cos_lam );
   [x, y] = this.fwd_fisheye(x, y);
   return { x:x, y:y };
+};
+
+AEQD.prototype.inv_web_merc = function(lam, phi) {      //  Web Mercator
+  const atanSinhPi = 1.48442222;
+  if (Math.abs(phi) < atanSinhPi) {
+    phi = Math.asinh(Math.tan(phi)) * atanSinhPi / Math.PI;
+  }
+  return { lam, phi };
 };
 
 /**
@@ -139,6 +159,8 @@ AEQD.prototype.inverse = function(x, y) {
   if ( lam < -Math.PI || Math.PI <= lam ) {
     lam -= 2 * Math.PI * Math.floor((lam + Math.PI) / (2*Math.PI));
   }
+  // let { lam: retlambda, phi: retphi } = this.inv_web_merc(lam, phi);
+
   return { lambda: lam, phi: phi };
 };
 

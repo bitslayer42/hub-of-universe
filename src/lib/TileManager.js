@@ -131,19 +131,18 @@ TileManager.prototype.subdivideTile = function (tile) {
 
 // 
 TileManager.prototype.zoomInTiles = function (tileInfos) {
-  let retTiles = [];
   for (const tile of tileInfos) {
-    let xy = this.imageProj.projection.forward(tile.mid.lam, tile.mid.phi);
-    let radius = Math.sqrt(xy.x * xy.x + xy.y * xy.y);
+    let kidtiles = this.subdivideTile(tile);
+    for (const kidtile of kidtiles.children) {
+      let xy = this.imageProj.projection.forward(kidtile.mid.lam, kidtile.mid.phi);
+      let radius = Math.sqrt(xy.x * xy.x + xy.y * xy.y);
 
-    if (radius < Math.PI / (tile.xyz.z + 0) && tile.xyz.z < this.currTileLevel) {
-      let tilewkids = this.subdivideTile(tile);
-      retTiles.push(this.zoomInTiles(tilewkids.children));
-    } else {
-      retTiles.push(tile);
+      if (radius < Math.PI / (tile.xyz.z + 0) && tile.xyz.z < this.currTileLevel) {
+        tileInfos.push(kidtile);
+      }
     }
   };
-  return retTiles;
+  return tileInfos;
 };
 
 /**
@@ -152,9 +151,8 @@ TileManager.prototype.zoomInTiles = function (tileInfos) {
 TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel, getUrl) {
   this.currTileLevel = currTileLevel;
   this.getUrl = getUrl;
-  var tileInfos = [
-    {
-      "url": "",
+  var firstTile = {
+      "url": this.getUrl(0,0,0),
       "rect": [
         lamRange[0],
         phiRange[0],
@@ -170,15 +168,11 @@ TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel
         "lam": 0,
         "phi": 0
       }
-    },
-  ];
-  for (const tile of tileInfos) {
-    var str = this.getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
-    tile.url = str;
-  }
-  var tileTree = this.zoomInTiles(tileInfos);
-  let arrTiles = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
-  return arrTiles;
+    };
+  var tileTree = this.zoomInTiles([firstTile]);
+  let tileInfos = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
+  console.log(tileInfos.length);
+  return tileInfos;
 };
 
 
