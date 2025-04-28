@@ -32,7 +32,7 @@ var Main = function () {
   this.zoomMax = 40.0;
   this.maxTileLevel = 5; // tile levels 0 to maxTileLevel
   this.imageProj = null;
-  this.debug = false;
+  this.debug = true;
 
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
@@ -127,6 +127,10 @@ var Main = function () {
   this.init = (imageProj) => {
     //imageProj is a RasterAEQD
     var canvasInfo = this.canvas.getBoundingClientRect(); //read-only left, top, right, bottom, x, y, width, height properties of this.canvas
+    var canvasSize = {
+      width: canvasInfo.width,
+      height: canvasInfo.height,
+    };
     var tile_opts = {
       rootNumX: 2,
       rootNumY: 1,
@@ -135,18 +139,16 @@ var Main = function () {
       // maxTileLevel: this.maxTileLevel,
       tileOrigin: [-Math.PI, -Math.PI / 2],
       inverseY: false,
+      canvasSize: canvasSize,
     };
     var cache_opts = {
       num: 50,
+      crossOrigin: false,
       debug: this.debug,
     };
 
     imageProj.init(this.gl);
     imageProj.setProjCenter(this.lam0, this.phi0);
-    var canvasSize = {
-      width: canvasInfo.width,
-      height: canvasInfo.height,
-    };
     this.mapView = new MapView(this.gl, imageProj, canvasSize, tile_opts, cache_opts);
 
     var viewRect = this.mapView.getViewRect();
@@ -155,7 +157,7 @@ var Main = function () {
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
       //return "http://www.flatearthlab.com/data/20120925/adb12292ed/NE2_50M_SR_W/" + z + "/" + x + "/" + y + ".png"
-      // return "https://api.mapbox.com/styles/v1/mapbox/streets-v9/tiles/256/0/0/0?access_token=access_token"
+      // return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=pk.eyJ1IjoiYml0c2xheWVyNDIiLCJhIjoiY205MXh4c2ZjMDY5czJrcHcwZTM4NHhiZyJ9.mMYRfw9tewpnBYmKmXXBMw`
       return "./images/" + z + "/" + x + "/" + y + ".png";
     };
 

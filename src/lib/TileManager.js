@@ -14,7 +14,7 @@ import { ProjMath } from "./ProjMath.js";
  * @constructor
  */
 var TileManager = function (tile_opts, imgProj) {
-  this.rootNumX = 2;
+  this.rootNumX = 1;
   this.rootNumY = 1;
   this.rootTileSizeX = Math.PI;
   this.rootTileSizeY = Math.PI;
@@ -23,6 +23,8 @@ var TileManager = function (tile_opts, imgProj) {
   this.imageProj = imgProj;
   this.getUrl = null;
   this.currTileLevel = 0;
+  this.canvasSize = { width: null, height: null };
+  this.tilesAcross = 256;
   //
   if (typeof tile_opts !== 'undefined') {
     if ('rootNumX' in tile_opts) {
@@ -42,6 +44,11 @@ var TileManager = function (tile_opts, imgProj) {
     }
     if ('tileOrigin' in tile_opts) {
       this.tileOrigin = tile_opts.tileOrigin;   //  TODO Array型チェック!!  Type check
+    }
+    if ('canvasSize' in tile_opts) {
+      this.canvasSize = tile_opts.canvasSize;
+      this.tilesAcross = this.canvasSize.width / 256; // how many tiles fill the canvas
+      this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
     }
   }
   //
@@ -69,113 +76,95 @@ TileManager.prototype.subdivideTile = function (tile) {
   var [ix, iy, iz] = [tile.xyz.x, tile.xyz.y, tile.xyz.z];
   //  subdivide tile into 4 tiles
   arrTiles.push({
-    "url": "",
     "xyz": {
       "x": ix * 2,
       "y": iy * 2,
       "z": iz + 1
     },
-    "rect": [x1, yHalf, xHalf, y2],
-    "mid": {
-      "lam": (x1 + xHalf) / 2,
-      "phi": (yHalf + y2) / 2
-    }
+    rect: [x1, yHalf, xHalf, y2],
   });
   arrTiles.push({
-    "url": "",
     "xyz": {
       "x": ix * 2 + 1,
       "y": iy * 2,
       "z": iz + 1
     },
     "rect": [xHalf, yHalf, x2, y2],
-    "mid": {
-      "lam": (xHalf + x2) / 2,
-      "phi": (yHalf + y2) / 2
-    }
-  });
+});
   arrTiles.push({
-    "url": "",
     "xyz": {
       "x": ix * 2,
       "y": iy * 2 + 1,
       "z": iz + 1
     },
     "rect": [x1, y1, xHalf, yHalf],
-    "mid": {
-      "lam": (x1 + xHalf) / 2,
-      "phi": (y1 + yHalf) / 2
-    },
   });
   arrTiles.push({
-    "url": "",
     "xyz": {
       "x": ix * 2 + 1,
       "y": iy * 2 + 1,
       "z": iz + 1
     },
     "rect": [xHalf, y1, x2, yHalf],
-    "mid": {
-      "lam": (xHalf + x2) / 2,
-      "phi": (y1 + yHalf) / 2
-    }
   });
-  //  set url
-  for (const tile of arrTiles) {
-    var str = this.getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
-    tile.url = str;
-  }
-  tile.children = arrTiles;
-  return tile;
+  // tile.children = arrTiles;
+  return arrTiles;
 }
 
-// 
-TileManager.prototype.zoomInTiles = function (tileInfos) {
-  for (const tile of tileInfos) {
-    let kidtiles = this.subdivideTile(tile);
-    for (const kidtile of kidtiles.children) {
-      let xy = this.imageProj.projection.forward(kidtile.mid.lam, kidtile.mid.phi);
-      let radius = Math.sqrt(xy.x * xy.x + xy.y * xy.y);
+TileManager.prototype.zoomInTiles = function (tile) {
+  let retTiles = [];
+  retTiles.push(tile);
+  let kidtiles = this.subdivideTile(tile);
+  for (const kidtile of kidtiles) {
+    var x1 = kidtile.rect[0];
+    var y1 = kidtile.rect[1];
+    var x2 = kidtile.rect[2];
+    var y2 = kidtile.rect[3];
+    let botleft = this.imageProj.projection.forward(x1, y1);
+    let topright = this.imageProj.projection.forward(x2, y2);
+    let topleft = this.imageProj.projection.forward(x1, y2);
+    let botright = this.imageProj.projection.forward(x2, y1);
+    let diag1 = Math.sqrt(
+      Math.pow(botleft.x - topright.x, 2) +
+      Math.pow(botleft.y - topright.y, 2)
+    );
+    let diag2 = Math.sqrt(
+      Math.pow(topleft.x - botright.x, 2) +
+      Math.pow(topleft.y - botright.y, 2)
+    );
+    let diagonal = Math.min(diag1, diag2);
 
-      if (radius < Math.PI / (tile.xyz.z + 0) && tile.xyz.z < this.currTileLevel) {
-        tileInfos.push(kidtile);
-      }
+    if (diagonal > this.tileMaxSize && kidtile.xyz.z <= this.currTileLevel) {
+      retTiles.push(this.zoomInTiles(kidtile));
     }
-  };
-  return tileInfos;
+  }
+  return retTiles;
 };
 
-/**
- * getUrl : function(level, ix, iy) -> URL
- */
 TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel, getUrl) {
   this.currTileLevel = currTileLevel;
   this.getUrl = getUrl;
   var firstTile = {
-      "url": this.getUrl(0,0,0),
-      "rect": [
-        lamRange[0],
-        phiRange[0],
-        lamRange[1],
-        phiRange[1]
-      ],
-      "xyz": {
-        "x": 0,
-        "y": 0,
-        "z": 0
-      },
-      "mid": {
-        "lam": 0,
-        "phi": 0
-      }
-    };
-  var tileTree = this.zoomInTiles([firstTile]);
+    "rect": [
+      lamRange[0],
+      phiRange[0],
+      lamRange[1],
+      phiRange[1]
+    ],
+    "xyz": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+    },
+  };
+  var tileTree = this.zoomInTiles(firstTile);
   let tileInfos = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
-  console.log(tileInfos.length);
+  for (const tile of tileInfos) {
+    //  set url
+    var str = this.getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
+    tile.url = str;
+  }
   return tileInfos;
 };
-
-
-
 
 export { TileManager };
