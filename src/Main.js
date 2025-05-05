@@ -17,8 +17,8 @@ var Main = function () {
   this.prevTime = null;
   this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians
-  this.lam0 = 45 * 0.0174533;
-  this.phi0 = 0.0 * 0.0174533;
+  this.lam0 = -82.0 * 0.0174533;
+  this.phi0 = 35.0 * 0.0174533;
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
@@ -29,10 +29,10 @@ var Main = function () {
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 40.0;
-  this.maxTileLevel = 5; // tile levels 0 to maxTileLevel
+  this.zoomMax = 60.0;
+  this.maxTileLevel = 7; // tile levels 0 to maxTileLevel
   this.imageProj = null;
-  this.debug = true;
+  this.debug = false;
 
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
@@ -43,20 +43,13 @@ var Main = function () {
     //imageProj is a RasterAEQD
     this.startup(this.imageProj); // sets up this.canvas, webgl, and hammer, and calls init
     this.animation(); // starts animation
-
     this.getProjCenterParameter(); // check for url params
   });
 
   this.animation = () => {
-    this.requestId = requestAnimationFrame(this.animation);
     var currTime = new Date().getTime();
-    if (null == this.prevTime) {
-      this.prevTime = currTime;
-    }
-    // var baseTileLevel = Math.floor(this.gl.canvas.width / 256);
-    // this.viewStatus.currTileLevel = baseTileLevel + Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
-    console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
+    // console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
 
     var currPos;
@@ -92,7 +85,7 @@ var Main = function () {
     }
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
     this.mapView.render();
-    this.prevTime = currTime;
+    this.requestId = requestAnimationFrame(this.animation);
   };
 
   this.startup = (imageProj) => {
@@ -223,7 +216,6 @@ var Main = function () {
         this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale + event.scale - 1.0;
       }
       this.viewStatus.zoomScale = Math.min(Math.max(this.viewStatus.zoomMin, this.viewStatus.zoomScale), this.viewStatus.zoomMax);
-      // this.imageProj.setScale(this.viewStatus.zoomScale);
     }
   };
 
@@ -277,8 +269,7 @@ var Main = function () {
     var canv_xy = this.checkAndGetMousePos(event); //verify on canvas
     if (canv_xy) {
       this.viewStatus.zoomScale += event.deltaY * -0.01;
-      this.viewStatus.zoomScale = Math.min(Math.max(.01, this.viewStatus.zoomScale), 40.0);
-      // this.imageProj.setScale(this.viewStatus.zoomScale);
+      this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     }
   };
 
