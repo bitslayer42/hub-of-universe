@@ -142,15 +142,15 @@ TileManager.prototype.zoomInTiles = function (tile) {
   return retTiles;
 };
 
-TileManager.prototype.getTileInfos = function (lamRange, phiRange, currTileLevel, getUrl) {
+TileManager.prototype.getTileInfos = function (currTileLevel, getUrl) {
   this.currTileLevel = currTileLevel;
   this.getUrl = getUrl;
   var firstTile = {
     "rect": [
-      lamRange[0],
-      phiRange[0],
-      lamRange[1],
-      phiRange[1]
+      -Math.PI,
+      -Math.PI / 2.0,
+      Math.PI,
+      Math.PI / 2.0
     ],
     "xyz": {
       "x": 0,
