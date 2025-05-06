@@ -56,7 +56,7 @@ var Main = function () {
     if (this.viewStatus.interpolater != null) { // Interpolater is running
       currPos = this.viewStatus.interpolater.getPos(currTime);
       this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
-      this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
+      // this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
       this.viewStatus.interpolater.isFinished() && (this.viewStatus.interpolater = null);
       this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
       this.mapView.render();
@@ -144,8 +144,10 @@ var Main = function () {
     imageProj.setProjCenter(this.lam0, this.phi0);
     this.mapView = new MapView(this.gl, imageProj, canvasSize, tile_opts, cache_opts);
 
-    var viewRect = this.mapView.getViewRect();
-    var radius = (viewRect[2] - viewRect[0]) / 2; //radius (pi)
+    // var viewRect = this.mapView.getViewRect();
+    // var viewRect = [-Math.PI, -Math.PI, Math.PI, Math.PI];
+    // var radius = Math.PI;
+    // var radius = (viewRect[2] - viewRect[0]) / 2; //radius (pi)
 
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
@@ -157,7 +159,7 @@ var Main = function () {
     var currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.mapView.setTileLevel(currTileLevel);
 
-    this.mapView.setWindow(-radius, -radius, radius, radius);
+    // this.mapView.setWindow(-radius, -radius, radius, radius);
 
     this.mapView.requestImagesIfNecessary();
   };

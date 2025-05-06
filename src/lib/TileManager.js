@@ -114,7 +114,7 @@ TileManager.prototype.subdivideTile = function (tile) {
 TileManager.prototype.zoomInTiles = function (tile) {
   let retTiles = [];
   retTiles.push(tile);
-  console.log("tile: ", tile.xyz);
+  console.log("tile: ", tile.xyz, Math.random());
   let kidtiles = this.subdivideTile(tile);
   for (const kidtile of kidtiles) {
     var x1 = kidtile.rect[0];
@@ -135,7 +135,7 @@ TileManager.prototype.zoomInTiles = function (tile) {
     );
     let diagonal = Math.min(diag1, diag2);
 
-    if ((diagonal > this.tileMaxSize && kidtile.xyz.z <= this.currTileLevel) || tile.xyz.z == 0) {
+    if ((diagonal > this.tileMaxSize && kidtile.xyz.z <= this.currTileLevel)  ){// || tile.xyz.z == 0) {
       retTiles.push(this.zoomInTiles(kidtile));
     }
   }

@@ -5,7 +5,6 @@
  * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
  */
 
-import { ViewWindowManager } from "./lib/ViewWindowManager.js";
 import { TileManager } from "./lib/TileManager.js";
 import { ImageCache } from "./lib/ImageCache.js";
 
@@ -24,8 +23,7 @@ var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   var viewWindowOpts = {
     // not used
   };
-  var rangeRect = this.imageProj.projection.getRange();
-  this.viewWindowManager_ = new ViewWindowManager(rangeRect, canvasSize, viewWindowOpts);
+  this.canvasSize = canvasSize;
   //
   this.tileManager = new TileManager(tile_opts, this.imageProj);
   this.prevTileInfos_ = null;
@@ -37,10 +35,10 @@ var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
     return self.createTexture(img);
   };
   //
-  this.centerIcon_ = null;
-  this.centerIconSize_ = null;  //  iconSize: { width:, height: } [pixel]
+  // this.centerIcon_ = null;
+  // this.centerIconSize_ = null;  //  iconSize: { width:, height: } [pixel]
   //
-  this.graticuleInterval = 0;   //  (default 20) If it is 0 or less do not draw latitude and longitude lines 0以下の場合は緯度経度線を描画しない
+  // this.graticuleInterval = 0;   //  (default 20) If it is 0 or less do not draw latitude and longitude lines 0以下の場合は緯度経度線を描画しない
   this.getURL = null;
   this.calculateLevel = null;
   this.currTileLevel = 0;
@@ -52,10 +50,10 @@ MapView.prototype.clearTileInfoCache_ = function() {
   this.prevTileInfos_ = null;
 };
 
-MapView.prototype.setCenterIcon = function(iconTexture, size) {
-  this.centerIcon_ = iconTexture;
-  this.centerIconSize_ = size;
-};
+// MapView.prototype.setCenterIcon = function(iconTexture, size) {
+//   this.centerIcon_ = iconTexture;
+//   this.centerIconSize_ = size;
+// };
 
 MapView.prototype.setProjCenter = function(lam, phi) {
   this.clearTileInfoCache_();
@@ -66,36 +64,27 @@ MapView.prototype.getProjCenter = function() {
   return this.imageProj.projection.getProjCenter();
 };
 
-MapView.prototype.getViewRect = function() {
-  return this.viewWindowManager_.getViewRect();
-};
-
-MapView.prototype.setWindow = function(x1, y1, x2, y2) {
-  this.clearTileInfoCache_();
-  this.viewWindowManager_.setViewWindow(x1, y1, x2, y2);
-};
-
 MapView.prototype.moveWindow = function(dx, dy) {
-  this.viewWindowManager_.moveWindow(dx, dy);
+  console.log("MapView.prototype.moveWindow");
 };
 
 MapView.prototype.setTileLevel = function(currTileLevel) {
   this.currTileLevel = currTileLevel;
 };
 
-// MapView.prototype.getViewCenterPoint = function() {
-//   return this.viewWindowManager_.getViewWindowCenter();
-// };
 
-MapView.prototype.setViewCenterPoint = function(cx, cy) {
-  this.viewWindowManager_.setViewWindowCenter(cx, cy);
+MapView.prototype.getViewPointFromWindow = function(canvX, canvY) {
+  var scaleX_ = (Math.PI * 2) / this.canvasSize.width; // convert pixel to pi
+  var scaleY_ = (Math.PI * 2) / -this.canvasSize.height; 
+  var x = -Math.PI + canvX * scaleX_;
+  var y = -Math.PI + (canvY - this.canvasSize.height) * scaleY_;
+  return [x, y]; // pi's
 };
 
-
 MapView.prototype.getLambdaPhiPointFromWindow = function(x, y) {
-  var viewPos = this.viewWindowManager_.getViewPointFromWindow(x, y);
+  var viewPos = this.getViewPointFromWindow(x, y);
   var lam_phi = this.imageProj.projection.inverse(viewPos[0], viewPos[1]);
-  return lam_phi;
+  return lam_phi; 
 }; 
 
 
@@ -114,6 +103,7 @@ MapView.prototype.requestImagesIfNecessary = function() {
 // Called from animation
 MapView.prototype.render = function() {
   if ( this.getURL == null )   return;
+  this.clearTileInfoCache_();
   var tileInfos = this.getTileInfos_();
   this.requestImages_(tileInfos);
   this.render_(tileInfos);
@@ -139,7 +129,7 @@ MapView.prototype.createTexture = function(img) {
 
 
 MapView.prototype.getTileInfos_ = function() {
-  var window = this.viewWindowManager_.getViewWindow();
+  var window = [-Math.PI,-Math.PI,Math.PI,Math.PI]
   if ( this.prevTileInfos_ != null && this.prevWindow_ != null ) {
     if (window[0] == this.prevWindow_[0] && window[1] == this.prevWindow_[1] &&
       window[2] == this.prevWindow_[2] && window[3] == this.prevWindow_[3] &&
@@ -171,7 +161,7 @@ MapView.prototype.requestImages_ = function(tileInfos) {
 
 
 MapView.prototype.render_ = function(tileInfos) {
-  this.imageProj.clear(this.viewWindowManager_.canvasSize);
+  this.imageProj.clear(this.canvasSize);
   var targetTextures = [];
   for (var i = 0; i < tileInfos.length; ++i ) {
     var info = tileInfos[i];
@@ -181,20 +171,16 @@ MapView.prototype.render_ = function(tileInfos) {
     }
   }
 
-  var texCoords = this.viewWindowManager_.getNormalizedRectAsTriangleStrip();
-  this.imageProj.prepareRender(texCoords, this.viewWindowManager_.rect);
+  var texCoords = new Float32Array([
+    0.0, 0.0,   // left top
+    0.0, 1.0,   // left bottom
+    1.0, 0.0,   // right top
+    1.0, 1.0    // right bottom
+  ]);
+  this.imageProj.prepareRender(texCoords, [-Math.PI,-Math.PI,Math.PI,Math.PI]);
   if ( 0 < targetTextures.length ) {
     this.imageProj.renderTextures(targetTextures);
   }
-  // if ( 0 < this.graticuleInterval ) {
-  //   this.imageProj.renderGraticule(this.viewWindowManager_.rect, this.graticuleInterval);
-  // }
-  // //
-  // if ( this.centerIcon_ ) {
-  //   var iconSize = this.viewWindowManager_.getNormalizedSize(this.centerIconSize_);
-  //   this.imageProj.prepareRender(texCoords, this.viewWindowManager_.rect);
-  //   this.imageProj.renderOverlays(this.centerIcon_, iconSize);
-  // }
 };
 
 
