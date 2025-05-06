@@ -18,7 +18,7 @@
 
 /* ------------------------------------------------------------ */
 
-var ShaderProgram = function(gl) {
+let ShaderProgram = function(gl) {
   this.gl_ = gl;
   this.vbo_ = null;
   this.program_ = null;
@@ -53,10 +53,10 @@ ShaderProgram.RENDER_TYPE_POLYLINE = 2;       // dim=1, dataType=??
 
 
 ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
-  var vertexShader = this.loadShader_(this.gl_.VERTEX_SHADER, vertShaderStr);
-  var fragmentShader = this.loadShader_(this.gl_.FRAGMENT_SHADER, fragShaderStr);
+  let vertexShader = this.loadShader_(this.gl_.VERTEX_SHADER, vertShaderStr);
+  let fragmentShader = this.loadShader_(this.gl_.FRAGMENT_SHADER, fragShaderStr);
 
-  var prog = this.gl_.createProgram();
+  let prog = this.gl_.createProgram();
   this.gl_.attachShader(prog, vertexShader);
   this.gl_.attachShader(prog, fragmentShader);
 
@@ -64,9 +64,9 @@ ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
   this.gl_.bindAttribLocation(prog, 1, "aTexCoord");
   this.gl_.linkProgram(prog);
 
-  var linked = this.gl_.getProgramParameter(prog, this.gl_.LINK_STATUS);
+  let linked = this.gl_.getProgramParameter(prog, this.gl_.LINK_STATUS);
   if (!linked && !this.gl_.isContextLost()) {
-    var info = this.gl_.getProgramInfoLog(prog);
+    let info = this.gl_.getProgramInfoLog(prog);
     alert("Error linking program:\n" + info);
     this.gl_.deleteProgram(prog);
     return false;
@@ -95,11 +95,11 @@ ShaderProgram.prototype.initAdditionalParams = function() {
 };
 
 ShaderProgram.prototype.loadShader_ = function(type, shaderSrc) {
-  var shader = this.gl_.createShader(type);
+  let shader = this.gl_.createShader(type);
   this.gl_.shaderSource(shader, shaderSrc);
   this.gl_.compileShader(shader);
   if (!this.gl_.getShaderParameter(shader, this.gl_.COMPILE_STATUS) && !this.gl_.isContextLost()) {
-    var info = this.gl_.getShaderInfoLog(shader);
+    let info = this.gl_.getShaderInfoLog(shader);
     alert("Error compiling shader:\n" + info);
     this.gl_.deleteShader(shader);
     return null;
@@ -142,7 +142,7 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
     this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自 Original
   }
 
-  var offset = ShaderProgram.UNIT_RECT_TRIANGLE_STRIP.byteLength;
+  let offset = ShaderProgram.UNIT_RECT_TRIANGLE_STRIP.byteLength;
   this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, ShaderProgram.UNIT_RECT_TRIANGLE_STRIP);
   this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, offset, texCoords);
 
@@ -171,10 +171,10 @@ ShaderProgram.prototype.renderIconTexture = function(texture, iconSize, xyPos) {
 };
 
 ShaderProgram.prototype.renderTexture = function(texture, region) {
-  var lam1 = region[0];
-  var phi1 = region[1];
-  var lam2 = region[2];
-  var phi2 = region[3];
+  let lam1 = region[0];
+  let phi1 = region[1];
+  let lam2 = region[2];
+  let phi2 = region[3];
 
   this.gl_.bindTexture(this.gl_.TEXTURE_2D, texture);
   this.gl_.uniform2f(this.locDataCoord1_, lam1, phi1);

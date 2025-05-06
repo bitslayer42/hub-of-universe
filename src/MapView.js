@@ -16,11 +16,11 @@ import { ImageCache } from "./lib/ImageCache.js";
  * @param {number} ??
  * @constructor
  */
-var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
+let MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.gl = gl;
   this.imageProj = imgProj;
 
-  var viewWindowOpts = {
+  let viewWindowOpts = {
     // not used
   };
   this.canvasSize = canvasSize;
@@ -30,7 +30,7 @@ var MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.prevWindow_ = null;
   //
   this.imageCache = new ImageCache(cache_opts);
-  var self = this;
+  let self = this;
   this.imageCache.createTexture = function(img) {
     return self.createTexture(img);
   };
@@ -74,16 +74,16 @@ MapView.prototype.setTileLevel = function(currTileLevel) {
 
 
 MapView.prototype.getViewPointFromWindow = function(canvX, canvY) {
-  var scaleX_ = (Math.PI * 2) / this.canvasSize.width; // convert pixel to pi
-  var scaleY_ = (Math.PI * 2) / -this.canvasSize.height; 
-  var x = -Math.PI + canvX * scaleX_;
-  var y = -Math.PI + (canvY - this.canvasSize.height) * scaleY_;
+  let scaleX_ = (Math.PI * 2) / this.canvasSize.width; // convert pixel to pi
+  let scaleY_ = (Math.PI * 2) / -this.canvasSize.height; 
+  let x = -Math.PI + canvX * scaleX_;
+  let y = -Math.PI + (canvY - this.canvasSize.height) * scaleY_;
   return [x, y]; // pi's
 };
 
 MapView.prototype.getLambdaPhiPointFromWindow = function(x, y) {
-  var viewPos = this.getViewPointFromWindow(x, y);
-  var lam_phi = this.imageProj.projection.inverse(viewPos[0], viewPos[1]);
+  let viewPos = this.getViewPointFromWindow(x, y);
+  let lam_phi = this.imageProj.projection.inverse(viewPos[0], viewPos[1]);
   return lam_phi; 
 }; 
 
@@ -95,8 +95,8 @@ MapView.prototype.resetImages = function() {
 // Called from init
 MapView.prototype.requestImagesIfNecessary = function() {
   if ( this.getURL == null )   return -1;
-  var tileInfos = this.getTileInfos_();
-  var count = this.requestImages_(tileInfos);
+  let tileInfos = this.getTileInfos_();
+  let count = this.requestImages_(tileInfos);
   return count;
 };
 
@@ -104,14 +104,14 @@ MapView.prototype.requestImagesIfNecessary = function() {
 MapView.prototype.render = function() {
   if ( this.getURL == null )   return;
   this.clearTileInfoCache_();
-  var tileInfos = this.getTileInfos_();
+  let tileInfos = this.getTileInfos_();
   this.requestImages_(tileInfos);
   this.render_(tileInfos);
 };
 
 //  TODO この実装の詳細は別の場所にあるべきか Should this implementation's detail be in a different location?
 MapView.prototype.createTexture = function(img) {
-  var tex = this.gl.createTexture();
+  let tex = this.gl.createTexture();
   this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
   this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
   this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
@@ -129,14 +129,14 @@ MapView.prototype.createTexture = function(img) {
 
 
 MapView.prototype.getTileInfos_ = function() {
-  var tileInfos = this.tileManager.getTileInfos(this.currTileLevel, this.getURL);
+  let tileInfos = this.tileManager.getTileInfos(this.currTileLevel, this.getURL);
   return tileInfos;
 };
 
 
 MapView.prototype.requestImages_ = function(tileInfos) {
-  var count = 0;
-  for (var i = 0; i < tileInfos.length; ++i ) {
+  let count = 0;
+  for (let i = 0; i < tileInfos.length; ++i ) {
     if ( this.imageCache.loadImageIfAbsent(tileInfos[i].url, tileInfos[i].rect) ) {
       ++count;
     }
@@ -147,16 +147,16 @@ MapView.prototype.requestImages_ = function(tileInfos) {
 
 MapView.prototype.render_ = function(tileInfos) {
   this.imageProj.clear(this.canvasSize);
-  var targetTextures = [];
-  for (var i = 0; i < tileInfos.length; ++i ) {
-    var info = tileInfos[i];
-    var tex = this.imageCache.getTexture(info.url);
+  let targetTextures = [];
+  for (let i = 0; i < tileInfos.length; ++i ) {
+    let info = tileInfos[i];
+    let tex = this.imageCache.getTexture(info.url);
     if ( tex ) {
       targetTextures.push(tex);
     }
   }
 
-  var texCoords = new Float32Array([
+  let texCoords = new Float32Array([
     0.0, 0.0,   // left top
     0.0, 1.0,   // left bottom
     1.0, 0.0,   // right top

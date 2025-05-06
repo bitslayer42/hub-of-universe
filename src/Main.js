@@ -8,7 +8,7 @@ import { Interpolater } from "./lib/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterAEQD } from './RasterAEQD.js';
 
-var Main = function () {
+let Main = function () {
   this.interpolateTimeSpan = 1e3;
   this.gl = null;
   this.canvas = null;
@@ -47,23 +47,23 @@ var Main = function () {
   });
 
   this.animation = () => {
-    var currTime = new Date().getTime();
+    let isInterpolatorRunning = this.viewStatus.interpolater != null;
+    let currTime = new Date().getTime();
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     // console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
 
-    var currPos;
+    let currPos;
     if (this.viewStatus.interpolater != null) { // Interpolater is running
       currPos = this.viewStatus.interpolater.getPos(currTime);
       this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
-      // this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
       this.viewStatus.interpolater.isFinished() && (this.viewStatus.interpolater = null);
       this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
       this.mapView.render();
     } else if (this.viewStatus.targetLambdaPhi != null) { // new lambda phi requested, start up interpolater
-      var center = [0, 0]; // this.mapView.getViewCenterPoint();
-      var currLambdaPhi = this.mapView.getProjCenter();
-      var targLambdaPhi = this.viewStatus.targetLambdaPhi;
+      let center = [0, 0]; // this.mapView.getViewCenterPoint();
+      let currLambdaPhi = this.mapView.getProjCenter();
+      let targLambdaPhi = this.viewStatus.targetLambdaPhi;
       this.viewStatus.interpolater = Interpolater.create(
         currLambdaPhi,
         targLambdaPhi,
@@ -83,7 +83,7 @@ var Main = function () {
       this.prevScale = this.viewStatus.zoomScale;
       this.mapView.render();
     }
-    this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
+    // this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
     this.mapView.render();
     this.requestId = requestAnimationFrame(this.animation);
   };
@@ -98,7 +98,7 @@ var Main = function () {
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost, false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored, false);
 
-    var mc = new Hammer.Manager(this.canvas, {
+    let mc = new Hammer.Manager(this.canvas, {
       recognizers: [
         [Hammer.Pinch, { enable: true, }],
         [Hammer.Pan, { enable: true, }],
@@ -119,12 +119,12 @@ var Main = function () {
 
   this.init = (imageProj) => {
     //imageProj is a RasterAEQD
-    var canvasInfo = this.canvas.getBoundingClientRect(); //read-only left, top, right, bottom, x, y, width, height properties of this.canvas
-    var canvasSize = {
+    let canvasInfo = this.canvas.getBoundingClientRect(); //read-only left, top, right, bottom, x, y, width, height properties of this.canvas
+    let canvasSize = {
       width: canvasInfo.width,
       height: canvasInfo.height,
     };
-    var tile_opts = {
+    let tile_opts = {
       rootNumX: 2,
       rootNumY: 1,
       rootTileSizeX: Math.PI,
@@ -134,7 +134,7 @@ var Main = function () {
       inverseY: false,
       canvasSize: canvasSize,
     };
-    var cache_opts = {
+    let cache_opts = {
       num: 50,
       crossOrigin: false,
       debug: this.debug,
@@ -144,11 +144,6 @@ var Main = function () {
     imageProj.setProjCenter(this.lam0, this.phi0);
     this.mapView = new MapView(this.gl, imageProj, canvasSize, tile_opts, cache_opts);
 
-    // var viewRect = this.mapView.getViewRect();
-    // var viewRect = [-Math.PI, -Math.PI, Math.PI, Math.PI];
-    // var radius = Math.PI;
-    // var radius = (viewRect[2] - viewRect[0]) / 2; //radius (pi)
-
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
       //return "http://www.flatearthlab.com/data/20120925/adb12292ed/NE2_50M_SR_W/" + z + "/" + x + "/" + y + ".png"
@@ -156,16 +151,14 @@ var Main = function () {
       return "./images/" + z + "/" + x + "/" + y + ".png";
     };
 
-    var currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
+    let currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.mapView.setTileLevel(currTileLevel);
-
-    // this.mapView.setWindow(-radius, -radius, radius, radius);
 
     this.mapView.requestImagesIfNecessary();
   };
 
   this.resizeCanvas = (canvas) => {
-    var width = canvas.clientWidth,
+    let width = canvas.clientWidth,
       height = canvas.clientHeight;
     (canvas.width == width && canvas.height == height) ||
       ((canvas.width = width), (canvas.height = height));
@@ -177,9 +170,9 @@ var Main = function () {
     let params = new URLSearchParams(document.location.search);
     let latLonStr = params.get("projCenter");
     if (latLonStr) {
-      var latLon = latLonStr.split(",");
+      let latLon = latLonStr.split(",");
       if (latLon.length < 2) return null;
-      var latDeg = parseFloat(latLon[0]),
+      let latDeg = parseFloat(latLon[0]),
         lonDeg = parseFloat(latLon[1]);
       if (isNaN(latDeg) || isNaN(lonDeg)) return null;
       this.phi0 = (latDeg * Math.PI) / 180; //degrees to radians
@@ -189,9 +182,9 @@ var Main = function () {
 
   //returns pixels 0,0 top left of canvas
   this.checkAndGetMousePos = (event) => {
-    var canv_xy = this.canvas.getBoundingClientRect();
-    var left = event.clientX - canv_xy.left;
-    var top = event.clientY - canv_xy.top;
+    let canv_xy = this.canvas.getBoundingClientRect();
+    let left = event.clientX - canv_xy.left;
+    let top = event.clientY - canv_xy.top;
     if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
       return null;
     }
@@ -200,9 +193,9 @@ var Main = function () {
 
   //returns pixels 0,0 top left of canvas
   this.checkAndGetGesturePos = (event) => {
-    var canv_xy = this.canvas.getBoundingClientRect();
-    var left = event.center.x - canv_xy.left;
-    var top = event.center.y - canv_xy.top;
+    let canv_xy = this.canvas.getBoundingClientRect();
+    let left = event.center.x - canv_xy.left;
+    let top = event.center.y - canv_xy.top;
     if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
       return null;
     }
@@ -210,7 +203,7 @@ var Main = function () {
   };
 
   this.handlePinch = (event) => { // TODO: make it work with new vals
-    var canv_xy = this.checkAndGetMousePos(event); //verify on canvas
+    let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
     if (canv_xy) {
       if (event.scale < 1.0) {
         this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale * event.scale;
@@ -231,12 +224,12 @@ var Main = function () {
 
   this.handlePan = (event) => {
     if (this.viewStatus.drag) {
-      var canv_xy = this.checkAndGetGesturePos(event);
+      let canv_xy = this.checkAndGetGesturePos(event);
       if (null != canv_xy) {
         if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
-          var dx = canv_xy[0] - this.viewStatus.dragPrevPos[0];
-          var dy = canv_xy[1] - this.viewStatus.dragPrevPos[1];
+          let dx = canv_xy[0] - this.viewStatus.dragPrevPos[0];
+          let dy = canv_xy[1] - this.viewStatus.dragPrevPos[1];
           this.mapView.moveWindow(dx, dy);
         }
         this.viewStatus.dragPrevPos = canv_xy;
@@ -246,7 +239,7 @@ var Main = function () {
 
   this.handlePanStart = (event) => {
     this.viewStatus.drag = true;
-    var canv_xy = this.checkAndGetGesturePos(event);
+    let canv_xy = this.checkAndGetGesturePos(event);
     if (canv_xy) {
       event.preventDefault();
       this.viewStatus.dragPrevPos = canv_xy;
@@ -259,16 +252,16 @@ var Main = function () {
   };
 
   this.handleDoubleTap = (event) => {
-    var canv_xy = this.checkAndGetGesturePos(event);
+    let canv_xy = this.checkAndGetGesturePos(event);
     if (canv_xy) {
       event.preventDefault();
-      var lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
+      let lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
       this.viewStatus.targetLambdaPhi = lam_phi; //{lambda: 1.533480323761242, phi: 0.5899993533326611} ; //c
     }
   };
 
   this.handleWheel = (event) => {
-    var canv_xy = this.checkAndGetMousePos(event); //verify on canvas
+    let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
     if (canv_xy) {
       this.viewStatus.zoomScale += event.deltaY * -0.01;
       this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);

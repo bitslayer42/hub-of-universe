@@ -10,7 +10,7 @@
  *  画像キャッシュ Image cache
  * @constructor
  */
-var ImageCache = function (cache_opts) {
+let ImageCache = function (cache_opts) {
   this.num = 32;             //  default: 32
   this.crossOrigin = null;
   this.textures = {};
@@ -36,16 +36,16 @@ var ImageCache = function (cache_opts) {
 
 ImageCache.prototype.loadImage_ = function (url, info) {
   this.loading[url] = true;
-  var image = new Image();
+  let image = new Image();
   if (this.crossOrigin != null) {
     image.crossOrigin = this.crossOrigin;
   }
-  var cache = this;
-  var debug = this.debug;
+  let cache = this;
+  let debug = this.debug;
   image.onload = function () {
     cache.ongoingImageLoads.splice(cache.ongoingImageLoads.indexOf(image), 1);
     if (cache.createTexture == null) return;
-    var tex = cache.createTexture(image);
+    let tex = cache.createTexture(image);
     if (tex) {
       cache.textures[url] = [tex, info];
     }
@@ -53,10 +53,10 @@ ImageCache.prototype.loadImage_ = function (url, info) {
 
     // For DEBUG: Draw a red border around each loaded image
     if (debug) {
-      var canvas = document.createElement('canvas');
+      let canvas = document.createElement('canvas');
       canvas.width = 256;
       canvas.height = 256;
-      var ctx = canvas.getContext('2d');
+      let ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0);
       ctx.strokeStyle = 'red';
       ctx.lineWidth = 5;
@@ -78,13 +78,13 @@ ImageCache.prototype.loadImageIfAbsent = function (url, info) {
 
 
 ImageCache.prototype.getTexture = function (url) {
-  var tex = this.textures[url];
+  let tex = this.textures[url];
   return tex;
 };
 
 
 ImageCache.prototype.clearOngoingImageLoads = function () {
-  for (var i = 0; i < this.ongoingImageLoads.length; i++) {
+  for (let i = 0; i < this.ongoingImageLoads.length; i++) {
     this.ongoingImageLoads[i].onload = undefined;
   }
   this.ongoingImageLoads = [];

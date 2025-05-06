@@ -32,12 +32,12 @@ const RasterAEQD = function() {
 
 RasterAEQD.prototype.init = function(gl) {
   this.shader_ = new ShaderProgram(gl);
-  var ret = this.shader_.init(RasterAEQD.VERTEX_SHADER_STR, RasterAEQD.FRAGMENT_SHADER_STR);
+  let ret = this.shader_.init(RasterAEQD.VERTEX_SHADER_STR, RasterAEQD.FRAGMENT_SHADER_STR);
   if ( !ret ) {
     return false;
   }
 
-  var numberOfItems = 4 + 4 + this.numberOfPoints;
+  let numberOfItems = 4 + 4 + this.numberOfPoints;
   this.shader_.initVBO(numberOfItems);
   this.shader_.setClearColor(this.backColor_);
   return true;
@@ -62,9 +62,9 @@ RasterAEQD.prototype.prepareRender = function(texCoords, viewRect) {
 // c- Renders textures at locations specified in textureInfos
 RasterAEQD.prototype.renderTextures = function(textureInfos) {
   this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
-  for ( var i = 0; i < textureInfos.length; ++i ) {
-    var texture = textureInfos[i][0];
-    var region = textureInfos[i][1];
+  for ( let i = 0; i < textureInfos.length; ++i ) {
+    let texture = textureInfos[i][0];
+    let region = textureInfos[i][1];
     this.shader_.renderTexture(texture, region);
   }
 };

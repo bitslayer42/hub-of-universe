@@ -14,7 +14,7 @@ import { ProjMath } from "./lib/ProjMath.js";
  * @param {object} option (divN)
  * @constructor
  */
-var AEQD = function(lam0, phi0, zoomScale, opt_divn) {
+let AEQD = function(lam0, phi0, zoomScale, opt_divn) {
   this.rando = Math.random();
   this.lam0 = lam0;
   this.phi0 = phi0;
@@ -72,24 +72,24 @@ AEQD.prototype.fwd_fisheye = function(x, y) {
  */
 AEQD.prototype.forward = function(lambda, phi) {
   let wm = this.frw_web_merc(lambda, phi);
-  var sin_phi = Math.sin(wm.phi);
-  var cos_phi = Math.cos(wm.phi);
-  var sin_lam = Math.sin(wm.lam - this.lam0);
-  var cos_lam = Math.cos(wm.lam - this.lam0);
+  let sin_phi = Math.sin(wm.phi);
+  let cos_phi = Math.cos(wm.phi);
+  let sin_lam = Math.sin(wm.lam - this.lam0);
+  let cos_lam = Math.cos(wm.lam - this.lam0);
 
-  var c = Math.acos( this.sin_phi0_ * sin_phi + this.cos_phi0_ * cos_phi * cos_lam );
+  let c = Math.acos( this.sin_phi0_ * sin_phi + this.cos_phi0_ * cos_phi * cos_lam );
   if ( Math.abs(c) < ProjMath.EPSILON ) {
     return { x: 0.0, y: 0.0 };
   }
 
-  var sin_c = Math.sin(c);
+  let sin_c = Math.sin(c);
   if ( Math.abs(sin_c) < ProjMath.EPSILON ) {
     return null;  //  対蹠点. point of view
   }
 
-  var k = c / sin_c;
-  var x = k * cos_phi * sin_lam;
-  var y = k * ( this.cos_phi0_ * sin_phi - this.sin_phi0_ * cos_phi * cos_lam );
+  let k = c / sin_c;
+  let x = k * cos_phi * sin_lam;
+  let y = k * ( this.cos_phi0_ * sin_phi - this.sin_phi0_ * cos_phi * cos_lam );
   [x, y] = this.fwd_fisheye(x, y);
   return { x:x, y:y };
 };
@@ -124,19 +124,19 @@ AEQD.prototype.inv_fisheye = function(x, y) {
 AEQD.prototype.inverse = function(x, y) {
   [x, y] = this.inv_fisheye(x, y);
 
-  var rh2 = x * x + y * y;
+  let rh2 = x * x + y * y;
   if ( ProjMath.PI_SQ < rh2 )   return null;
 
-  var rho = Math.sqrt(rh2);
+  let rho = Math.sqrt(rh2);
   if ( rho < ProjMath.EPSILON )  return { lambda: this.lam0, phi: this.phi0 };
 
-  var c_rh = rho;
-  var sin_c = Math.sin(c_rh);
-  var cos_c = Math.cos(c_rh);
+  let c_rh = rho;
+  let sin_c = Math.sin(c_rh);
+  let cos_c = Math.cos(c_rh);
 
-  var sinPhi = cos_c * this.sin_phi0_ + y * sin_c * this.cos_phi0_ / rho;
-  var phi = Math.asin(ProjMath.clamp(sinPhi, -1, 1));
-  var lam;
+  let sinPhi = cos_c * this.sin_phi0_ + y * sin_c * this.cos_phi0_ / rho;
+  let phi = Math.asin(ProjMath.clamp(sinPhi, -1, 1));
+  let lam;
   if ( ProjMath.HALF_PI - ProjMath.EPSILON < this.phi0 ) {   //  phi0 = pi/2
     lam = Math.atan2(x, -y) + this.lam0;
   } else if ( this.phi0 < -(ProjMath.HALF_PI - ProjMath.EPSILON) ) {   //  phi0 = -pi/2

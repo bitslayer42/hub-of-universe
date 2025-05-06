@@ -13,7 +13,7 @@ import { ProjMath } from "./ProjMath.js";
  * @param {number} ??
  * @constructor
  */
-var TileManager = function (tile_opts, imgProj) {
+let TileManager = function (tile_opts, imgProj) {
   this.rootNumX = 1;
   this.rootNumY = 1;
   this.rootTileSizeX = Math.PI;
@@ -61,19 +61,19 @@ TileManager.prototype.getTileX_ = function (numX, lam) {
 };
 
 TileManager.prototype.getTileY_ = function (numY, phi) {
-  var sign = this.inverseY ? -1 : +1;
+  let sign = this.inverseY ? -1 : +1;
   return Math.floor(sign * numY * (phi - this.tileOrigin[1]) / this.rootSizeY);
 };
 
 TileManager.prototype.subdivideTile = function (tile) {
-  var arrTiles = [];
-  var x1 = tile.rect[0];
-  var y1 = tile.rect[1];
-  var x2 = tile.rect[2];
-  var y2 = tile.rect[3];
-  var xHalf = (x1 + x2) / 2;
-  var yHalf = (y1 + y2) / 2;
-  var [ix, iy, iz] = [tile.xyz.x, tile.xyz.y, tile.xyz.z];
+  let arrTiles = [];
+  let x1 = tile.rect[0];
+  let y1 = tile.rect[1];
+  let x2 = tile.rect[2];
+  let y2 = tile.rect[3];
+  let xHalf = (x1 + x2) / 2;
+  let yHalf = (y1 + y2) / 2;
+  let [ix, iy, iz] = [tile.xyz.x, tile.xyz.y, tile.xyz.z];
   //  subdivide tile into 4 tiles
   arrTiles.push({
     "xyz": {
@@ -117,10 +117,10 @@ TileManager.prototype.zoomInTiles = function (tile) {
   console.log("tile: ", tile.xyz, Math.random());
   let kidtiles = this.subdivideTile(tile);
   for (const kidtile of kidtiles) {
-    var x1 = kidtile.rect[0];
-    var y1 = kidtile.rect[1];
-    var x2 = kidtile.rect[2];
-    var y2 = kidtile.rect[3];
+    let x1 = kidtile.rect[0];
+    let y1 = kidtile.rect[1];
+    let x2 = kidtile.rect[2];
+    let y2 = kidtile.rect[3];
     let botleft = this.imageProj.projection.forward(x1, y1);
     let topright = this.imageProj.projection.forward(x2, y2);
     let topleft = this.imageProj.projection.forward(x1, y2);
@@ -145,7 +145,7 @@ TileManager.prototype.zoomInTiles = function (tile) {
 TileManager.prototype.getTileInfos = function (currTileLevel, getUrl) {
   this.currTileLevel = currTileLevel;
   this.getUrl = getUrl;
-  var firstTile = {
+  let firstTile = {
     "rect": [
       -Math.PI,
       -Math.PI / 2.0,
@@ -158,11 +158,11 @@ TileManager.prototype.getTileInfos = function (currTileLevel, getUrl) {
       "z": 0
     },
   };
-  var tileTree = this.zoomInTiles(firstTile);
+  let tileTree = this.zoomInTiles(firstTile);
   let tileInfos = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
   for (const tile of tileInfos) {
     //  set url
-    var str = this.getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
+    let str = this.getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
     tile.url = str;
   }
   return tileInfos;
