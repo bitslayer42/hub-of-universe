@@ -1,9 +1,9 @@
- /**
- * Raster Map Projection v0.0.13  2016-11-13
- * Copyright (C) 2016 T.Seno
- * All rights reserved.
- * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
- */
+/**
+* Raster Map Projection v0.0.13  2016-11-13
+* Copyright (C) 2016 T.Seno
+* All rights reserved.
+* @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
+*/
 
 import { TileManager } from "./lib/TileManager.js";
 import { ImageCache } from "./lib/ImageCache.js";
@@ -16,13 +16,10 @@ import { ImageCache } from "./lib/ImageCache.js";
  * @param {number} ??
  * @constructor
  */
-let MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
+let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.gl = gl;
   this.imageProj = imgProj;
 
-  let viewWindowOpts = {
-    // not used
-  };
   this.canvasSize = canvasSize;
   //
   this.tileManager = new TileManager(tile_opts, this.imageProj);
@@ -31,86 +28,85 @@ let MapView = function(gl, imgProj, canvasSize, tile_opts, cache_opts) {
   //
   this.imageCache = new ImageCache(cache_opts);
   let self = this;
-  this.imageCache.createTexture = function(img) {
+  this.imageCache.createTexture = function (img) {
     return self.createTexture(img);
   };
   //
-  // this.centerIcon_ = null;
-  // this.centerIconSize_ = null;  //  iconSize: { width:, height: } [pixel]
-  //
-  // this.graticuleInterval = 0;   //  (default 20) If it is 0 or less do not draw latitude and longitude lines 0以下の場合は緯度経度線を描画しない
+  this.tileInfos = null;
   this.getURL = null;
   this.calculateLevel = null;
   this.currTileLevel = 0;
   this.prevTileLevel = null;
 };
 
-MapView.prototype.clearTileInfoCache_ = function() {
+MapView.prototype.clearTileInfoCache_ = function () {
   this.prevWindow_ = null;
   this.prevTileInfos_ = null;
 };
 
-// MapView.prototype.setCenterIcon = function(iconTexture, size) {
-//   this.centerIcon_ = iconTexture;
-//   this.centerIconSize_ = size;
-// };
-
-MapView.prototype.setProjCenter = function(lam, phi) {
+MapView.prototype.setProjCenter = function (lam, phi) {
   this.clearTileInfoCache_();
   this.imageProj.setProjCenter(lam, phi);
 };
 
-MapView.prototype.getProjCenter = function() {
+MapView.prototype.getProjCenter = function () {
   return this.imageProj.projection.getProjCenter();
 };
 
-MapView.prototype.moveWindow = function(dx, dy) {
+MapView.prototype.moveWindow = function (dx, dy) {
   console.log("MapView.prototype.moveWindow");
 };
 
-MapView.prototype.setTileLevel = function(currTileLevel) {
+MapView.prototype.resizeCanvas = function (canvas) {
+  this.canvasSize.width = canvas.width;
+  this.canvasSize.height = canvas.height;
+  this.tileManager.resizeCanvas(this.canvasSize);
+}
+
+MapView.prototype.setTileLevel = function (currTileLevel) {
   this.currTileLevel = currTileLevel;
 };
 
 
-MapView.prototype.getViewPointFromWindow = function(canvX, canvY) {
+MapView.prototype.getViewPointFromWindow = function (canvX, canvY) {
   let scaleX_ = (Math.PI * 2) / this.canvasSize.width; // convert pixel to pi
-  let scaleY_ = (Math.PI * 2) / -this.canvasSize.height; 
+  let scaleY_ = (Math.PI * 2) / -this.canvasSize.height;
   let x = -Math.PI + canvX * scaleX_;
   let y = -Math.PI + (canvY - this.canvasSize.height) * scaleY_;
   return [x, y]; // pi's
 };
 
-MapView.prototype.getLambdaPhiPointFromWindow = function(x, y) {
+MapView.prototype.getLambdaPhiPointFromWindow = function (x, y) {
   let viewPos = this.getViewPointFromWindow(x, y);
   let lam_phi = this.imageProj.projection.inverse(viewPos[0], viewPos[1]);
-  return lam_phi; 
-}; 
+  return lam_phi;
+};
 
 
-MapView.prototype.resetImages = function() {
+MapView.prototype.resetImages = function () {
   this.imageCache.clearOngoingImageLoads();
 };
 
 // Called from init
-MapView.prototype.requestImagesIfNecessary = function() {
-  if ( this.getURL == null )   return -1;
-  let tileInfos = this.getTileInfos_();
-  let count = this.requestImages_(tileInfos);
+MapView.prototype.requestImagesIfNecessary = function () {
+  if (this.getURL == null) return -1;
+  this.getTileInfos_();
+  let count = this.requestImages_(this.tileInfos);
   return count;
 };
 
 // Called from animation
-MapView.prototype.render = function() {
-  if ( this.getURL == null )   return;
-  this.clearTileInfoCache_();
-  let tileInfos = this.getTileInfos_();
-  this.requestImages_(tileInfos);
-  this.render_(tileInfos);
-};
+MapView.prototype.render = function (getNewTiles) {
+  if (this.getURL == null) return;
+  if (getNewTiles) {
+    this.getTileInfos_();
+    this.requestImages_(this.tileInfos);
+  }
+  this.render_(this.tileInfos);
+}
 
 //  TODO この実装の詳細は別の場所にあるべきか Should this implementation's detail be in a different location?
-MapView.prototype.createTexture = function(img) {
+MapView.prototype.createTexture = function (img) {
   let tex = this.gl.createTexture();
   this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
   this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
@@ -128,16 +124,17 @@ MapView.prototype.createTexture = function(img) {
 };
 
 
-MapView.prototype.getTileInfos_ = function() {
-  let tileInfos = this.tileManager.getTileInfos(this.currTileLevel, this.getURL);
-  return tileInfos;
+MapView.prototype.getTileInfos_ = function () {
+  console.log("MapView.prototype.getTileInfos_");
+  this.tileInfos = this.tileManager.getTileInfos(this.currTileLevel, this.getURL);
+  console.log("this.tileInfos.length: ", this.tileInfos.length);
 };
 
 
-MapView.prototype.requestImages_ = function(tileInfos) {
+MapView.prototype.requestImages_ = function () {
   let count = 0;
-  for (let i = 0; i < tileInfos.length; ++i ) {
-    if ( this.imageCache.loadImageIfAbsent(tileInfos[i].url, tileInfos[i].rect) ) {
+  for (let i = 0; i < this.tileInfos.length; ++i) {
+    if (this.imageCache.loadImageIfAbsent(this.tileInfos[i].url, this.tileInfos[i].rect)) {
       ++count;
     }
   }
@@ -145,13 +142,13 @@ MapView.prototype.requestImages_ = function(tileInfos) {
 };
 
 
-MapView.prototype.render_ = function(tileInfos) {
+MapView.prototype.render_ = function () {
   this.imageProj.clear(this.canvasSize);
   let targetTextures = [];
-  for (let i = 0; i < tileInfos.length; ++i ) {
-    let info = tileInfos[i];
+  for (let i = 0; i < this.tileInfos.length; ++i) {
+    let info = this.tileInfos[i];
     let tex = this.imageCache.getTexture(info.url);
-    if ( tex ) {
+    if (tex) {
       targetTextures.push(tex);
     }
   }
@@ -162,8 +159,8 @@ MapView.prototype.render_ = function(tileInfos) {
     1.0, 0.0,   // right top
     1.0, 1.0    // right bottom
   ]);
-  this.imageProj.prepareRender(texCoords, [-Math.PI,-Math.PI,Math.PI,Math.PI]);
-  if ( 0 < targetTextures.length ) {
+  this.imageProj.prepareRender(texCoords, [-Math.PI, -Math.PI, Math.PI, Math.PI]);
+  if (0 < targetTextures.length) {
     this.imageProj.renderTextures(targetTextures);
   }
 };

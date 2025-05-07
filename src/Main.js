@@ -46,8 +46,14 @@ let Main = function () {
     this.getProjCenterParameter(); // check for url params
   });
 
+  window.addEventListener('resize', () => {
+    this.resizeCanvas(this.canvas);
+    this.mapView.resizeCanvas(this.canvas);
+    this.imageProj.clear(this.canvas);
+  });
+
   this.animation = () => {
-    let isInterpolatorRunning = this.viewStatus.interpolater != null;
+    let getNewTiles = false;
     let currTime = new Date().getTime();
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     // console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
@@ -57,34 +63,33 @@ let Main = function () {
     if (this.viewStatus.interpolater != null) { // Interpolater is running
       currPos = this.viewStatus.interpolater.getPos(currTime);
       this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
-      this.viewStatus.interpolater.isFinished() && (this.viewStatus.interpolater = null);
-      this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-      this.mapView.render();
+      if (this.viewStatus.interpolater.isFinished()) {
+        this.viewStatus.interpolater = null;
+        this.mapView.render(getNewTiles); // throw in an extra one why not
+        this.mapView.render(getNewTiles); // throw in an extra one why not
+        this.mapView.render(getNewTiles); // throw in an extra one why not
+        this.mapView.render(getNewTiles); // throw in an extra one why not
+        getNewTiles = false;
+      };
     } else if (this.viewStatus.targetLambdaPhi != null) { // new lambda phi requested, start up interpolater
-      let center = [0, 0]; // this.mapView.getViewCenterPoint();
       let currLambdaPhi = this.mapView.getProjCenter();
       let targLambdaPhi = this.viewStatus.targetLambdaPhi;
       this.viewStatus.interpolater = Interpolater.create(
         currLambdaPhi,
         targLambdaPhi,
-        center,
+        [0, 0],
         [0, 0],
         this.interpolateTimeSpan
       );
       this.viewStatus.targetLambdaPhi = null;
-      // if (this.viewStatus.interpolater != null) { // NOTE why was this duplicated? First time thru?
-      //   currPos = this.viewStatus.interpolater.getPos(currTime);
-      //   this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
-      //   this.mapView.setViewCenterPoint(currPos.viewPos[0], currPos.viewPos[1]);
-      // }
+      getNewTiles = true;
     }
     if (this.prevScale != this.viewStatus.zoomScale) {
       this.imageProj.setScale(this.viewStatus.zoomScale);
       this.prevScale = this.viewStatus.zoomScale;
-      this.mapView.render();
+      getNewTiles = true;
     }
-    // this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-    this.mapView.render();
+    this.mapView.render(getNewTiles);
     this.requestId = requestAnimationFrame(this.animation);
   };
 
@@ -125,13 +130,6 @@ let Main = function () {
       height: canvasInfo.height,
     };
     let tile_opts = {
-      rootNumX: 2,
-      rootNumY: 1,
-      rootTileSizeX: Math.PI,
-      rootTileSizeY: Math.PI,
-      // maxTileLevel: this.maxTileLevel,
-      tileOrigin: [-Math.PI, -Math.PI / 2],
-      inverseY: false,
       canvasSize: canvasSize,
     };
     let cache_opts = {

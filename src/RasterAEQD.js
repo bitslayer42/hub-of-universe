@@ -10,13 +10,6 @@ import { AEQD } from './AEQD.js';
 
 /* ------------------------------------------------------------ */
 
-/**
- * Projection of raster data.
- * @param {object} gl WebGL instance.
- * @param {number} canvasWidth
- * @param {number} canvasHeight
- * @constructor
- */
 const RasterAEQD = function() {
   this.shader_ = null;
   //

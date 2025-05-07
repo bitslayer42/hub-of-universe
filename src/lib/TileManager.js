@@ -5,21 +5,8 @@
 * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
 */
 import { ProjMath } from "./ProjMath.js";
-
-/**
- * ラスタタイル情報管理 Raster tile information management
- * @param {number} rootNumX
- * @param {number} rootNumY
- * @param {number} ??
- * @constructor
- */
+``
 let TileManager = function (tile_opts, imgProj) {
-  this.rootNumX = 1;
-  this.rootNumY = 1;
-  this.rootTileSizeX = Math.PI;
-  this.rootTileSizeY = Math.PI;
-  this.inverseY = false;
-  this.tileOrigin = [-Math.PI, -Math.PI / 2];     // lower left
   this.imageProj = imgProj;
   this.getUrl = null;
   this.currTileLevel = 0;
@@ -27,43 +14,19 @@ let TileManager = function (tile_opts, imgProj) {
   this.tilesAcross = 256;
   //
   if (typeof tile_opts !== 'undefined') {
-    if ('rootNumX' in tile_opts) {
-      this.rootNumX = tile_opts.rootNumX;
-    }
-    if ('rootNumY' in tile_opts) {
-      this.rootNumY = tile_opts.rootNumY;
-    }
-    if ('rootTileSizeX' in tile_opts) {
-      this.rootTileSizeX = tile_opts.rootTileSizeX;
-    }
-    if ('tileSizeY' in tile_opts) {
-      this.rootTileSizeY = tile_opts.rootTileSizeY;
-    }
-    if ('inverseY' in tile_opts) {
-      this.inverseY = tile_opts.inverseY;   //  TODO booleanへの型変換. Type conversion
-    }
-    if ('tileOrigin' in tile_opts) {
-      this.tileOrigin = tile_opts.tileOrigin;   //  TODO Array型チェック!!  Type check
-    }
     if ('canvasSize' in tile_opts) {
       this.canvasSize = tile_opts.canvasSize;
       this.tilesAcross = this.canvasSize.width / 256; // how many tiles fill the canvas
       this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
     }
   }
-  //
-  this.rootSizeX = this.rootNumX * this.rootTileSizeX;
-  this.rootSizeY = this.rootNumY * this.rootTileSizeY;
 };
 
-TileManager.prototype.getTileX_ = function (numX, lam) {
-  return Math.floor(numX * (lam - this.tileOrigin[0]) / this.rootSizeX);
-};
-
-TileManager.prototype.getTileY_ = function (numY, phi) {
-  let sign = this.inverseY ? -1 : +1;
-  return Math.floor(sign * numY * (phi - this.tileOrigin[1]) / this.rootSizeY);
-};
+TileManager.prototype.resizeCanvas = function (canvasSize) {
+  this.canvasSize = canvasSize;
+  this.tilesAcross = this.canvasSize.width / 256; // how many tiles fill the canvas
+  this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
+}
 
 TileManager.prototype.subdivideTile = function (tile) {
   let arrTiles = [];
@@ -114,7 +77,7 @@ TileManager.prototype.subdivideTile = function (tile) {
 TileManager.prototype.zoomInTiles = function (tile) {
   let retTiles = [];
   retTiles.push(tile);
-  console.log("tile: ", tile.xyz, Math.random());
+  // console.log("tile: ", tile.xyz, Math.random()); // <==========
   let kidtiles = this.subdivideTile(tile);
   for (const kidtile of kidtiles) {
     let x1 = kidtile.rect[0];
