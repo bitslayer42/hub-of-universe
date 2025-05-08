@@ -17,19 +17,19 @@ let Main = function () {
   this.prevTime = null;
   this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians
-  this.lam0 = -82.0 * 0.0174533;
+  this.lam0 = 45.0 * 0.0174533;
   this.phi0 = 35.0 * 0.0174533;
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 0.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 20.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 60.0;
+  this.zoomMax = 20.0;
   this.maxTileLevel = 7; // tile levels 0 to maxTileLevel
   this.imageProj = null;
   this.debug = false;
@@ -56,7 +56,7 @@ let Main = function () {
     let getNewTiles = false;
     let currTime = new Date().getTime();
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
-    // console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
+    console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
 
     let currPos;
@@ -65,11 +65,7 @@ let Main = function () {
       this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
       if (this.viewStatus.interpolater.isFinished()) {
         this.viewStatus.interpolater = null;
-        this.mapView.render(getNewTiles); // throw in an extra one why not
-        this.mapView.render(getNewTiles); // throw in an extra one why not
-        this.mapView.render(getNewTiles); // throw in an extra one why not
-        this.mapView.render(getNewTiles); // throw in an extra one why not
-        getNewTiles = false;
+        // getNewTiles = true;
       };
     } else if (this.viewStatus.targetLambdaPhi != null) { // new lambda phi requested, start up interpolater
       let currLambdaPhi = this.mapView.getProjCenter();
@@ -82,12 +78,11 @@ let Main = function () {
         this.interpolateTimeSpan
       );
       this.viewStatus.targetLambdaPhi = null;
-      getNewTiles = true;
     }
     if (this.prevScale != this.viewStatus.zoomScale) {
       this.imageProj.setScale(this.viewStatus.zoomScale);
       this.prevScale = this.viewStatus.zoomScale;
-      getNewTiles = true;
+      // getNewTiles = true;
     }
     this.mapView.render(getNewTiles);
     this.requestId = requestAnimationFrame(this.animation);
