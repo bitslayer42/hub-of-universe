@@ -17,20 +17,20 @@ let Main = function () {
   this.prevTime = null;
   this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians
-  this.lam0 = 45.0 * 0.0174533;
-  this.phi0 = 35.0 * 0.0174533;
+  this.lam0 = -85.0 * 0.0174533;
+  this.phi0 = 5.0 * 0.0174533;
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 20.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 0.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 20.0;
-  this.maxTileLevel = 7; // tile levels 0 to maxTileLevel
+  this.zoomMax = 120.0;
+  this.maxTileLevel = 8; // tile levels 0 to maxTileLevel
   this.imageProj = null;
   this.debug = false;
 
@@ -65,7 +65,7 @@ let Main = function () {
       this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
       if (this.viewStatus.interpolater.isFinished()) {
         this.viewStatus.interpolater = null;
-        // getNewTiles = true;
+        getNewTiles = true;
       };
     } else if (this.viewStatus.targetLambdaPhi != null) { // new lambda phi requested, start up interpolater
       let currLambdaPhi = this.mapView.getProjCenter();
@@ -82,7 +82,7 @@ let Main = function () {
     if (this.prevScale != this.viewStatus.zoomScale) {
       this.imageProj.setScale(this.viewStatus.zoomScale);
       this.prevScale = this.viewStatus.zoomScale;
-      // getNewTiles = true;
+      getNewTiles = true;
     }
     this.mapView.render(getNewTiles);
     this.requestId = requestAnimationFrame(this.animation);

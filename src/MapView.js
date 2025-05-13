@@ -125,9 +125,8 @@ MapView.prototype.createTexture = function (img) {
 
 
 MapView.prototype.getTileInfos_ = function () {
-  console.log("MapView.prototype.getTileInfos_");
   this.tileInfos = this.tileManager.getTileInfos(this.currTileLevel, this.getURL);
-  console.log("this.tileInfos.length: ", this.tileInfos.length);
+  console.log("MapView.tileInfos.length: ", this.tileInfos.length);
 };
 
 
