@@ -81,25 +81,19 @@ TileManager.prototype.zoomInTiles = function (tile) {
   // console.log("tile: ", tile.xyz, Math.random()); // <==========
   let kidtiles = this.subdivideTile(tile);
   for (const kidtile of kidtiles) {
-
     let tileMidLam = (kidtile.rect[0] + kidtile.rect[2]) / 2;
     let tileMidPhi = (kidtile.rect[1] + kidtile.rect[3]) / 2;
     const atanSinhPi = 1.48442222;
     let webMercPhi = Math.atan(Math.sinh(tileMidPhi * Math.PI / atanSinhPi));
-    // let xy = this.imageProj.projection.forward(tileMidLam, tileMidPhi);
-    // let radius = Math.sqrt(xy.x * xy.x + xy.y * xy.y);
     let lamphi0 = { lambda: this.imageProj.projection.lam0, phi: this.imageProj.projection.phi0 };
     let lamphiP = { lambda: tileMidLam, phi: webMercPhi }
     let radius2 = ProjMath.sphericalDistance(
       lamphi0,
       lamphiP,
     );
-
-            // function toDeg(radians) {return Math.round(radians * (180 / Math.PI));}
-            // console.log("radius2: ", String(toDeg(radius2)).padStart(4, '0'), "%", kidtile.xyz,
-            // toDeg(lamphi0.lambda), toDeg(lamphi0.phi), toDeg(lamphiP.lambda), toDeg(lamphiP.phi)); // <==========
-    
     let fisheyeR = Math.log(1 + this.imageProj.projection.zoomScale * radius2) / Math.log(1 + this.imageProj.projection.zoomScale);
+    let adjForLat = Math.cos(tileMidPhi);
+    fisheyeR = fisheyeR / adjForLat;
     if (fisheyeR < Math.PI / (kidtile.xyz.z) && tile.xyz.z <= this.currTileLevel) {
       retTiles.push(this.zoomInTiles(kidtile));
     }

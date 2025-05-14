@@ -16,20 +16,20 @@ let Main = function () {
   this.requestId = null;
   this.prevTime = null;
   this.prevScale = null;
-  // Center of map: lam0 longitude, phi0 latitude in radians
-  this.lam0 = -85.0 * 0.0174533;
-  this.phi0 = 5.0 * 0.0174533;
+  // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
+  this.lam0 = -82.5 * 0.0174533;
+  this.phi0 = 35.3 * 0.0174533;
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 0.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 100.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 120.0;
+  this.zoomMax = 1000.0;
   this.maxTileLevel = 8; // tile levels 0 to maxTileLevel
   this.imageProj = null;
   this.debug = false;
@@ -256,7 +256,7 @@ let Main = function () {
   this.handleWheel = (event) => {
     let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
     if (canv_xy) {
-      this.viewStatus.zoomScale += event.deltaY * -0.01;
+      this.viewStatus.zoomScale += (event.deltaY * -0.01);
       this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     }
   };
