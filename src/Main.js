@@ -23,16 +23,16 @@ let Main = function () {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 100.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 19.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 1000.0;
+  this.zoomMax = 20.0;
   this.maxTileLevel = 8; // tile levels 0 to maxTileLevel
   this.imageProj = null;
-  this.debug = false;
+  this.debug = true;
 
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
@@ -56,7 +56,10 @@ let Main = function () {
     let getNewTiles = false;
     let currTime = new Date().getTime();
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
-    console.log("Tile Level: " + this.viewStatus.currTileLevel + " ZoomScale: " + this.viewStatus.zoomScale);
+    let consolelamphi = this.mapView.getProjCenter();
+    console.log("TileLvl: " + this.viewStatus.currTileLevel + 
+                " ZoomScl: " + this.viewStatus.zoomScale + 
+                " lamphi0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
 
     let currPos;
@@ -139,7 +142,6 @@ let Main = function () {
 
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
-      //return "http://www.flatearthlab.com/data/20120925/adb12292ed/NE2_50M_SR_W/" + z + "/" + x + "/" + y + ".png"
       // return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=pk.eyJ1IjoiYml0c2xheWVyNDIiLCJhIjoiY205MXh4c2ZjMDY5czJrcHcwZTM4NHhiZyJ9.mMYRfw9tewpnBYmKmXXBMw`
       return "./images/" + z + "/" + x + "/" + y + ".png";
     };
