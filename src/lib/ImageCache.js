@@ -52,22 +52,22 @@ ImageCache.prototype.loadImage_ = function (url, info) {
     delete cache.loading.url;
 
     // For DEBUG: Draw a red border around each loaded image
-    // if (debug) {
-    //   let canvas = document.createElement('canvas');
-    //   canvas.width = 256;
-    //   canvas.height = 256;
-    //   let ctx = canvas.getContext('2d');
-    //   ctx.drawImage(image, 0, 0);
-    //   ctx.strokeStyle = 'red';
-    //   ctx.lineWidth = 5;
-    //   ctx.strokeRect(0, 0, image.width, image.height);
-    //   image.src = canvas.toDataURL();
-    // }
+    if (debug == "boxred") {
+      let canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      let ctx = canvas.getContext('2d');
+      ctx.drawImage(image, 0, 0);
+      ctx.strokeStyle = 'red';
+      ctx.lineWidth = 5;
+      ctx.strokeRect(0, 0, image.width, image.height);
+      image.src = canvas.toDataURL();
+    }
   };
   this.ongoingImageLoads.push(image);
 
   // debug: levels over 8 just use black tile
-  if (debug) {
+  if (debug == "local8") {
     let splitUrl = url.split("/");
     let zed = parseInt(splitUrl[2]);
     if (zed > 8) {

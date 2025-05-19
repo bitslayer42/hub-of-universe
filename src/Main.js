@@ -32,7 +32,7 @@ let Main = function () {
   this.zoomMax = 1_000_000.01;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.imageProj = null;
-  this.debug = true;
+  this.debug = "local8"; // "local8", "boxred", false
 
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
