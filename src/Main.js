@@ -17,20 +17,20 @@ let Main = function () {
   this.prevTime = null;
   this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
-  this.lam0 = -82.5 * 0.0174533;
-  this.phi0 = 35.3 * 0.0174533;
+  this.lam0 = -74.00637522872131 * 0.0174533; // -82.5 * 0.0174533
+  this.phi0 = 42.65861289085927  * 0.0174533; // 35.3 * 0.0174533
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 19.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 1_000_000.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 20.0;
-  this.maxTileLevel = 8; // tile levels 0 to maxTileLevel
+  this.zoomMax = 1_000_000.01;
+  this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.imageProj = null;
   this.debug = true;
 
@@ -56,10 +56,12 @@ let Main = function () {
     let getNewTiles = false;
     let currTime = new Date().getTime();
     this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
-    let consolelamphi = this.mapView.getProjCenter();
-    console.log("TileLvl: " + this.viewStatus.currTileLevel + 
-                " ZoomScl: " + this.viewStatus.zoomScale + 
-                " lamphi0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533);
+
+    // let consolelamphi = this.mapView.getProjCenter();
+    // console.log("TileLvl: " + this.viewStatus.currTileLevel + 
+    //             " ZoomScl: " + this.viewStatus.zoomScale + 
+    //             " lamphi0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533);
+
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
 
     let currPos;
@@ -143,7 +145,7 @@ let Main = function () {
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
       // return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=pk.eyJ1IjoiYml0c2xheWVyNDIiLCJhIjoiY205MXh4c2ZjMDY5czJrcHcwZTM4NHhiZyJ9.mMYRfw9tewpnBYmKmXXBMw`
-      return "./images/" + z + "/" + x + "/" + y + ".png";
+      return `./images/${z}/${x}/${y}.png`;
     };
 
     let currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);

@@ -13,6 +13,7 @@ let TileManager = function (tile_opts, imgProj) {
   this.tilesAcross = 0;
   this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
+  this.theLikeHighestLevel = 0; // highest level of tiles
   //
   if (typeof tile_opts !== 'undefined') {
     if ('canvasSize' in tile_opts) {
@@ -122,11 +123,12 @@ TileManager.prototype.zoomInTiles = function (tile) {
   for (const kidtile of kidtiles) {
     let radius = this.getRadius(kidtile); // distance to center of map from this tile
     let diagonal = this.getTileDiagonal(kidtile); // diagonal size of tile in 2pi's
-    let radiusOK = radius < Math.PI / kidtile.xyz.z;
+    let radiusOK = radius < Math.PI * 2.0 / kidtile.xyz.z;
     let diagonalOK = diagonal > this.tileMaxSize || kidtile.xyz.z <= 1;
     let curLevelOK = tile.xyz.z <= this.currTileLevel;
-    console.log("tile: ", kidtile.xyz, "radiusOK: ", radiusOK, "diagonalOK: ", diagonalOK, "curLevelOK: ", curLevelOK);
+    // console.log("tile: ", kidtile.xyz, "rad: ", radiusOK, radius, Math.PI / kidtile.xyz.z, "diag: ", diagonalOK, "maxlev: ", curLevelOK, (radiusOK && diagonalOK && curLevelOK) ? "" : "--NO");
     if (radiusOK && diagonalOK && curLevelOK) {
+      if(kidtile.xyz.z>this.theLikeHighestLevel) {this.theLikeHighestLevel = kidtile.xyz.z}
       retTiles.push(this.zoomInTiles(kidtile));
     }
   }
@@ -135,6 +137,7 @@ TileManager.prototype.zoomInTiles = function (tile) {
 
 TileManager.prototype.getTileInfos = function (currTileLevel, getUrl) {
   this.currTileLevel = currTileLevel;
+  this.theLikeHighestLevel = 1;
   let firstTile = {
     "rect": [
       -Math.PI,
@@ -155,6 +158,7 @@ TileManager.prototype.getTileInfos = function (currTileLevel, getUrl) {
     let str = getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
     tile.url = str;
   }
+  console.log("theLikeHighestLevel: ", this.theLikeHighestLevel);
   return tileInfos;
 };
 

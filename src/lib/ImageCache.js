@@ -78,6 +78,7 @@ ImageCache.prototype.loadImage_ = function (url, info) {
   } else {
     image.src = url;
   }
+  // image.src = url;
 };
 
 
