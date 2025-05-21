@@ -94,9 +94,7 @@ let Main = function () {
   };
 
   this.startup = (imageProj) => {
-    this.canvas = document.getElementById("webglCanvas");
     this.gl = this.canvas.getContext("webgl2");
-    // this.gl = WebGLUtils.setupWebGL(this.canvas);
     if (!this.gl) {
       return void alert("Failed to setup WebGL.");
     }
