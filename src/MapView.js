@@ -37,6 +37,8 @@ let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.calculateLevel = null;
   this.currTileLevel = 0;
   this.prevTileLevel = null;
+  this.lam0 = 0;
+  this.phi0 = 0;
 };
 
 MapView.prototype.clearTileInfoCache_ = function () {
@@ -45,6 +47,8 @@ MapView.prototype.clearTileInfoCache_ = function () {
 };
 
 MapView.prototype.setProjCenter = function (lam, phi) {
+  this.lam0 = lam;
+  this.phi0 = phi;
   this.clearTileInfoCache_();
   this.imageProj.setProjCenter(lam, phi);
 };
@@ -125,7 +129,7 @@ MapView.prototype.createTexture = function (img) {
 
 
 MapView.prototype.getTileInfos_ = function () {
-  this.tileInfos = this.tileManager.getTileInfos(this.currTileLevel, this.getURL);
+  this.tileInfos = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL);
   console.log("MapView.tileInfos.length: ", this.tileInfos.length);
 };
 

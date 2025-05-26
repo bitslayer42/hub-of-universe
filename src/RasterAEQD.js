@@ -73,6 +73,7 @@ RasterAEQD.prototype.setScale = function(zoomScale) {
   this.projection.setScale(zoomScale);
 }
 
+/*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*/
 RasterAEQD.VERTEX_SHADER_STR = /*glsl*/`#version 300 es
   precision highp float;
   in vec2 aPosition;
@@ -85,7 +86,7 @@ RasterAEQD.VERTEX_SHADER_STR = /*glsl*/`#version 300 es
   }
 `;
 
-
+/*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*/
 RasterAEQD.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
 
   precision highp float;
@@ -107,12 +108,11 @@ RasterAEQD.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   const float blurRatio = 0.015;
   const float xyRadius = pi;
   const float atanSinhPi = 1.48442222; // atan(sinh(pi)) = max phi for web merc
-
   out vec4 fragColor;
 
   vec2 web_merc(float lambda, float phi) {      //  Web Mercator
     if (abs(phi) < atanSinhPi) {
-      phi = asinh(tan(phi)) * atanSinhPi / pi;
+      phi = asinh(tan(phi)) * 0.5;
     }
     return vec2(lambda, phi);
   }

@@ -17,8 +17,8 @@ let Main = function () {
   this.prevTime = null;
   this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
-  this.lam0 = -74.00637522872131 * 0.0174533; // -82.5 * 0.0174533
-  this.phi0 = 42.65861289085927  * 0.0174533; // 35.3 * 0.0174533
+  this.lam0 = 0.0816255 * 0.0174533; // -0.00142463433
+  this.phi0 = 51.4807135 * 0.0174533; // 0.89850833693
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
@@ -30,9 +30,9 @@ let Main = function () {
   };
   this.zoomMin = 0.01;
   this.zoomMax = 1_000_000.01;
-  this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
+  this.maxTileLevel = 18; // tile levels 0 to maxTileLevel
   this.imageProj = null;
-  this.debug = "local8"; // "local8", "local0", "boxred", false
+  this.debug = "local0"; // "local8", "local0", "boxred", false
 
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
@@ -70,7 +70,7 @@ let Main = function () {
       this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
       if (this.viewStatus.interpolater.isFinished()) {
         this.viewStatus.interpolater = null;
-        getNewTiles = true;
+        // getNewTiles = true;
       };
     } else if (this.viewStatus.targetLambdaPhi != null) { // new lambda phi requested, start up interpolater
       let currLambdaPhi = this.mapView.getProjCenter();
@@ -87,7 +87,7 @@ let Main = function () {
     if (this.prevScale != this.viewStatus.zoomScale) {
       this.imageProj.setScale(this.viewStatus.zoomScale);
       this.prevScale = this.viewStatus.zoomScale;
-      getNewTiles = true;
+      // getNewTiles = true;
     }
     this.mapView.render(getNewTiles);
     this.requestId = requestAnimationFrame(this.animation);
@@ -139,6 +139,7 @@ let Main = function () {
     imageProj.init(this.gl);
     imageProj.setProjCenter(this.lam0, this.phi0);
     this.mapView = new MapView(this.gl, imageProj, canvasSize, tile_opts, cache_opts);
+    this.mapView.setProjCenter(this.lam0, this.phi0);
 
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
@@ -175,16 +176,16 @@ let Main = function () {
     }
   };
 
-  //returns pixels 0,0 top left of canvas
-  this.checkAndGetMousePos = (event) => {
-    let canv_xy = this.canvas.getBoundingClientRect();
-    let left = event.clientX - canv_xy.left;
-    let top = event.clientY - canv_xy.top;
-    if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
-      return null;
-    }
-    return [left, top];
-  };
+  // //returns pixels 0,0 top left of canvas
+  // this.checkAndGetMousePos = (event) => {
+  //   let canv_xy = this.canvas.getBoundingClientRect();
+  //   let left = event.clientX - canv_xy.left;
+  //   let top = event.clientY - canv_xy.top;
+  //   if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
+  //     return null;
+  //   }
+  //   return [left, top];
+  // };
 
   //returns pixels 0,0 top left of canvas
   this.checkAndGetGesturePos = (event) => {
@@ -198,15 +199,15 @@ let Main = function () {
   };
 
   this.handlePinch = (event) => { // TODO: make it work with new vals
-    let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
-    if (canv_xy) {
-      if (event.scale < 1.0) {
-        this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale * event.scale;
-      } else {
-        this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale + event.scale - 1.0;
-      }
-      this.viewStatus.zoomScale = Math.min(Math.max(this.viewStatus.zoomMin, this.viewStatus.zoomScale), this.viewStatus.zoomMax);
+    // let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
+    // if (canv_xy) {
+    if (event.scale < 1.0) {
+      this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale * event.scale;
+    } else {
+      this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale + event.scale - 1.0;
     }
+    this.viewStatus.zoomScale = Math.min(Math.max(this.viewStatus.zoomMin, this.viewStatus.zoomScale), this.viewStatus.zoomMax);
+    // }
   };
 
   this.handlePinchStart = (event) => {
@@ -256,11 +257,17 @@ let Main = function () {
   };
 
   this.handleWheel = (event) => {
-    let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
-    if (canv_xy) {
-      this.viewStatus.zoomScale += (event.deltaY * -0.01);
-      this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
+    // let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
+    // if (canv_xy) {
+    if (event.deltaY < 0) {
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.2;
     }
+    else {
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.2;
+    }
+    this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
+    // console.log("wheel.deltaY", event.deltaY, "zoomScale100", this.viewStatus.zoomScale);
+    // }
   };
 
   this.handleContextLost = (event) => {

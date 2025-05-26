@@ -8,12 +8,10 @@ import { ProjMath } from "./ProjMath.js";
 ``
 let TileManager = function (tile_opts, imgProj) {
   this.imageProj = imgProj;
-  this.currTileLevel = 0;
   this.canvasSize = { width: null, height: null };
   this.tilesAcross = 0;
   this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
-  this.theLikeHighestLevel = 0; // highest level of tiles
   //
   if (typeof tile_opts !== 'undefined') {
     if ('canvasSize' in tile_opts) {
@@ -30,136 +28,103 @@ TileManager.prototype.resizeCanvas = function (canvasSize) {
   this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
 }
 
-TileManager.prototype.subdivideTile = function (tile) {
-  let arrTiles = [];
-  let x1 = tile.rect[0];
-  let y1 = tile.rect[1];
-  let x2 = tile.rect[2];
-  let y2 = tile.rect[3];
-  let xHalf = (x1 + x2) / 2;
-  let yHalf = (y1 + y2) / 2;
-  let [ix, iy, iz] = [tile.xyz.x, tile.xyz.y, tile.xyz.z];
-  //  subdivide tile into 4 tiles
-  arrTiles.push({
-    "xyz": {
-      "x": ix * 2,
-      "y": iy * 2,
-      "z": iz + 1
-    },
-    rect: [x1, yHalf, xHalf, y2],
-  });
-  arrTiles.push({
-    "xyz": {
-      "x": ix * 2 + 1,
-      "y": iy * 2,
-      "z": iz + 1
-    },
-    "rect": [xHalf, yHalf, x2, y2],
-  });
-  arrTiles.push({
-    "xyz": {
-      "x": ix * 2,
-      "y": iy * 2 + 1,
-      "z": iz + 1
-    },
-    "rect": [x1, y1, xHalf, yHalf],
-  });
-  arrTiles.push({
-    "xyz": {
-      "x": ix * 2 + 1,
-      "y": iy * 2 + 1,
-      "z": iz + 1
-    },
-    "rect": [xHalf, y1, x2, yHalf],
-  });
-  // tile.children = arrTiles;
-  return arrTiles;
+TileManager.prototype.getTileXY = function (longitude, latitude, level) {
+  // Convert longitude and latitude to pixel coordinates
+  let sinLatitude = Math.sin(latitude * Math.PI / 180);
+  let pixelX = ((longitude + 180) / 360) * this.tileSize * Math.pow(2, level);
+  let pixelY = (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * this.tileSize * Math.pow(2, level);
+  let tileX = Math.floor(pixelX / this.tileSize);
+  let tileY = Math.floor(pixelY / this.tileSize);
+  console.log("level", level, "tileSize", this.tileSize, "pixelX", pixelX, "pixelY", pixelY, "tileX", tileX, "tileY", tileY);
+  return { tileX, tileY };
 }
 
-TileManager.prototype.getRadius = function (kidtile) {
-  let tileMidLam = (kidtile.rect[0] + kidtile.rect[2]) / 2;
-  let tileMidPhi = (kidtile.rect[1] + kidtile.rect[3]) / 2;
-  const atanSinhPi = 1.48442222;
-  let webMercPhi = Math.atan(Math.sinh(tileMidPhi * Math.PI / atanSinhPi));
-  let lamphi0 = { lambda: this.imageProj.projection.lam0, phi: this.imageProj.projection.phi0 };
-  let lamphiP = { lambda: tileMidLam, phi: webMercPhi }
-  let radius = ProjMath.sphericalDistance(
-    lamphi0,
-    lamphiP,
-  );
-  let fisheyeR = Math.log(1 + this.imageProj.projection.zoomScale * radius) /
-    Math.log(1 + this.imageProj.projection.zoomScale);
-  let adjForLat = Math.cos(tileMidPhi);
-  fisheyeR = fisheyeR / adjForLat;
-  return fisheyeR;
+TileManager.prototype.tileXYToQuadkey = function (tileX, tileY, level) {
+  let quadkey = '';
+  for (let i = level; i > 0; i--) {
+    let digit = 0;
+    const mask = 1 << (i - 1);
+    if ((tileX & mask) !== 0) {
+      digit |= 1;
+    }
+    if ((tileY & mask) !== 0) {
+      digit |= 2;
+    }
+    quadkey += digit.toString();
+  }
+  return quadkey;
 }
 
-TileManager.prototype.getTileDiagonal = function (kidtile) {
-  let x1 = kidtile.rect[0];
-  let y1 = kidtile.rect[1];
-  let x2 = kidtile.rect[2];
-  let y2 = kidtile.rect[3];
-  let botleft1 = this.imageProj.projection.forward(x1, y1);
-  let topleft2 = this.imageProj.projection.forward(x1, y2);
-  let topright3 = this.imageProj.projection.forward(x2, y2);
-  let botright4 = this.imageProj.projection.forward(x2, y1);
-  // Use smaller of diagonals
-  let diag1 = Math.sqrt(
-    Math.pow(botleft1.x - topright3.x, 2) +
-    Math.pow(botleft1.y - topright3.y, 2)
-  );
-  let diag2 = Math.sqrt(
-    Math.pow(topleft2.x - botright4.x, 2) +
-    Math.pow(topleft2.y - botright4.y, 2)
-  );
-  let diagonal = Math.min(diag1, diag2);
-  return diagonal;
-}
-
-TileManager.prototype.zoomInTiles = function (tile) {
-  let retTiles = [];
-  retTiles.push(tile);
-  let kidtiles = this.subdivideTile(tile);
-  for (const kidtile of kidtiles) {
-    let radius = this.getRadius(kidtile); // distance to center of map from this tile
-    let diagonal = this.getTileDiagonal(kidtile); // diagonal size of tile in 2pi's
-    let radiusOK = radius < Math.PI * 2.0 / kidtile.xyz.z;
-    let diagonalOK = diagonal > this.tileMaxSize || kidtile.xyz.z <= 1;
-    let curLevelOK = tile.xyz.z <= this.currTileLevel;
-    // console.log("tile: ", kidtile.xyz, "rad: ", radiusOK, radius, Math.PI / kidtile.xyz.z, "diag: ", diagonalOK, "maxlev: ", curLevelOK, (radiusOK && diagonalOK && curLevelOK) ? "" : "--NO");
-    if (radiusOK && diagonalOK && curLevelOK) {
-      if(kidtile.xyz.z>this.theLikeHighestLevel) {this.theLikeHighestLevel = kidtile.xyz.z}
-      retTiles.push(this.zoomInTiles(kidtile));
+function quadkeyToTileXY(quadkey) {
+  let x = 0;
+  let y = 0;
+  const z = quadkey.length;
+  for (let i = z; i > 0; i--) {
+    const mask = 1 << (i - 1);
+    const digit = parseInt(quadkey.charAt(z - i));
+    if (digit & 1) {
+      x |= mask;
+    }
+    if (digit & 2) {
+      y |= mask;
     }
   }
-  return retTiles;
-};
+  return { x: x, y: y, z: z };
+}
 
-TileManager.prototype.getTileInfos = function (currTileLevel, getUrl) {
-  this.currTileLevel = currTileLevel;
-  this.theLikeHighestLevel = 1;
-  let firstTile = {
-    "rect": [
-      -Math.PI,
-      -Math.PI / 2.0,
-      Math.PI,
-      Math.PI / 2.0
-    ],
+TileManager.prototype.getRectFromXYZ = function (tile) {
+  //  get the tile rect from tile xyz
+  let baseX = -Math.PI;
+  let baseY = Math.PI / 2.0;
+  let baseWidth = Math.PI * 2.0;
+  let baseHeight = Math.PI;
+  let tileWidth = baseWidth / Math.pow(2, tile.xyz.z);
+  let tileHeight = baseHeight / Math.pow(2, tile.xyz.z);
+  let x1 = baseX + tile.xyz.x * tileWidth;
+  let y2 = baseY - tile.xyz.y * tileHeight;
+  let x2 = baseX + (tile.xyz.x + 1) * tileWidth;
+  let y1 = baseY - (tile.xyz.y + 1) * tileHeight;
+
+  return [x1, y1, x2, y2];
+}
+
+TileManager.prototype.getFirstTile = function (lam0, phi0, currTileLevel) {
+  let latitude = phi0 * 180 / Math.PI;
+  let longitude = lam0 * 180 / Math.PI;
+  let { tileX, tileY } = this.getTileXY(longitude, latitude, currTileLevel);
+  return {
     "xyz": {
-      "x": 0,
-      "y": 0,
-      "z": 0
+      "x": tileX,
+      "y": tileY,
+      "z": currTileLevel
     },
-  };
-  let tileTree = this.zoomInTiles(firstTile);
-  let tileInfos = tileTree.flat(Infinity); // trees are arrays of arrays... of objects; flatten to array of objects
-  for (const tile of tileInfos) {
-    //  set url
-    let str = getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
-    tile.url = str;
+    "quadkey": this.tileXYToQuadkey(tileX, tileY, currTileLevel),
   }
-  console.log("theLikeHighestLevel: ", this.theLikeHighestLevel);
-  return tileInfos;
+}
+
+TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
+  let tileInfos = [];
+
+  //  get the first tile
+  let currTile = this.getFirstTile(lam0, phi0, currTileLevel);
+  tileInfos.push(currTile);
+  //  get the other tiles
+  for (let level = currTileLevel-1; level >= 0; level--) {
+    let nextTileQuadkey = currTile.quadkey.slice(0,-1);
+    let nextTileXYZ = quadkeyToTileXY(nextTileQuadkey);
+    let nextTile = {
+      "xyz": nextTileXYZ,
+      "quadkey": nextTileQuadkey,
+    };
+    tileInfos.push(nextTile);
+    currTile = nextTile;
+  }
+
+  for (const tile of tileInfos) {
+    tile.rect = this.getRectFromXYZ(tile);
+    tile.url = getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
+  }
+  return tileInfos.reverse();
 };
 
 export { TileManager };
