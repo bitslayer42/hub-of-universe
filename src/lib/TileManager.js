@@ -35,7 +35,6 @@ TileManager.prototype.getTileXY = function (longitude, latitude, level) {
   let pixelY = (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * this.tileSize * Math.pow(2, level);
   let tileX = Math.floor(pixelX / this.tileSize);
   let tileY = Math.floor(pixelY / this.tileSize);
-  console.log("level", level, "tileSize", this.tileSize, "pixelX", pixelX, "pixelY", pixelY, "tileX", tileX, "tileY", tileY);
   return { tileX, tileY };
 }
 
@@ -88,6 +87,53 @@ TileManager.prototype.getRectFromXYZ = function (tile) {
   return [x1, y1, x2, y2];
 }
 
+TileManager.prototype.getNSWEtiles = function (tile) {
+  //  get the four tiles to the north, south, west and east of the given tile
+  let tiles = [];
+  let { x, y, z } = tile.xyz;
+  //  north
+  if (y > 0) {
+    tiles.push({
+      "xyz": { "x": x, "y": y - 1, "z": z },
+      "quadkey": this.tileXYToQuadkey(x, y - 1, z)
+    });
+  }
+  //  south
+  if (y < Math.pow(2, z) - 1) {
+    tiles.push({
+      "xyz": { "x": x, "y": y + 1, "z": z },
+      "quadkey": this.tileXYToQuadkey(x, y + 1, z)
+    });
+  }
+  //  west
+  if (x > 0) {
+    tiles.push({
+      "xyz": { "x": x - 1, "y": y, "z": z },
+      "quadkey": this.tileXYToQuadkey(x - 1, y, z)
+    });
+  } else {
+    //  if we are at the left edge, we can wrap around to the right edge
+    tiles.push({
+      "xyz": { "x": Math.pow(2, z) - 1, "y": y, "z": z },
+      "quadkey": this.tileXYToQuadkey(Math.pow(2, z) - 1, y, z)
+    });
+  }
+  //  east
+  if (x < Math.pow(2, z) - 1) {
+    tiles.push({
+      "xyz": { "x": x + 1, "y": y, "z": z },
+      "quadkey": this.tileXYToQuadkey(x + 1, y, z)
+    });
+  } else {
+    //  if we are at the right edge, we can wrap around to the left edge
+    tiles.push({
+      "xyz": { "x": 0, "y": y, "z": z },
+      "quadkey": this.tileXYToQuadkey(0, y, z)
+    });
+  }
+  return tiles;
+}
+
 TileManager.prototype.getFirstTile = function (lam0, phi0, currTileLevel) {
   let latitude = phi0 * 180 / Math.PI;
   let longitude = lam0 * 180 / Math.PI;
@@ -108,6 +154,8 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
   //  get the first tile
   let currTile = this.getFirstTile(lam0, phi0, currTileLevel);
   tileInfos.push(currTile);
+  let NSWEtiles = this.getNSWEtiles(currTile);
+  tileInfos.push(...NSWEtiles);
   //  get the other tiles
   for (let level = currTileLevel-1; level >= 0; level--) {
     let nextTileQuadkey = currTile.quadkey.slice(0,-1);
@@ -117,6 +165,8 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
       "quadkey": nextTileQuadkey,
     };
     tileInfos.push(nextTile);
+    let nextNSWEtiles = this.getNSWEtiles(nextTile);
+    tileInfos.push(...nextNSWEtiles);
     currTile = nextTile;
   }
 
