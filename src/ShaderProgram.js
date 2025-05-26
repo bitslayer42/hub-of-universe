@@ -1,23 +1,3 @@
-/**
- * Raster Map Projection v0.0.13  2016-11-13
- * Copyright (C) 2016 T.Seno
- * All rights reserved.
- * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
- */
-
-/* ------------------------------------------------------------ */
-
-/**
- * Size : { width: Float, height: Float }
- * Point : { x: Float, y: Float }
- * GeoCoord : { lambda: Float, phi: Float }
- * Rectangle : { x1: Float, y1: Float, x2: Float, y2: Float }
- * Range : { min: Float, max: Float }
- */
-
-
-/* ------------------------------------------------------------ */
-
 let ShaderProgram = function(gl) {
   this.gl_ = gl;
   this.vbo_ = null;

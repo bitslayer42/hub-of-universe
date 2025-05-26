@@ -1,9 +1,3 @@
-/*! FlatEarth WebGL v0.0.13  2016-11-13
- * Copyright (C) 2016 T.Seno
- * Copyright (C) 2016 www.flatearthlab.com
- * All rights reserved.
- */
-
 import { Interpolater } from "./lib/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterAEQD } from './RasterAEQD.js';
@@ -17,20 +11,20 @@ let Main = function () {
   this.prevTime = null;
   this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
-  this.lam0 = 0.0816255 * 0.0174533; // -0.00142463433
-  this.phi0 = 51.4807135 * 0.0174533; // 0.89850833693
+  this.lam0 = -74.0113949 * 0.0174533; // -1.29174307860817
+  this.phi0 = 40.703355 * 0.0174533; // 0.7104078658215001
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 1_000_000.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 0.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 1_000_000.01;
-  this.maxTileLevel = 18; // tile levels 0 to maxTileLevel
+  this.zoomMax = 100_000_000.01;
+  this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.imageProj = null;
   this.debug = "local0"; // "local8", "local0", "boxred", false
 
@@ -55,14 +49,7 @@ let Main = function () {
   this.animation = () => {
     let getNewTiles = false;
     let currTime = new Date().getTime();
-    this.viewStatus.currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
-
-    // let consolelamphi = this.mapView.getProjCenter();
-    // console.log("TileLvl: " + this.viewStatus.currTileLevel + 
-    //             " ZoomScl: " + this.viewStatus.zoomScale + 
-    //             " lamphi0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533);
-
-    this.mapView.setTileLevel(this.viewStatus.currTileLevel);
+    this.setTileLevel();
 
     let currPos;
     if (this.viewStatus.interpolater != null) { // Interpolater is running
@@ -70,7 +57,7 @@ let Main = function () {
       this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
       if (this.viewStatus.interpolater.isFinished()) {
         this.viewStatus.interpolater = null;
-        // getNewTiles = true;
+        getNewTiles = true;
       };
     } else if (this.viewStatus.targetLambdaPhi != null) { // new lambda phi requested, start up interpolater
       let currLambdaPhi = this.mapView.getProjCenter();
@@ -87,7 +74,7 @@ let Main = function () {
     if (this.prevScale != this.viewStatus.zoomScale) {
       this.imageProj.setScale(this.viewStatus.zoomScale);
       this.prevScale = this.viewStatus.zoomScale;
-      // getNewTiles = true;
+      getNewTiles = true;
     }
     this.mapView.render(getNewTiles);
     this.requestId = requestAnimationFrame(this.animation);
@@ -147,9 +134,7 @@ let Main = function () {
       return `./images/${z}/${x}/${y}.png`;
     };
 
-    let currTileLevel = Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
-    this.mapView.setTileLevel(currTileLevel);
-
+    this.setTileLevel();
     this.mapView.requestImagesIfNecessary();
   };
 
@@ -159,6 +144,17 @@ let Main = function () {
     (canvas.width == width && canvas.height == height) ||
       ((canvas.width = width), (canvas.height = height));
   };
+
+  this.setTileLevel = () => {
+    this.viewStatus.currTileLevel = Math.round(Math.log10(this.viewStatus.zoomScale) * 3.0);// Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
+    this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel),0);
+    // let consolelamphi = this.mapView.getProjCenter();
+    console.log("TileLvl: " + this.viewStatus.currTileLevel,
+                " ZoomScl: " + this.viewStatus.zoomScale,
+                // " lamphi0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
+              );
+    this.mapView.setTileLevel(this.viewStatus.currTileLevel)
+  }
 
   //  If url includes ?projCenter=lat,log in degrees map will be centered there
   // //  e.g. http://localhost:8080/?projCenter=35.32,-82.48

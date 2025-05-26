@@ -1,19 +1,6 @@
-/**
- * Raster Map Projection v0.0.13  2016-11-13
- * Copyright (C) 2016 T.Seno
- * All rights reserved.
- * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
- */
-/* ------------------------------------------------------------ */
-
 import { ProjMath } from "./lib/ProjMath.js";
-/**
- * Spherical Azimuthal Equidistant Projection
- * @param {number} lam0  latitude of the center [rad].
- * @param {number} phi0  longitude of the center [rad].
- * @param {object} option (divN)
- * @constructor
- */
+
+
 let AEQD = function(lam0, phi0, zoomScale, opt_divn) {
   this.rando = Math.random();
   this.lam0 = lam0;
@@ -25,25 +12,9 @@ let AEQD = function(lam0, phi0, zoomScale, opt_divn) {
   this.zoomScale = zoomScale;
 };
 
-/**
- * 値域を表す矩形 Rectangle representing range
- */
-// AEQD.RANGE_RECTANGLE = [ -Math.PI, -Math.PI, +Math.PI, +Math.PI ];
-
-// AEQD.prototype.getRange = function() {
-//   return AEQD.RANGE_RECTANGLE.slice(0);
-// };
-
 AEQD.prototype.getProjCenter = function() {
   return { lambda: this.lam0, phi: this.phi0 };
 };
-
-// AEQD.prototype.setProjCenter = function(lam0, phi0) {
-//   this.lam0 = lam0;
-//   this.phi0 = phi0;
-//   this.sin_phi0_ = Math.sin(phi0);
-//   this.cos_phi0_ = Math.cos(phi0);
-// }
 
 AEQD.prototype.frw_web_merc = function(lam, phi) {      //  Web Mercator
   const atanSinhPi = 1.48442222;
@@ -51,11 +22,6 @@ AEQD.prototype.frw_web_merc = function(lam, phi) {      //  Web Mercator
   return { lam, phi };
 };
 
-/**
- * fisheye effect
- * @param {} x 
- * @param {} y
- */
 AEQD.prototype.fwd_fisheye = function(x, y) { 
   [x, y] = [x / Math.PI, y / Math.PI];
   let rho = Math.sqrt(x*x + y*y);
@@ -64,12 +30,6 @@ AEQD.prototype.fwd_fisheye = function(x, y) {
   return [ Math.cos(theta) * fisheyeR * Math.PI, Math.sin(theta) * fisheyeR * Math.PI ];
 }
 
-/**
- * Forward projection.
- * @param {Float} lambda
- * @param {Float} phi
- * @return {Point}
- */
 AEQD.prototype.forward = function(lambda, phi) {
   let wm = this.frw_web_merc(lambda, phi);
   let sin_phi = Math.sin(wm.phi);
@@ -102,11 +62,6 @@ AEQD.prototype.inv_web_merc = function(lam, phi) {      //  Web Mercator
   return { lam, phi };
 };
 
-/**
- * fisheye effect
- * @param {} x 
- * @param {} y
- */
 AEQD.prototype.inv_fisheye = function(x, y) { 
   [x, y] = [x / Math.PI, y / Math.PI];
   let rho = Math.sqrt(x*x + y*y);
@@ -115,12 +70,6 @@ AEQD.prototype.inv_fisheye = function(x, y) {
   return [ Math.cos(theta) * fisheyeR * Math.PI, Math.sin(theta) * fisheyeR * Math.PI ];
 }
 
-/**
- * Inverse projection.
- * @param {Float} x
- * @param {Float} y
- * @param {GeoCoord}
- */
 AEQD.prototype.inverse = function(x, y) {
   [x, y] = this.inv_fisheye(x, y);
 

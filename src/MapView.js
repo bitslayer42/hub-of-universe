@@ -1,21 +1,6 @@
-/**
-* Raster Map Projection v0.0.13  2016-11-13
-* Copyright (C) 2016 T.Seno
-* All rights reserved.
-* @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
-*/
-
 import { TileManager } from "./lib/TileManager.js";
 import { ImageCache } from "./lib/ImageCache.js";
 
-/* ------------------------------------------------------------ */
-/**
- * Map View
- * @param {object} gl
- * @param {object} RasterAEQD or RasterProjLAEA
- * @param {number} ??
- * @constructor
- */
 let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.gl = gl;
   this.imageProj = imgProj;

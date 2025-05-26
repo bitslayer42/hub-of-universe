@@ -1,11 +1,3 @@
-/**
-* Raster Map Projection v0.0.13  2016-11-13
-* Copyright (C) 2016 T.Seno
-* All rights reserved.
-* @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
-*/
-import { ProjMath } from "./ProjMath.js";
-``
 let TileManager = function (tile_opts, imgProj) {
   this.imageProj = imgProj;
   this.canvasSize = { width: null, height: null };
@@ -29,7 +21,7 @@ TileManager.prototype.resizeCanvas = function (canvasSize) {
 }
 
 TileManager.prototype.getTileXY = function (longitude, latitude, level) {
-  // Convert longitude and latitude to pixel coordinates
+  // Get tile at center of map: Convert longitude and latitude to pixel coordinates
   let sinLatitude = Math.sin(latitude * Math.PI / 180);
   let pixelX = ((longitude + 180) / 360) * this.tileSize * Math.pow(2, level);
   let pixelY = (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * this.tileSize * Math.pow(2, level);
@@ -88,7 +80,7 @@ TileManager.prototype.getRectFromXYZ = function (tile) {
 }
 
 TileManager.prototype.getNSWEtiles = function (tile) {
-  //  get the four tiles to the north, south, west and east of the given tile
+  //  get the eight tiles surrounding the given tile
   let tiles = [];
   let { x, y, z } = tile.xyz;
   //  north
@@ -131,6 +123,34 @@ TileManager.prototype.getNSWEtiles = function (tile) {
       "quadkey": this.tileXYToQuadkey(0, y, z)
     });
   }
+  // northeast
+  if (y > 0 && x < Math.pow(2, z) - 1) {
+    tiles.push({
+      "xyz": { "x": x + 1, "y": y - 1, "z": z },
+      "quadkey": this.tileXYToQuadkey(x + 1, y - 1, z)
+    });
+  }
+  // northwest
+  if (y > 0 && x > 0) {
+    tiles.push({
+      "xyz": { "x": x - 1, "y": y - 1, "z": z },
+      "quadkey": this.tileXYToQuadkey(x - 1, y - 1, z)
+    });
+  }
+  // southeast
+  if (y < Math.pow(2, z) - 1 && x < Math.pow(2, z) - 1) {
+    tiles.push({
+      "xyz": { "x": x + 1, "y": y + 1, "z": z },
+      "quadkey": this.tileXYToQuadkey(x + 1, y + 1, z)
+    });
+  }
+  // southwest
+  if (y < Math.pow(2, z) - 1 && x > 0) {
+    tiles.push({
+      "xyz": { "x": x - 1, "y": y + 1, "z": z },
+      "quadkey": this.tileXYToQuadkey(x - 1, y + 1, z)
+    });
+  }
   return tiles;
 }
 
@@ -150,6 +170,7 @@ TileManager.prototype.getFirstTile = function (lam0, phi0, currTileLevel) {
 
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
   let tileInfos = [];
+  let halfOfCurrLevel = Math.floor(currTileLevel / 2.0);
 
   //  get the first tile
   let currTile = this.getFirstTile(lam0, phi0, currTileLevel);
@@ -165,8 +186,11 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
       "quadkey": nextTileQuadkey,
     };
     tileInfos.push(nextTile);
-    let nextNSWEtiles = this.getNSWEtiles(nextTile);
-    tileInfos.push(...nextNSWEtiles);
+    if (level > halfOfCurrLevel) { // Higher levels get the NSWE tiles
+      let nextNSWEtiles = this.getNSWEtiles(nextTile);
+      tileInfos.push(...nextNSWEtiles);
+    }
+
     currTile = nextTile;
   }
 

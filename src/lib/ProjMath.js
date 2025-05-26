@@ -1,14 +1,3 @@
-/**
- * Raster Map Projection v0.0.13  2016-11-13
- * Copyright (C) 2016 T.Seno
- * All rights reserved.
- * @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
- */
-/* ------------------------------------------------------------ */
-
-/**
- * 数学関数ユーティリティ. Mathematical function utility
- */
 let ProjMath = function() {};
 
 ProjMath.EPSILON = 1.0e-7;

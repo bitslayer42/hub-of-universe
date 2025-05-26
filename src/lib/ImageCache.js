@@ -1,15 +1,4 @@
-/**
-* Raster Map Projection v0.0.13  2016-11-13
-* Copyright (C) 2016 T.Seno
-* All rights reserved.
-* @license GPL v3 License (http://www.gnu.org/licenses/gpl.html)
-*/
-/* ------------------------------------------------------------ */
 
-/**
- *  画像キャッシュ Image cache
- * @constructor
- */
 let ImageCache = function (cache_opts) {
   this.num = 32;             //  default: 32
   this.crossOrigin = null;
@@ -71,9 +60,9 @@ ImageCache.prototype.loadImage_ = function (url, info) {
     let splitUrl = url.split("/");
     let zed = parseInt(splitUrl[2]);
     if ( debug == "local0" ) {
-      image.src = "./images/debug.png";
+      image.src = "./debug.png";
     } else if (debug == "local8" && zed > 8) {
-      image.src = "./images/debug.png";
+      image.src = "./debug.png";
     } else {
       image.src = url;
     }
