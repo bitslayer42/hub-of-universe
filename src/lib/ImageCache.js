@@ -67,10 +67,12 @@ ImageCache.prototype.loadImage_ = function (url, info) {
   this.ongoingImageLoads.push(image);
 
   // debug: levels over 8 just use black tile
-  if (debug == "local8") {
+  if (debug == "local8" || debug == "local0") {
     let splitUrl = url.split("/");
     let zed = parseInt(splitUrl[2]);
-    if (zed > 8) {
+    if ( debug == "local0" ) {
+      image.src = "./images/debug.png";
+    } else if (debug == "local8" && zed > 8) {
       image.src = "./images/debug.png";
     } else {
       image.src = url;
