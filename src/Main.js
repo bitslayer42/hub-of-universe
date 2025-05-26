@@ -1,6 +1,7 @@
 import { Interpolater } from "./lib/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterAEQD } from './RasterAEQD.js';
+import { mapbox_access_token } from './mapbox_access_token.js';
 
 let Main = function () {
   this.interpolateTimeSpan = 1e3;
@@ -17,16 +18,16 @@ let Main = function () {
     drag: false,
     dragPrevPos: null,
     pinchPrevScale: null,
-    zoomScale: 0.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 300.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 100_000_000.01;
+  this.zoomMax = 3_000_000.01;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.imageProj = null;
-  this.debug = "local0"; // "local8", "local0", "boxred", false
+  this.debug = false; // "local8", "local0", "boxred", false
 
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
@@ -130,8 +131,8 @@ let Main = function () {
 
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
-      // return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=pk.eyJ1IjoiYml0c2xheWVyNDIiLCJhIjoiY205MXh4c2ZjMDY5czJrcHcwZTM4NHhiZyJ9.mMYRfw9tewpnBYmKmXXBMw`
-      return `./images/${z}/${x}/${y}.png`;
+      return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
+      // return `./images/${z}/${x}/${y}.png`;
     };
 
     this.setTileLevel();
@@ -256,10 +257,10 @@ let Main = function () {
     // let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
     // if (canv_xy) {
     if (event.deltaY < 0) {
-      this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.2;
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.1;
     }
     else {
-      this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.2;
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     // console.log("wheel.deltaY", event.deltaY, "zoomScale100", this.viewStatus.zoomScale);

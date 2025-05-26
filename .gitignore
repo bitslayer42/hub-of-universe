@@ -2,3 +2,4 @@
 .vscode/
 node_modules/
 images/
+mapbox_access_token.js

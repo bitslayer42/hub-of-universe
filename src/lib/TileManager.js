@@ -20,11 +20,11 @@ TileManager.prototype.resizeCanvas = function (canvasSize) {
   this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
 }
 
-TileManager.prototype.getTileXY = function (longitude, latitude, level) {
-  // Get tile at center of map: Convert longitude and latitude to pixel coordinates
-  let sinLatitude = Math.sin(latitude * Math.PI / 180);
-  let pixelX = ((longitude + 180) / 360) * this.tileSize * Math.pow(2, level);
-  let pixelY = (0.5 - Math.log((1 + sinLatitude) / (1 - sinLatitude)) / (4 * Math.PI)) * this.tileSize * Math.pow(2, level);
+TileManager.prototype.getTileXY = function (lam0, phi0, level) {
+  // Get tile at center of map
+  let sinPhi0 = Math.sin(phi0);
+  let pixelX = ((lam0 + Math.PI) / (2 * Math.PI)) * this.tileSize * Math.pow(2, level);
+  let pixelY = (0.5 - Math.log((1 + sinPhi0) / (1 - sinPhi0)) / (4 * Math.PI)) * this.tileSize * Math.pow(2, level);
   let tileX = Math.floor(pixelX / this.tileSize);
   let tileY = Math.floor(pixelY / this.tileSize);
   return { tileX, tileY };
@@ -79,92 +79,113 @@ TileManager.prototype.getRectFromXYZ = function (tile) {
   return [x1, y1, x2, y2];
 }
 
-TileManager.prototype.getNSWEtiles = function (tile) {
-  //  get the eight tiles surrounding the given tile
+TileManager.prototype.getNSWEtiles = function (tile, tileList = ["N", "S", "W", "E", "NE", "NW", "SE", "SW"]) {
+  // Get the tiles surrounding the given tile that are specified by the parameter tileList
+  // which is an array of strings which can include: ["N", "S", "W", "E", "NE", "NW", "SE", "SW"]
   let tiles = [];
   let { x, y, z } = tile.xyz;
-  //  north
-  if (y > 0) {
-    tiles.push({
-      "xyz": { "x": x, "y": y - 1, "z": z },
-      "quadkey": this.tileXYToQuadkey(x, y - 1, z)
-    });
+  let maxZ = Math.pow(2, z) - 1; // max tile index at this zoom level
+
+  if (tileList.length === 0) {
+    return tiles; //  no tiles to return
   }
-  //  south
-  if (y < Math.pow(2, z) - 1) {
-    tiles.push({
-      "xyz": { "x": x, "y": y + 1, "z": z },
-      "quadkey": this.tileXYToQuadkey(x, y + 1, z)
-    });
+  if (tileList.includes("N")) {
+    if (y > 0) {
+      tiles.push({
+        "xyz": { "x": x, "y": y - 1, "z": z },
+      });
+    }
   }
-  //  west
-  if (x > 0) {
-    tiles.push({
-      "xyz": { "x": x - 1, "y": y, "z": z },
-      "quadkey": this.tileXYToQuadkey(x - 1, y, z)
-    });
-  } else {
-    //  if we are at the left edge, we can wrap around to the right edge
-    tiles.push({
-      "xyz": { "x": Math.pow(2, z) - 1, "y": y, "z": z },
-      "quadkey": this.tileXYToQuadkey(Math.pow(2, z) - 1, y, z)
-    });
+  if (tileList.includes("S")) {
+    if (y < maxZ) {
+      tiles.push({
+        "xyz": { "x": x, "y": y + 1, "z": z },
+      });
+    }
   }
-  //  east
-  if (x < Math.pow(2, z) - 1) {
-    tiles.push({
-      "xyz": { "x": x + 1, "y": y, "z": z },
-      "quadkey": this.tileXYToQuadkey(x + 1, y, z)
-    });
-  } else {
-    //  if we are at the right edge, we can wrap around to the left edge
-    tiles.push({
-      "xyz": { "x": 0, "y": y, "z": z },
-      "quadkey": this.tileXYToQuadkey(0, y, z)
-    });
+  if (tileList.includes("W")) {
+    if (x > 0) {
+      tiles.push({
+        "xyz": { "x": x - 1, "y": y, "z": z },
+      });
+    } else {
+      //  if we are at the left edge, we can wrap around to the right edge
+      tiles.push({
+        "xyz": { "x": maxZ, "y": y, "z": z },
+      });
+    }
   }
-  // northeast
-  if (y > 0 && x < Math.pow(2, z) - 1) {
-    tiles.push({
-      "xyz": { "x": x + 1, "y": y - 1, "z": z },
-      "quadkey": this.tileXYToQuadkey(x + 1, y - 1, z)
-    });
+  if (tileList.includes("E")) {
+    if (x < maxZ) {
+      tiles.push({
+        "xyz": { "x": x + 1, "y": y, "z": z },
+      });
+    } else {
+      //  if we are at the right edge, we can wrap around to the left edge
+      tiles.push({
+        "xyz": { "x": 0, "y": y, "z": z },
+      });
+    }
   }
-  // northwest
-  if (y > 0 && x > 0) {
-    tiles.push({
-      "xyz": { "x": x - 1, "y": y - 1, "z": z },
-      "quadkey": this.tileXYToQuadkey(x - 1, y - 1, z)
-    });
+  if (tileList.includes("NE")) {
+    if (y > 0 && x < maxZ) {
+      tiles.push({
+        "xyz": { "x": x + 1, "y": y - 1, "z": z },
+      });
+    }
   }
-  // southeast
-  if (y < Math.pow(2, z) - 1 && x < Math.pow(2, z) - 1) {
-    tiles.push({
-      "xyz": { "x": x + 1, "y": y + 1, "z": z },
-      "quadkey": this.tileXYToQuadkey(x + 1, y + 1, z)
-    });
+  if (tileList.includes("NW")) {
+    if (y > 0 && x > 0) {
+      tiles.push({
+        "xyz": { "x": x - 1, "y": y - 1, "z": z },
+      });
+    }
   }
-  // southwest
-  if (y < Math.pow(2, z) - 1 && x > 0) {
-    tiles.push({
-      "xyz": { "x": x - 1, "y": y + 1, "z": z },
-      "quadkey": this.tileXYToQuadkey(x - 1, y + 1, z)
-    });
+  if (tileList.includes("SE")) {
+    if (y < maxZ && x < maxZ) {
+      tiles.push({
+        "xyz": { "x": x + 1, "y": y + 1, "z": z },
+      });
+    }
+  }
+  if (tileList.includes("SW")) {
+    if (y < maxZ && x > 0) {
+      tiles.push({
+        "xyz": { "x": x - 1, "y": y + 1, "z": z },
+      });
+    }
   }
   return tiles;
 }
 
-TileManager.prototype.getFirstTile = function (lam0, phi0, currTileLevel) {
-  let latitude = phi0 * 180 / Math.PI;
-  let longitude = lam0 * 180 / Math.PI;
-  let { tileX, tileY } = this.getTileXY(longitude, latitude, currTileLevel);
+TileManager.prototype.getAdjacentTiles = function (currTile) {
+  let tileInfos = [];
+  let NSWEtiles = [];
+
+  let quadrant = currTile.quadkey.slice(-1);
+  // add three tiles in the current quadrant
+  if (quadrant === '0') {
+    NSWEtiles = this.getNSWEtiles(currTile, ["N", "W", "NW"]);
+  }
+  else if (quadrant === '1') {
+    NSWEtiles = this.getNSWEtiles(currTile, ["N", "E", "NE"]);
+  }
+  else if (quadrant === '2') {
+    NSWEtiles = this.getNSWEtiles(currTile, ["S", "W", "SW"]);
+  }
+  else if (quadrant === '3') {
+    NSWEtiles = this.getNSWEtiles(currTile, ["S", "E", "SE"]);
+  }
+  tileInfos.push(...NSWEtiles);
+
+  return tileInfos;
+}
+
+TileManager.prototype.getPreLevel = function (lam0, phi0, currTileLevel) {
+  let { tileX, tileY } = this.getTileXY(lam0, phi0, currTileLevel + 1); // use next level to get quadrant
+  let tileQuadkey = this.tileXYToQuadkey(tileX, tileY, currTileLevel + 1);
   return {
-    "xyz": {
-      "x": tileX,
-      "y": tileY,
-      "z": currTileLevel
-    },
-    "quadkey": this.tileXYToQuadkey(tileX, tileY, currTileLevel),
+    "quadkey": tileQuadkey,
   }
 }
 
@@ -172,26 +193,22 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
   let tileInfos = [];
   let halfOfCurrLevel = Math.floor(currTileLevel / 2.0);
 
-  //  get the first tile
-  let currTile = this.getFirstTile(lam0, phi0, currTileLevel);
-  tileInfos.push(currTile);
-  let NSWEtiles = this.getNSWEtiles(currTile);
-  tileInfos.push(...NSWEtiles);
-  //  get the other tiles
-  for (let level = currTileLevel-1; level >= 0; level--) {
-    let nextTileQuadkey = currTile.quadkey.slice(0,-1);
-    let nextTileXYZ = quadkeyToTileXY(nextTileQuadkey);
-    let nextTile = {
-      "xyz": nextTileXYZ,
-      "quadkey": nextTileQuadkey,
-    };
-    tileInfos.push(nextTile);
-    if (level > halfOfCurrLevel) { // Higher levels get the NSWE tiles
-      let nextNSWEtiles = this.getNSWEtiles(nextTile);
-      tileInfos.push(...nextNSWEtiles);
-    }
+  //  get a tile above the top level to determine quadrant
+  let prevTile = this.getPreLevel(lam0, phi0, currTileLevel);
 
-    currTile = nextTile;
+  for (let level = currTileLevel; level >= 0; level--) {
+    let currTileQuadkey = prevTile.quadkey.slice(0, -1);
+    let currTileXYZ = quadkeyToTileXY(currTileQuadkey);
+    let currTile = {
+      "xyz": currTileXYZ,
+      "quadkey": currTileQuadkey,
+    };
+    tileInfos.push(currTile);
+    if (level > halfOfCurrLevel) { // Higher levels get the NSWE tiles
+      let nextAdjacentTiles = this.getAdjacentTiles(currTile);
+      tileInfos.push(...nextAdjacentTiles);
+    }
+    prevTile = currTile;
   }
 
   for (const tile of tileInfos) {
