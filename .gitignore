@@ -2,4 +2,4 @@
 .vscode/
 node_modules/
 images/
-mapbox_access_token.js
+mapbox_default_public_token.js

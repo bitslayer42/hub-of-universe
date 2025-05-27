@@ -28,7 +28,7 @@ let Main = function () {
   this.zoomMax = 3_000_000.01;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.imageProj = null;
-  this.debug = false; // "local8", "local0", "boxred", false
+  this.debug = "local0"; // "local8", "local0", "boxred", false
 
   document.addEventListener('DOMContentLoaded', () => {
     this.canvas = document.getElementById('webglCanvas');
@@ -132,8 +132,8 @@ let Main = function () {
 
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
-      return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
-      // return `./images/${z}/${x}/${y}.png`;
+      // return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
+      return `./images/${z}/${x}/${y}.png`;
     };
 
     this.setTileLevel();
