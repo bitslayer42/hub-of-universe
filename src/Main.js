@@ -1,8 +1,9 @@
-import { Interpolater } from "./lib/Interpolater.js";
+import { Interpolater } from "./mod/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterAEQD } from './RasterAEQD.js';
-import { mapbox_access_token } from './mapbox_access_token.js';
-// import { mapbox_access_token } from './mapbox_default_public_token.js';
+// import { mapbox_access_token } from './mapbox_access_token.js';
+import { mapbox_access_token } from './MapboxAccessToken.js';
+import 'hammerjs';
 
 let Main = function () {
   this.interpolateTimeSpan = 1e3;

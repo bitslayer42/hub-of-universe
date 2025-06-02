@@ -1,5 +1,5 @@
-import { TileManager } from "./lib/TileManager.js";
-import { ImageCache } from "./lib/ImageCache.js";
+import { TileManager } from "./mod/TileManager.js";
+import { ImageCache } from "./mod/ImageCache.js";
 
 let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.gl = gl;

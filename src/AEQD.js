@@ -1,4 +1,4 @@
-import { ProjMath } from "./lib/ProjMath.js";
+import { ProjMath } from "./mod/ProjMath.js";
 
 
 let AEQD = function(lam0, phi0, zoomScale, opt_divn) {

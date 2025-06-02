@@ -2,4 +2,5 @@
 .vscode/
 node_modules/
 images/
-mapbox_default_public_token.js
+.env
+.parcel-cache
