@@ -1,7 +1,6 @@
 import { Interpolater } from "./mod/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterAEQD } from './RasterAEQD.js';
-// import { mapbox_access_token } from './mapbox_access_token.js';
 import { mapbox_access_token } from './MapboxAccessToken.js';
 import 'hammerjs';
 
@@ -14,8 +13,10 @@ let Main = function () {
   this.prevTime = null;
   this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
-  this.lam0 = -74.0113949 * 0.0174533; // -1.29174307860817
-  this.phi0 = 40.703355 * 0.0174533; // 0.7104078658215001
+  // this.lam0 = -74.0113949 * 0.0174533; // -1.29174307860817 // Manhattan
+  // this.phi0 = 40.703355 * 0.0174533; // 0.7104078658215001
+  this.lam0 = -1.34406026074966; // DC capital
+  this.phi0 = 0.6787546684457174; // 
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
@@ -26,12 +27,13 @@ let Main = function () {
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 3_000_000.01;
+  this.zoomMax = 15_000_000.01;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.imageProj = null;
-  this.debug = false; // "local8", "local0", "boxred", false
+  this.debug = false; // "local", "boxred", false
 
   document.addEventListener('DOMContentLoaded', () => {
+    this.getQueryParams(); // check for url params
     this.canvas = document.getElementById('webglCanvas');
     this.resizeCanvas(this.canvas);
 
@@ -40,7 +42,6 @@ let Main = function () {
     //imageProj is a RasterAEQD
     this.startup(this.imageProj); // sets up this.canvas, webgl, and hammer, and calls init
     this.animation(); // starts animation
-    this.getProjCenterParameter(); // check for url params
   });
 
   window.addEventListener('resize', () => {
@@ -159,21 +160,40 @@ let Main = function () {
     this.mapView.setTileLevel(this.viewStatus.currTileLevel)
   }
 
-  //  If url includes ?projCenter=lat,log in degrees map will be centered there
-  // //  e.g. http://localhost:8080/?projCenter=35.32,-82.48
-  this.getProjCenterParameter = () => {
-    let params = new URLSearchParams(document.location.search);
-    let latLonStr = params.get("projCenter");
-    if (latLonStr) {
-      let latLon = latLonStr.split(",");
-      if (latLon.length < 2) return null;
-      let latDeg = parseFloat(latLon[0]),
-        lonDeg = parseFloat(latLon[1]);
-      if (isNaN(latDeg) || isNaN(lonDeg)) return null;
-      this.phi0 = (latDeg * Math.PI) / 180; //degrees to radians
-      this.lam0 = (lonDeg * Math.PI) / 180;
+  // Set variables from query parameters in the URL
+  // e.g. http://localhost:1234/?zoom=1000&lon=-74.0113949&lat=40.703355
+  this.getQueryParams = () => {
+    let params = new URLSearchParams(window.location.search);
+    let zoomScale = params.get("zoom");
+    if (zoomScale) {
+      zoomScale = parseFloat(zoomScale);
+      if (!isNaN(zoomScale)) {
+        this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, zoomScale), this.zoomMax);
+      }
+    }
+    let latitude = params.get("lat");
+    let longitude = params.get("lon");
+    if (latitude && longitude) {
+      latitude = parseFloat(latitude);
+      longitude = parseFloat(longitude);
+      if (!isNaN(latitude) && !isNaN(longitude)) {
+        this.lam0 = longitude * 0.0174533; //degrees to radians
+        this.phi0 = latitude * 0.0174533; //degrees to radians
+      }
+    }
+    let debug = params.get("debug");
+    if (debug) {
+      this.debug = debug;
     }
   };
+
+  this.setQueryParams = () => {
+    let params = new URLSearchParams(window.location.search);
+    params.set("zoomScale", this.viewStatus.zoomScale);
+    params.set("lon", (this.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+    params.set("lat", (this.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+  }
 
   // //returns pixels 0,0 top left of canvas
   // this.checkAndGetMousePos = (event) => {

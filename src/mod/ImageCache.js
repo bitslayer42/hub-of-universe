@@ -54,22 +54,17 @@ ImageCache.prototype.loadImage_ = function (url, info) {
     }
   };
   this.ongoingImageLoads.push(image);
+  console.log(debug)
 
-  // debug: levels over 8 just use black tile
-  if (debug == "local8" || debug == "local0") {
-    let splitUrl = url.split("/");
-    let zed = parseInt(splitUrl[2]);
-    if ( debug == "local0" ) {
-      image.src = "./debug.png";
-    } else if (debug == "local8" && zed > 8) {
-      image.src = "./debug.png";
-    } else {
-      image.src = url;
-    }
+  // debug: "local" use debug tile
+  if (debug == "local") {
+    image.src = new URL(
+      './debug.png',
+      import.meta.url
+    );
   } else {
     image.src = url;
   }
-  // image.src = url;
 };
 
 
