@@ -3,11 +3,11 @@ import { ImageCache } from "./mod/ImageCache.js";
 
 let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.gl = gl;
-  this.imageProj = imgProj;
+  this.rasterProj = imgProj;
 
   this.canvasSize = canvasSize;
   //
-  this.tileManager = new TileManager(tile_opts, this.imageProj);
+  this.tileManager = new TileManager(tile_opts, this.rasterProj);
   this.prevTileInfos_ = null;
   this.prevWindow_ = null;
   //
@@ -35,11 +35,11 @@ MapView.prototype.setProjCenter = function (lam, phi) {
   this.lam0 = lam;
   this.phi0 = phi;
   this.clearTileInfoCache_();
-  this.imageProj.setProjCenter(lam, phi);
+  this.rasterProj.setProjCenter(lam, phi);
 };
 
 MapView.prototype.getProjCenter = function () {
-  return this.imageProj.projection.getProjCenter();
+  return this.rasterProj.projection.getProjCenter();
 };
 
 MapView.prototype.moveWindow = function (dx, dy) {
@@ -67,7 +67,7 @@ MapView.prototype.getViewPointFromWindow = function (canvX, canvY) {
 
 MapView.prototype.getLambdaPhiPointFromWindow = function (x, y) {
   let viewPos = this.getViewPointFromWindow(x, y);
-  let lam_phi = this.imageProj.projection.inverse(viewPos[0], viewPos[1]);
+  let lam_phi = this.rasterProj.projection.inverse(viewPos[0], viewPos[1]);
   return lam_phi;
 };
 
@@ -131,7 +131,7 @@ MapView.prototype.requestImages_ = function () {
 
 
 MapView.prototype.render_ = function () {
-  this.imageProj.clear(this.canvasSize);
+  this.rasterProj.clear(this.canvasSize);
   let targetTextures = [];
   for (let i = 0; i < this.tileInfos.length; ++i) {
     let info = this.tileInfos[i];
@@ -147,9 +147,9 @@ MapView.prototype.render_ = function () {
     1.0, 0.0,   // right top
     1.0, 1.0    // right bottom
   ]);
-  this.imageProj.prepareRender(texCoords, [-Math.PI, -Math.PI, Math.PI, Math.PI]);
+  this.rasterProj.prepareRender(texCoords, [-Math.PI, -Math.PI, Math.PI, Math.PI]);
   if (0 < targetTextures.length) {
-    this.imageProj.renderTextures(targetTextures);
+    this.rasterProj.renderTextures(targetTextures);
   }
 };
 

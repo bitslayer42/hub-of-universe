@@ -1,6 +1,6 @@
 import { Interpolater } from "./mod/Interpolater.js";
 import { MapView } from "./MapView.js";
-import { RasterAEQD } from './RasterAEQD.js';
+import { RasterProj } from './RasterProj.js';
 import { mapbox_access_token } from './MapboxAccessToken.js';
 import 'hammerjs';
 
@@ -29,7 +29,7 @@ let Main = function () {
   this.zoomMin = 0.01;
   this.zoomMax = 15_000_000.01;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
-  this.imageProj = null;
+  this.rasterProj = null;
   this.debug = false; // "local", "boxred", false
 
   document.addEventListener('DOMContentLoaded', () => {
@@ -37,17 +37,16 @@ let Main = function () {
     this.canvas = document.getElementById('webglCanvas');
     this.resizeCanvas(this.canvas);
 
-    this.imageProj = new RasterAEQD();
-    this.imageProj.setScale(this.viewStatus.zoomScale);
-    //imageProj is a RasterAEQD
-    this.startup(this.imageProj); // sets up this.canvas, webgl, and hammer, and calls init
+    this.rasterProj = new RasterProj();
+    this.rasterProj.setScale(this.viewStatus.zoomScale);
+    this.startup(this.rasterProj); // sets up this.canvas, webgl, and hammer, and calls init
     this.animation(); // starts animation
   });
 
   window.addEventListener('resize', () => {
     this.resizeCanvas(this.canvas);
     this.mapView.resizeCanvas(this.canvas);
-    this.imageProj.clear(this.canvas);
+    this.rasterProj.clear(this.canvas);
   });
 
   this.animation = () => {
@@ -76,7 +75,7 @@ let Main = function () {
       this.viewStatus.targetLambdaPhi = null;
     }
     if (this.prevScale != this.viewStatus.zoomScale) {
-      this.imageProj.setScale(this.viewStatus.zoomScale);
+      this.rasterProj.setScale(this.viewStatus.zoomScale);
       this.prevScale = this.viewStatus.zoomScale;
       getNewTiles = true;
     }
@@ -84,7 +83,7 @@ let Main = function () {
     this.requestId = requestAnimationFrame(this.animation);
   };
 
-  this.startup = (imageProj) => {
+  this.startup = (rasterProj) => {
     this.gl = this.canvas.getContext("webgl2");
     if (!this.gl) {
       return void alert("Failed to setup WebGL.");
@@ -108,11 +107,10 @@ let Main = function () {
     mc.on("tap", this.handleDoubleTap);
 
     window.WheelEvent && document.addEventListener("wheel", this.handleWheel, false);
-    this.init(imageProj);
+    this.init(rasterProj);
   };
 
-  this.init = (imageProj) => {
-    //imageProj is a RasterAEQD
+  this.init = (rasterProj) => {
     let canvasInfo = this.canvas.getBoundingClientRect(); //read-only left, top, right, bottom, x, y, width, height properties of this.canvas
     let canvasSize = {
       width: canvasInfo.width,
@@ -127,9 +125,9 @@ let Main = function () {
       debug: this.debug,
     };
 
-    imageProj.init(this.gl);
-    imageProj.setProjCenter(this.lam0, this.phi0);
-    this.mapView = new MapView(this.gl, imageProj, canvasSize, tile_opts, cache_opts);
+    rasterProj.init(this.gl);
+    rasterProj.setProjCenter(this.lam0, this.phi0);
+    this.mapView = new MapView(this.gl, rasterProj, canvasSize, tile_opts, cache_opts);
     this.mapView.setProjCenter(this.lam0, this.phi0);
 
     //Add custom function to MapView

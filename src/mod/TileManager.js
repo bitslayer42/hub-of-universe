@@ -1,5 +1,5 @@
 let TileManager = function (tile_opts, imgProj) {
-  this.imageProj = imgProj;
+  this.rasterProj = imgProj;
   this.canvasSize = { width: null, height: null };
   this.tilesAcross = 0;
   this.tileMaxSize = 0;
