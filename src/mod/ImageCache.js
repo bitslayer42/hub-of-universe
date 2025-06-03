@@ -54,8 +54,6 @@ ImageCache.prototype.loadImage_ = function (url, info) {
     }
   };
   this.ongoingImageLoads.push(image);
-  console.log(debug)
-
   // debug: "local" use debug tile
   if (debug == "local") {
     image.src = new URL(

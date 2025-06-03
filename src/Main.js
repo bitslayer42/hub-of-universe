@@ -100,8 +100,8 @@ let Main = function () {
       ]
     });
     mc.on("pinch", this.handlePinch);
-    mc.on("pinchend pinchcancel", this.handlePinchEnd);
-    mc.on("pinchstart", this.handlePinchStart);
+    // mc.on("pinchend pinchcancel", this.handlePinchEnd);
+    // mc.on("pinchstart", this.handlePinchStart);
     mc.on("pan", this.handlePan);
     mc.on("panstart", this.handlePanStart);
     mc.on("panend pancancel", this.handlePanEnd);
@@ -151,11 +151,11 @@ let Main = function () {
 
   this.setTileLevel = () => {
     this.viewStatus.currTileLevel = Math.round(Math.log10(this.viewStatus.zoomScale) * 3.0);// Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
-    this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel),0);
-    // let consolelamphi = this.mapView.getProjCenter();
+    this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel), 0);
+    let consolelamphi = this.mapView.getProjCenter();
     console.log("TileLvl: " + this.viewStatus.currTileLevel,
                 " ZoomScl: " + this.viewStatus.zoomScale,
-                // " lamphi0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
+                " latlon0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
               );
     this.mapView.setTileLevel(this.viewStatus.currTileLevel)
   }
@@ -217,25 +217,34 @@ let Main = function () {
     return [left, top];
   };
 
-  this.handlePinch = (event) => { // TODO: make it work with new vals
-    // let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
-    // if (canv_xy) {
-    if (event.scale < 1.0) {
-      this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale * event.scale;
-    } else {
-      this.viewStatus.zoomScale = this.viewStatus.pinchPrevScale + event.scale - 1.0;
+  this.handleWheel = (event) => {
+    if (event.deltaY < 0) {
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.1;
     }
-    this.viewStatus.zoomScale = Math.min(Math.max(this.viewStatus.zoomMin, this.viewStatus.zoomScale), this.viewStatus.zoomMax);
-    // }
+    else {
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
+    }
+    this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
   };
 
-  this.handlePinchStart = (event) => {
-    this.viewStatus.pinchPrevScale = this.viewStatus.pinchPrevScale ? this.viewStatus.pinchPrevScale : 0.0;
+  this.handlePinch = (event) => {
+    // console.log("handlePinch", event.scale, this.viewStatus.zoomScale);
+    if (event.scale > 1.0) {
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.05;
+    }
+    else {
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.05;
+    }
+    this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
   };
 
-  this.handlePinchEnd = (event) => {
-    this.viewStatus.pinchPrevScale = this.viewStatus.zoomScale
-  };
+  // this.handlePinchStart = (event) => {
+  //   this.viewStatus.pinchPrevScale = this.viewStatus.pinchPrevScale ? this.viewStatus.pinchPrevScale : 0.0;
+  // };
+
+  // this.handlePinchEnd = (event) => {
+  //   this.viewStatus.pinchPrevScale = this.viewStatus.zoomScale
+  // };
 
   this.handlePan = (event) => {
     if (this.viewStatus.drag) {
@@ -273,20 +282,6 @@ let Main = function () {
       let lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
       this.viewStatus.targetLambdaPhi = lam_phi; //{lambda: 1.533480323761242, phi: 0.5899993533326611} ; //c
     }
-  };
-
-  this.handleWheel = (event) => {
-    // let canv_xy = this.checkAndGetMousePos(event); //verify on canvas
-    // if (canv_xy) {
-    if (event.deltaY < 0) {
-      this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.1;
-    }
-    else {
-      this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
-    }
-    this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    // console.log("wheel.deltaY", event.deltaY, "zoomScale100", this.viewStatus.zoomScale);
-    // }
   };
 
   this.handleContextLost = (event) => {

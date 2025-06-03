@@ -1,4 +1,4 @@
-// Mapbox deployment configuration file
+// Cloudflare deployment configuration file
 {
  "name": "hub-of-universe",
  "compatibility_date": "2025-05-27",

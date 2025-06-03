@@ -6,10 +6,8 @@
   "source": "./index.html",
   "type": "module",
   "scripts": {
-    "start": "parcel",
-    "build": "parcel build",
-    "prebuild": "rm -rf dist && mkdir dist",
-    "prestart": "rm -rf dist && mkdir dist"
+    "start": "rm -rf dist && parcel",
+    "build": "rm -rf dist && parcel build"
   },
   "license": "GPLv3",
   "devDependencies": {
