@@ -21,7 +21,7 @@ let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.getURL = null;
   this.calculateLevel = null;
   this.currTileLevel = 0;
-  this.prevTileLevel = null;
+  // this.prevTileLevel = null;
   this.lam0 = 0;
   this.phi0 = 0;
 };

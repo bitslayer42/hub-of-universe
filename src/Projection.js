@@ -54,13 +54,13 @@ Projection.prototype.forward = function(lambda, phi) {
   return { x:x, y:y };
 };
 
-Projection.prototype.inv_web_merc = function(lam, phi) {      //  Web Mercator
-  const atanSinhPi = 1.48442222;
-  if (Math.abs(phi) < atanSinhPi) {
-    phi = Math.asinh(Math.tan(phi)) * atanSinhPi / Math.PI;
-  }
-  return { lam, phi };
-};
+// Projection.prototype.inv_web_merc = function(lam, phi) {      //  Web Mercator
+//   const atanSinhPi = 1.48442222;
+//   if (Math.abs(phi) < atanSinhPi) {
+//     phi = Math.asinh(Math.tan(phi)) * atanSinhPi / Math.PI;
+//   }
+//   return { lam, phi };
+// };
 
 Projection.prototype.inv_fisheye = function(x, y) { 
   [x, y] = [x / Math.PI, y / Math.PI];
@@ -97,7 +97,7 @@ Projection.prototype.inverse = function(x, y) {
   if ( lam < -Math.PI || Math.PI <= lam ) {
     lam -= 2 * Math.PI * Math.floor((lam + Math.PI) / (2*Math.PI));
   }
-  // let { lam: retlambda, phi: retphi } = this.inv_web_merc(lam, phi);
+  // let { lam: retlambda, phi: retphi } = this.inv_web_merc(lam, phi); // This is not correct for some reason?
 
   return { lambda: lam, phi: phi };
 };

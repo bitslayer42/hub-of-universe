@@ -1,23 +1,23 @@
-let TileManager = function (tile_opts, imgProj) {
-  this.rasterProj = imgProj;
-  this.canvasSize = { width: null, height: null };
-  this.tilesAcross = 0;
-  this.tileMaxSize = 0;
+let TileManager = function (tile_opts, rasterProj) {
+  this.rasterProj = rasterProj;
+  // this.canvasSize = { width: null, height: null };
+  // this.tilesAcross = 0;
+  // this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
   //
-  if (typeof tile_opts !== 'undefined') {
-    if ('canvasSize' in tile_opts) {
-      this.canvasSize = tile_opts.canvasSize;
-      this.tilesAcross = this.canvasSize.width / this.tileSize; // how many tiles fill the canvas
-      this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in "2pi's"
-    }
-  }
+  // if (typeof tile_opts !== 'undefined') {
+  //   if ('canvasSize' in tile_opts) {
+  //     this.canvasSize = tile_opts.canvasSize;
+  //     this.tilesAcross = this.canvasSize.width / this.tileSize; // how many tiles fill the canvas
+  //     this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in "2pi's"
+  //   }
+  // }
 };
 
 TileManager.prototype.resizeCanvas = function (canvasSize) {
-  this.canvasSize = canvasSize;
-  this.tilesAcross = this.canvasSize.width / this.tileSize; // how many tiles fill the canvas
-  this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
+  // this.canvasSize = canvasSize;
+  // this.tilesAcross = this.canvasSize.width / this.tileSize;
+  // this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
 }
 
 TileManager.prototype.getTileXY = function (lam0, phi0, level) {
@@ -191,8 +191,6 @@ TileManager.prototype.getPreLevel = function (lam0, phi0, currTileLevel) {
 
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
   let tileInfos = [];
-  let halfOfCurrLevel = Math.floor(currTileLevel / 2.0);
-
   //  get a tile above the top level to determine quadrant
   let prevTile = this.getPreLevel(lam0, phi0, currTileLevel);
 
@@ -204,10 +202,8 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
       "quadkey": currTileQuadkey,
     };
     tileInfos.push(currTile);
-    if (level > halfOfCurrLevel) { // Higher levels get the NSWE tiles
-      let nextAdjacentTiles = this.getAdjacentTiles(currTile);
-      tileInfos.push(...nextAdjacentTiles);
-    }
+    let nextAdjacentTiles = this.getAdjacentTiles(currTile);
+    tileInfos.push(...nextAdjacentTiles);
     prevTile = currTile;
   }
 

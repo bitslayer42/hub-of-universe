@@ -27,7 +27,7 @@ let Main = function () {
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 15_000_000.01;
+  this.zoomMax = 20_000_000.01;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.rasterProj = null;
   this.debug = false; // "local", "boxred", false
@@ -58,7 +58,7 @@ let Main = function () {
     if (this.viewStatus.interpolater != null) { // Interpolater is running
       currPos = this.viewStatus.interpolater.getPos(currTime);
       this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
-      if (this.viewStatus.interpolater.isFinished()) {
+      if (this.viewStatus.interpolater.isFinished()) { // Interpolater finished
         this.viewStatus.interpolater = null;
         getNewTiles = true;
       };
@@ -152,9 +152,9 @@ let Main = function () {
     this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel), 0);
     let consolelamphi = this.mapView.getProjCenter();
     console.log("TileLvl: " + this.viewStatus.currTileLevel,
-                " ZoomScl: " + this.viewStatus.zoomScale,
-                " latlon0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
-              );
+      " ZoomScl: " + this.viewStatus.zoomScale,
+      " latlon0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
+    );
     this.mapView.setTileLevel(this.viewStatus.currTileLevel)
   }
 
@@ -185,13 +185,13 @@ let Main = function () {
     }
   };
 
-  this.setQueryParams = () => {
-    let params = new URLSearchParams(window.location.search);
-    params.set("zoomScale", this.viewStatus.zoomScale);
-    params.set("lon", (this.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
-    params.set("lat", (this.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
-    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-  }
+  // this.setQueryParams = () => {
+  //   let params = new URLSearchParams(window.location.search);
+  //   params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
+  //   params.set("lon", (this.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+  //   params.set("lat", (this.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+  //   window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+  // }
 
   // //returns pixels 0,0 top left of canvas
   // this.checkAndGetMousePos = (event) => {
@@ -273,7 +273,7 @@ let Main = function () {
     this.viewStatus.dragPrevPos = null;
   };
 
-  this.handleDoubleTap = (event) => {
+  this.handleDoubleTap = (event) => { console.log("handleDoubleTap");
     let canv_xy = this.checkAndGetGesturePos(event);
     if (canv_xy) {
       event.preventDefault();

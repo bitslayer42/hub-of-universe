@@ -104,14 +104,6 @@ ProjMath.sphericalDistance = function(pt1, pt2) {
      Math.cos( ProjMath.normalizeLambda(pt2.lambda - pt1.lambda) )) 
   );
   return distance;
-  // let dphi = Math.abs(pt1.phi - pt2.phi);
-  // let dlam = Math.abs( ProjMath.normalizeLambda(pt1.lambda - pt2.lambda) );
-  // if (dphi < ProjMath.EPSILON && dlam < ProjMath.EPSILON) {
-  //   return 0.0;
-  // }
-  // return Math.sqrt( dphi * dphi + Math.cos(pt1.phi) * Math.cos(pt2.phi) * dlam * dlam );
 };
 /* -------------------------------------------------------------------------- */
 export { ProjMath };
-
-// d  =  r · arccos (sin φA sin φB + cos φA cos φB cos (λB - λA))
