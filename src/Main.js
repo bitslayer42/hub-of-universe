@@ -15,8 +15,10 @@ let Main = function () {
   // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
   // this.lam0 = -74.0113949 * 0.0174533; // -1.29174307860817 // Manhattan
   // this.phi0 = 40.703355 * 0.0174533; // 0.7104078658215001
-  this.lam0 = -1.34406026074966; // DC capital
-  this.phi0 = 0.6787546684457174; // 
+  // this.lam0 = -1.34406026074966; // DC capital
+  // this.phi0 = 0.6787546684457174; // 
+  this.lam0 = 18.6506277 * 0.0174533; // -1.29174307860817 // Cape Town
+  this.phi0 = -33.9242542 * 0.0174533; // 0.7104078658215001
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
@@ -27,7 +29,7 @@ let Main = function () {
     currTileLevel: null,
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 20_000_000.01;
+  this.zoomMax = 30_000_000.01;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.rasterProj = null;
   this.debug = false; // "local", "boxred", false
@@ -150,10 +152,10 @@ let Main = function () {
   this.setTileLevel = () => {
     this.viewStatus.currTileLevel = Math.round(Math.log10(this.viewStatus.zoomScale) * 3.0);// Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel), 0);
-    let consolelamphi = this.mapView.getProjCenter();
+    // let consolelamphi = this.mapView.getProjCenter();
     console.log("TileLvl: " + this.viewStatus.currTileLevel,
       " ZoomScl: " + this.viewStatus.zoomScale,
-      " latlon0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
+      // " latlon0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
     );
     this.mapView.setTileLevel(this.viewStatus.currTileLevel)
   }
@@ -273,7 +275,8 @@ let Main = function () {
     this.viewStatus.dragPrevPos = null;
   };
 
-  this.handleDoubleTap = (event) => { console.log("handleDoubleTap");
+  this.handleDoubleTap = (event) => {
+    console.log("handleDoubleTap");
     let canv_xy = this.checkAndGetGesturePos(event);
     if (canv_xy) {
       event.preventDefault();
