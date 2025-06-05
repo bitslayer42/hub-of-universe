@@ -9,7 +9,7 @@ let TileManager = function (tile_opts, rasterProj) {
   //   if ('canvasSize' in tile_opts) {
   //     this.canvasSize = tile_opts.canvasSize;
   //     this.tilesAcross = this.canvasSize.width / this.tileSize; // how many tiles fill the canvas
-  //     this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in "2pi's"
+  //     this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in "2pi'S
   //   }
   // }
 };
@@ -79,9 +79,10 @@ TileManager.prototype.getRectFromXYZ = function (tile) {
   return [x1, y1, x2, y2];
 }
 
-TileManager.prototype.getNSWEtiles = function (tile, tileList = ["N", "S", "W", "E", "NE", "NW", "SE", "SW"]) {
+TileManager.prototype.getNSWEtiles = function (tile, tileList = [N, S, W, E, NE, NW, SE, SW]) {
   // Get the tiles surrounding the given tile that are specified by the parameter tileList
-  // which is an array of strings which can include: ["N", "S", "W", "E", "NE", "NW", "SE", "SW"]
+  // which is an array of strings which can include: [N, S, W, E, NE, NW, SE, SW]
+  let N = 0, NE = 1, E = 2, SE = 3, S = 4, SW = 5, W = 6, NW = 7;
   let tiles = [];
   let { x, y, z } = tile.xyz;
   let maxZ = Math.pow(2, z) - 1; // max tile index at this zoom level
@@ -89,70 +90,40 @@ TileManager.prototype.getNSWEtiles = function (tile, tileList = ["N", "S", "W", 
   if (tileList.length === 0) {
     return tiles; //  no tiles to return
   }
-  if (tileList.includes("N")) {
+  if (tileList.includes(N)) {
     if (y > 0) {
-      tiles.push({
-        "xyz": { "x": x, "y": y - 1, "z": z },
-      });
+      tiles.push({ "xyz": { "x": x, "y": y - 1, "z": z }, });
     }
   }
-  if (tileList.includes("S")) {
+  if (tileList.includes(S)) {
     if (y < maxZ) {
-      tiles.push({
-        "xyz": { "x": x, "y": y + 1, "z": z },
-      });
+      tiles.push({ "xyz": { "x": x, "y": y + 1, "z": z }, });
     }
   }
-  if (tileList.includes("W")) {
-    if (x > 0) {
-      tiles.push({
-        "xyz": { "x": x - 1, "y": y, "z": z },
-      });
-    } else {
-      //  if we are at the left edge, we can wrap around to the right edge
-      tiles.push({
-        "xyz": { "x": maxZ, "y": y, "z": z },
-      });
+  if (tileList.includes(W)) {
+    tiles.push({ "xyz": { "x": (x == 0 ? maxZ : x - 1), "y": y, "z": z }, });
+  }
+  if (tileList.includes(E)) {
+    tiles.push({ "xyz": { "x": (x == maxZ ? 0 : x + 1), "y": y, "z": z }, });
+  }
+  if (tileList.includes(NE)) {
+    if (y > 0) {
+      tiles.push({ "xyz": { "x": (x == maxZ ? 0 : x + 1), "y": y - 1, "z": z }, });
     }
   }
-  if (tileList.includes("E")) {
-    if (x < maxZ) {
-      tiles.push({
-        "xyz": { "x": x + 1, "y": y, "z": z },
-      });
-    } else {
-      //  if we are at the right edge, we can wrap around to the left edge
-      tiles.push({
-        "xyz": { "x": 0, "y": y, "z": z },
-      });
+  if (tileList.includes(NW)) {
+    if (y > 0) {
+      tiles.push({ "xyz": { "x": (x == 0 ? maxZ : x - 1), "y": y - 1, "z": z }, });
     }
   }
-  if (tileList.includes("NE")) {
-    if (y > 0 && x < maxZ) {
-      tiles.push({
-        "xyz": { "x": x + 1, "y": y - 1, "z": z },
-      });
+  if (tileList.includes(SE)) {
+    if (y < maxZ) {
+      tiles.push({ "xyz": { "x": (x == maxZ ? 0 : x + 1), "y": y + 1, "z": z }, });
     }
   }
-  if (tileList.includes("NW")) {
-    if (y > 0 && x > 0) {
-      tiles.push({
-        "xyz": { "x": x - 1, "y": y - 1, "z": z },
-      });
-    }
-  }
-  if (tileList.includes("SE")) {
-    if (y < maxZ && x < maxZ) {
-      tiles.push({
-        "xyz": { "x": x + 1, "y": y + 1, "z": z },
-      });
-    }
-  }
-  if (tileList.includes("SW")) {
-    if (y < maxZ && x > 0) {
-      tiles.push({
-        "xyz": { "x": x - 1, "y": y + 1, "z": z },
-      });
+  if (tileList.includes(SW)) {
+    if (y > 0) {
+      tiles.push({ "xyz": { "x": (x == 0 ? maxZ : x - 1), "y": y + 1, "z": z }, });
     }
   }
   return tiles;
@@ -161,20 +132,21 @@ TileManager.prototype.getNSWEtiles = function (tile, tileList = ["N", "S", "W", 
 TileManager.prototype.getAdjacentTiles = function (currTile) {
   let tileInfos = [];
   let NSWEtiles = [];
+  let N = 0, NE = 1, E = 2, SE = 3, S = 4, SW = 5, W = 6, NW = 7;
 
   let quadrant = currTile.quadkey.slice(-1);
   // add three tiles in the current quadrant
   if (quadrant === '0') {
-    NSWEtiles = this.getNSWEtiles(currTile, ["N", "W", "NW"]);
+    NSWEtiles = this.getNSWEtiles(currTile, [N, W, NW]);
   }
   else if (quadrant === '1') {
-    NSWEtiles = this.getNSWEtiles(currTile, ["N", "E", "NE"]);
+    NSWEtiles = this.getNSWEtiles(currTile, [N, E, NE]);
   }
   else if (quadrant === '2') {
-    NSWEtiles = this.getNSWEtiles(currTile, ["S", "W", "SW"]);
+    NSWEtiles = this.getNSWEtiles(currTile, [S, W, SW]);
   }
   else if (quadrant === '3') {
-    NSWEtiles = this.getNSWEtiles(currTile, ["S", "E", "SE"]);
+    NSWEtiles = this.getNSWEtiles(currTile, [S, E, SE]);
   }
   tileInfos.push(...NSWEtiles);
 
@@ -184,9 +156,18 @@ TileManager.prototype.getAdjacentTiles = function (currTile) {
 TileManager.prototype.getPreLevel = function (lam0, phi0, currTileLevel) {
   let { tileX, tileY } = this.getTileXY(lam0, phi0, currTileLevel + 1); // use next level to get quadrant
   let tileQuadkey = this.tileXYToQuadkey(tileX, tileY, currTileLevel + 1);
-  return {
-    "quadkey": tileQuadkey,
-  }
+  return { "quadkey": tileQuadkey }
+}
+
+TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
+  //  push all four level one tiles to the tileInfos array
+  let levelOneTiles = [
+    { "xyz": { "x": 0, "y": 0, "z": 1 }, "quadkey": "0" },
+    { "xyz": { "x": 1, "y": 0, "z": 1 }, "quadkey": "1" },
+    { "xyz": { "x": 0, "y": 1, "z": 1 }, "quadkey": "2" },
+    { "xyz": { "x": 1, "y": 1, "z": 1 }, "quadkey": "3" }
+  ];
+  tileInfos.push(...levelOneTiles);
 }
 
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
@@ -194,18 +175,18 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
   //  get a tile above the top level to determine quadrant
   let prevTile = this.getPreLevel(lam0, phi0, currTileLevel);
 
-  for (let level = currTileLevel; level >= 0; level--) {
+  for (let level = currTileLevel; level >= 2; level--) {
     let currTileQuadkey = prevTile.quadkey.slice(0, -1);
     let currTileXYZ = quadkeyToTileXY(currTileQuadkey);
     let currTile = {
-      "xyz": currTileXYZ,
-      "quadkey": currTileQuadkey,
+      "xyz": currTileXYZ, "quadkey": currTileQuadkey,
     };
     tileInfos.push(currTile);
     let nextAdjacentTiles = this.getAdjacentTiles(currTile);
     tileInfos.push(...nextAdjacentTiles);
     prevTile = currTile;
   }
+  this.pushLevelOneTiles(tileInfos);
 
   for (const tile of tileInfos) {
     tile.rect = this.getRectFromXYZ(tile);

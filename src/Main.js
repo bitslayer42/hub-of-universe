@@ -13,12 +13,16 @@ let Main = function () {
   this.prevTime = null;
   this.prevScale = null;
   // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
-  // this.lam0 = -74.0113949 * 0.0174533; // -1.29174307860817 // Manhattan
+  // this.lam0 = -74.0113949 * 0.0174533; // -1.29174307860817 // Fraunces Tavern
   // this.phi0 = 40.703355 * 0.0174533; // 0.7104078658215001
   // this.lam0 = -1.34406026074966; // DC capital
   // this.phi0 = 0.6787546684457174; // 
-  this.lam0 = 18.6506277 * 0.0174533; // -1.29174307860817 // Cape Town
-  this.phi0 = -33.9242542 * 0.0174533; // 0.7104078658215001
+  this.lam0 = -80.4505307 * 0.0174533; // -1.40412724747   // Key Largo
+  this.phi0 = 25.0900724 * 0.0174533; // 0.43790456061
+  // this.lam0 = -0.0816255 * 0.0174533; // -0.00142463433 London
+  // this.phi0 = 51.4807135 * 0.0174533; // 0.89850833693
+  // this.lam0 = 18.6506277 * 0.0174533; // -1.29174307860817 // Cape Town
+  // this.phi0 = -33.9242542 * 0.0174533; // 0.7104078658215001
   this.viewStatus = {
     drag: false,
     dragPrevPos: null,
