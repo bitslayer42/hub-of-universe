@@ -9,7 +9,7 @@ let TileManager = function (tile_opts, rasterProj) {
   //   if ('canvasSize' in tile_opts) {
   //     this.canvasSize = tile_opts.canvasSize;
   //     this.tilesAcross = this.canvasSize.width / this.tileSize; // how many tiles fill the canvas
-  //     this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in "2pi'S
+  //     this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in radians
   //   }
   // }
 };

@@ -42,10 +42,6 @@ MapView.prototype.getProjCenter = function () {
   return this.rasterProj.projection.getProjCenter();
 };
 
-MapView.prototype.moveWindow = function (dx, dy) {
-  console.log("MapView.prototype.moveWindow");
-};
-
 MapView.prototype.resizeCanvas = function (canvas) {
   this.canvasSize.width = canvas.width;
   this.canvasSize.height = canvas.height;
@@ -62,13 +58,13 @@ MapView.prototype.getViewPointFromWindow = function (canvX, canvY) {
   let scaleY_ = (Math.PI * 2) / -this.canvasSize.height;
   let x = -Math.PI + canvX * scaleX_;
   let y = -Math.PI + (canvY - this.canvasSize.height) * scaleY_;
-  return [x, y]; // pi's
+  return [x, y]; //radians
 };
 
-MapView.prototype.getLambdaPhiPointFromWindow = function (x, y) {
+MapView.prototype.getLambdaPhiPointFromWindow = function (x, y) { // canvas x y pixel coordinates
   let viewPos = this.getViewPointFromWindow(x, y);
   let lam_phi = this.rasterProj.projection.inverse(viewPos[0], viewPos[1]);
-  return lam_phi;
+  return lam_phi; // projected lambda, phi
 };
 
 
@@ -115,7 +111,7 @@ MapView.prototype.createTexture = function (img) {
 
 MapView.prototype.getTileInfos_ = function () {
   this.tileInfos = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL);
-  console.log("MapView.tileInfos.length: ", this.tileInfos.length);
+  // console.log("MapView.tileInfos.length: ", this.tileInfos.length);
 };
 
 

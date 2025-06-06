@@ -12,25 +12,25 @@ let Main = function () {
   this.requestId = null;
   this.prevTime = null;
   this.prevScale = null;
-  // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
-  // this.lam0 = -74.0113949 * 0.0174533; // -1.29174307860817 // Fraunces Tavern
-  // this.phi0 = 40.703355 * 0.0174533; // 0.7104078658215001
-  // this.lam0 = -1.34406026074966; // DC capital
-  // this.phi0 = 0.6787546684457174; // 
-  this.lam0 = -80.4505307 * 0.0174533; // -1.40412724747   // Key Largo
-  this.phi0 = 25.0900724 * 0.0174533; // 0.43790456061
-  // this.lam0 = -0.0816255 * 0.0174533; // -0.00142463433 London
-  // this.phi0 = 51.4807135 * 0.0174533; // 0.89850833693
-  // this.lam0 = 18.6506277 * 0.0174533; // -1.29174307860817 // Cape Town
-  // this.phi0 = -33.9242542 * 0.0174533; // 0.7104078658215001
   this.viewStatus = {
     drag: false,
-    dragPrevPos: null,
+    dragPrevPos: null, // canvas x y from upper left corner
     pinchPrevScale: null,
     zoomScale: 300.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
+    // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
+    // lam0: -74.0113949 * 0.0174533, // -1.29174307860817 // Fraunces Tavern
+    // phi0: 40.703355 * 0.0174533, // 0.7104078658215001
+    // lam0: -1.34406026074966, // DC capitol
+    // phi0: 0.6787546684457174, // 
+    lam0: -80.4505307 * 0.0174533, // -1.40412724747   // Key Largo
+    phi0: 25.0900724 * 0.0174533, // 0.43790456061
+    // lam0: -0.0816255 * 0.0174533, // -0.00142463433 London
+    // phi0: 51.4807135 * 0.0174533, // 0.89850833693
+    // lam0: 18.6506277 * 0.0174533, // -1.29174307860817 // Cape Town
+    // phi0: -33.9242542 * 0.0174533, // 0.7104078658215001
   };
   this.zoomMin = 0.01;
   this.zoomMax = 30_000_000.01;
@@ -105,8 +105,6 @@ let Main = function () {
       ]
     });
     mc.on("pinch", this.handlePinch);
-    // mc.on("pinchend pinchcancel", this.handlePinchEnd);
-    // mc.on("pinchstart", this.handlePinchStart);
     mc.on("pan", this.handlePan);
     mc.on("panstart", this.handlePanStart);
     mc.on("panend pancancel", this.handlePanEnd);
@@ -132,14 +130,12 @@ let Main = function () {
     };
 
     rasterProj.init(this.gl);
-    rasterProj.setProjCenter(this.lam0, this.phi0);
     this.mapView = new MapView(this.gl, rasterProj, canvasSize, tile_opts, cache_opts);
-    this.mapView.setProjCenter(this.lam0, this.phi0);
+    this.mapView.setProjCenter(this.viewStatus.lam0, this.viewStatus.phi0);
 
     //Add custom function to MapView
     this.mapView.getURL = function (z, x, y) {
       return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
-      // return `./images/${z}/${x}/${y}.png`;
     };
 
     this.setTileLevel();
@@ -157,10 +153,10 @@ let Main = function () {
     this.viewStatus.currTileLevel = Math.round(Math.log10(this.viewStatus.zoomScale) * 3.0);// Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel), 0);
     // let consolelamphi = this.mapView.getProjCenter();
-    console.log("TileLvl: " + this.viewStatus.currTileLevel,
-      " ZoomScl: " + this.viewStatus.zoomScale,
-      // " latlon0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
-    );
+    // console.log("TileLvl: " + this.viewStatus.currTileLevel,
+    //   " ZoomScl: " + this.viewStatus.zoomScale,
+    //   // " latlon0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
+    // );
     this.mapView.setTileLevel(this.viewStatus.currTileLevel)
   }
 
@@ -181,8 +177,8 @@ let Main = function () {
       latitude = parseFloat(latitude);
       longitude = parseFloat(longitude);
       if (!isNaN(latitude) && !isNaN(longitude)) {
-        this.lam0 = longitude * 0.0174533; //degrees to radians
-        this.phi0 = latitude * 0.0174533; //degrees to radians
+        this.viewStatus.lam0 = longitude * 0.0174533; //degrees to radians
+        this.viewStatus.phi0 = latitude * 0.0174533; //degrees to radians
       }
     }
     let debug = params.get("debug");
@@ -194,21 +190,10 @@ let Main = function () {
   // this.setQueryParams = () => {
   //   let params = new URLSearchParams(window.location.search);
   //   params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
-  //   params.set("lon", (this.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
-  //   params.set("lat", (this.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+  //   params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+  //   params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
   //   window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   // }
-
-  // //returns pixels 0,0 top left of canvas
-  // this.checkAndGetMousePos = (event) => {
-  //   let canv_xy = this.canvas.getBoundingClientRect();
-  //   let left = event.clientX - canv_xy.left;
-  //   let top = event.clientY - canv_xy.top;
-  //   if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
-  //     return null;
-  //   }
-  //   return [left, top];
-  // };
 
   //returns pixels 0,0 top left of canvas
   this.checkAndGetGesturePos = (event) => {
@@ -242,32 +227,27 @@ let Main = function () {
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
   };
 
-  // this.handlePinchStart = (event) => {
-  //   this.viewStatus.pinchPrevScale = this.viewStatus.pinchPrevScale ? this.viewStatus.pinchPrevScale : 0.0;
-  // };
-
-  // this.handlePinchEnd = (event) => {
-  //   this.viewStatus.pinchPrevScale = this.viewStatus.zoomScale
-  // };
-
   this.handlePan = (event) => {
     if (this.viewStatus.drag) {
       let canv_xy = this.checkAndGetGesturePos(event);
       if (null != canv_xy) {
         if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
-          let dx = canv_xy[0] - this.viewStatus.dragPrevPos[0];
-          let dy = canv_xy[1] - this.viewStatus.dragPrevPos[1];
-          this.mapView.moveWindow(dx, dy);
+          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / this.canvas.width ;
+          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / this.canvas.width ;
+          let curr_lam_phi = this.mapView.getProjCenter();
+          let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0); // limit phi to -90 to 90 degrees
+          let newLam0 = curr_lam_phi.lambda - deltaX;
+          this.mapView.setProjCenter(newLam0, newPhi0);
         }
         this.viewStatus.dragPrevPos = canv_xy;
       }
     }
-  };
+  }
 
   this.handlePanStart = (event) => {
     this.viewStatus.drag = true;
-    let canv_xy = this.checkAndGetGesturePos(event);
+    let canv_xy = this.checkAndGetGesturePos(event); // get canvas x y from upper left corner
     if (canv_xy) {
       event.preventDefault();
       this.viewStatus.dragPrevPos = canv_xy;
@@ -277,6 +257,7 @@ let Main = function () {
   this.handlePanEnd = (event) => {
     this.viewStatus.drag = false;
     this.viewStatus.dragPrevPos = null;
+    this.mapView.render(true); // render to get new tiles if necessary
   };
 
   this.handleDoubleTap = (event) => {
@@ -285,7 +266,9 @@ let Main = function () {
     if (canv_xy) {
       event.preventDefault();
       let lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
-      this.viewStatus.targetLambdaPhi = lam_phi; //{lambda: 1.533480323761242, phi: 0.5899993533326611} ; //c
+      this.viewStatus.lam0 = lam_phi.lambda;
+      this.viewStatus.phi0 = lam_phi.phi;
+      this.viewStatus.targetLambdaPhi = lam_phi; // set target lambda, phi for interpolater
     }
   };
 
@@ -297,7 +280,8 @@ let Main = function () {
   this.handleContextRestored = (event) => {
     init(), (this.requestId = requestAnimationFrame(animation));
   };
-}
+
+};
 
 new Main();
 

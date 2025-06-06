@@ -2,7 +2,7 @@ import { ProjMath } from "./mod/ProjMath.js";
 
 
 let Projection = function(lam0, phi0, zoomScale, opt_divn) {
-  this.rando = Math.random();
+  // this.rando = Math.random();
   this.lam0 = lam0;
   this.phi0 = phi0;
   this.divN_ = (typeof opt_divn !== 'undefined') ? opt_divn : 180;
