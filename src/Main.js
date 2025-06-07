@@ -16,7 +16,7 @@ let Main = function () {
     drag: false,
     dragPrevPos: null, // canvas x y from upper left corner
     pinchPrevScale: null,
-    zoomScale: 300.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 1.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
@@ -233,11 +233,12 @@ let Main = function () {
       if (null != canv_xy) {
         if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
-          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / this.canvas.width ;
-          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / this.canvas.width ;
+          let deltaZoomRate =Math.pow(Math.E,-this.viewStatus.zoomScale) + this.viewStatus.zoomScale + 100;
+          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaZoomRate ;
+          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaZoomRate ;
           let curr_lam_phi = this.mapView.getProjCenter();
-          let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0); // limit phi to -90 to 90 degrees
           let newLam0 = curr_lam_phi.lambda - deltaX;
+          let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0); // limit phi to -90 to 90 degrees
           this.mapView.setProjCenter(newLam0, newPhi0);
         }
         this.viewStatus.dragPrevPos = canv_xy;
