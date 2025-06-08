@@ -227,15 +227,33 @@ let Main = function () {
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
   };
 
+  this.getZoomRate = (i) => {
+    if (i < 1) {
+        return 100;
+    } else if (i < 10) {
+        return 300;
+    } else if (i < 100) {
+        return 500;
+    } else if (i < 1000) {
+        return 1000;
+    } else if (i < 10000) {
+        return 10000;
+    } else if (i < 100000) {
+        return 50000;
+    } else {
+        return i;
+    }
+  }
+
   this.handlePan = (event) => {
     if (this.viewStatus.drag) {
       let canv_xy = this.checkAndGetGesturePos(event);
       if (null != canv_xy) {
         if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
-          let deltaZoomRate =Math.pow(Math.E,-this.viewStatus.zoomScale) + this.viewStatus.zoomScale + 100;
-          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaZoomRate ;
-          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaZoomRate ;
+          let deltaZoomRate = this.getZoomRate(this.viewStatus.zoomScale);
+          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaZoomRate;
+          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaZoomRate;
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda - deltaX;
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0); // limit phi to -90 to 90 degrees
