@@ -16,7 +16,7 @@ let Main = function () {
     drag: false,
     dragPrevPos: null, // canvas x y from upper left corner
     pinchPrevScale: null,
-    zoomScale: 1.01, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 3000.01, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
@@ -36,7 +36,7 @@ let Main = function () {
   this.zoomMax = 30_000_000.01;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.rasterProj = null;
-  this.debug = false; // "local", "boxred", false
+  this.debug = false; // "local", "red", false
 
   document.addEventListener('DOMContentLoaded', () => {
     this.getQueryParams(); // check for url params
@@ -181,9 +181,13 @@ let Main = function () {
         this.viewStatus.phi0 = latitude * 0.0174533; //degrees to radians
       }
     }
-    let debug = params.get("debug");
-    if (debug) {
-      this.debug = debug;
+    let local = params.get("local");
+    if (local=="") {
+      this.debug = "local";
+    }
+    let red = params.get("red");
+    if (red=="") {
+      this.debug = "red";
     }
   };
 

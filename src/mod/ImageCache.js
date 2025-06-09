@@ -41,7 +41,7 @@ ImageCache.prototype.loadImage_ = function (url, info) {
     delete cache.loading.url;
 
     // For DEBUG: Draw a red border around each loaded image
-    if (debug == "boxred") {
+    if (debug == "red") {
       let canvas = document.createElement('canvas');
       canvas.width = 256;
       canvas.height = 256;
@@ -54,7 +54,7 @@ ImageCache.prototype.loadImage_ = function (url, info) {
     }
   };
   this.ongoingImageLoads.push(image);
-  // debug: "local" use debug tile
+  // use local debug tile
   if (debug == "local") {
     image.src = new URL(
       './debug.png',
