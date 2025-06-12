@@ -1,22 +1,22 @@
 let TileManager = function (tile_opts, rasterProj) {
   this.rasterProj = rasterProj;
-  this.canvasSize = { width: null, height: null };
-  this.tilesAcross = 0;
-  // this.tileMaxSize = 0;
+  // this.canvasSize = { width: null, height: null };
+  // this.tilesAcross = 0;
+  // // this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
-  //
-  if (typeof tile_opts !== 'undefined') {
-    if ('canvasSize' in tile_opts) {
-      this.canvasSize = tile_opts.canvasSize;
-      this.tilesAcross = this.canvasSize.width / this.tileSize; // how many tiles fill the canvas
-  //     this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in radians
-    }
-  }
+  // //
+  // if (typeof tile_opts !== 'undefined') {
+  //   if ('canvasSize' in tile_opts) {
+  //     this.canvasSize = tile_opts.canvasSize;
+  //     this.tilesAcross = this.canvasSize.width / this.tileSize; // how many tiles fill the canvas
+  // //     this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in radians
+  //   }
+  // }
 };
 
 TileManager.prototype.resizeCanvas = function (canvasSize) {
-  this.canvasSize = canvasSize;
-  this.tilesAcross = this.canvasSize.width / this.tileSize;
+  // this.canvasSize = canvasSize;
+  // this.tilesAcross = this.canvasSize.width / this.tileSize;
   // this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
 }
 
@@ -122,7 +122,7 @@ TileManager.prototype.getNSWEtiles = function (tile, tileList = [N, S, W, E, NE,
     }
   }
   if (tileList.includes(SW)) {
-    if (y > 0) {
+    if (y < maxZ) {
       tiles.push({ "xyz": { "x": (x == 0 ? maxZ : x - 1), "y": y + 1, "z": z }, });
     }
   }
@@ -153,15 +153,7 @@ TileManager.prototype.getAdjacentTiles = function (currTile) {
   return tileInfos;
 }
 
-TileManager.prototype.adjustTileLevel = function (currTileLevel) {
-    //  reduce the tile level for smaller screen sizes
-    let denominator = 4;
-    let adj = this.tilesAcross<=denominator ? this.tilesAcross/denominator : 1;
-    return Math.round(currTileLevel * adj);
-}
-
 TileManager.prototype.getPreLevel = function (lam0, phi0, currTileLevel) {
-  currTileLevel = this.adjustTileLevel(currTileLevel);
   let { tileX, tileY } = this.getTileXY(lam0, phi0, currTileLevel + 1); // use next level to get quadrant
   let tileQuadkey = this.tileXYToQuadkey(tileX, tileY, currTileLevel + 1);
   return { "quadkey": tileQuadkey }
