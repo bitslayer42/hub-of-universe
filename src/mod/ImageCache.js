@@ -1,8 +1,35 @@
+class LRUCache {
+  constructor(capacity) {
+    this.cache = new Map();
+    this.capacity = capacity;
+  }
+
+  get(key) {
+    if (!this.cache.has(key)) return false;
+    let val = this.cache.get(key);
+    this.cache.delete(key);
+    this.cache.set(key, val); // move to top of list
+    return val;
+  }
+
+  put(key, value) {
+    this.cache.delete(key);
+    if (this.cache.size === this.capacity) {
+      this.cache.delete(this.cache.keys().next().value);
+      this.cache.set(key, value);
+    } else {
+      this.cache.set(key, value);
+    }
+    // console.log("cache size", this.cache.size);
+  }
+
+}
+
 
 let ImageCache = function (cache_opts) {
   this.num = 32;             //  default: 32
   this.crossOrigin = null;
-  this.textures = {};
+  // this.textures = {};
   this.loading = {};
   this.ongoingImageLoads = [];
   this.debug = false;
@@ -20,6 +47,7 @@ let ImageCache = function (cache_opts) {
   }
   //
   this.createTexture = null;
+  this.textures = new LRUCache(this.num);
 };
 
 
@@ -36,7 +64,7 @@ ImageCache.prototype.loadImage_ = function (url, info) {
     if (cache.createTexture == null) return;
     let tex = cache.createTexture(image);
     if (tex) {
-      cache.textures[url] = [tex, info];
+      cache.textures.put(url, [tex, info]);
     }
     delete cache.loading.url;
 
@@ -67,7 +95,7 @@ ImageCache.prototype.loadImage_ = function (url, info) {
 
 
 ImageCache.prototype.loadImageIfAbsent = function (url, info) {
-  if (url in this.textures) return false;
+  if (this.textures.get(url)) return false;
   if (url in this.loading) return false;
   this.loadImage_(url, info);
   return true;  //  ロード開始 Start loading
@@ -75,7 +103,7 @@ ImageCache.prototype.loadImageIfAbsent = function (url, info) {
 
 
 ImageCache.prototype.getTexture = function (url) {
-  let tex = this.textures[url];
+  let tex = this.textures.get(url);
   return tex;
 };
 

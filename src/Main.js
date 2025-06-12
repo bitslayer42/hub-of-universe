@@ -124,7 +124,7 @@ let Main = function () {
       canvasSize: canvasSize,
     };
     let cache_opts = {
-      num: 50,
+      num: 100,
       crossOrigin: false,
       debug: this.debug,
     };
