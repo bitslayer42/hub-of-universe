@@ -153,10 +153,10 @@ TileManager.prototype.getAdjacentTiles = function (currTile) {
   return tileInfos;
 }
 
-TileManager.prototype.getPreLevel = function (lam0, phi0, currTileLevel) {
-  let { tileX, tileY } = this.getTileXY(lam0, phi0, currTileLevel + 1); // use next level to get quadrant
-  let tileQuadkey = this.tileXYToQuadkey(tileX, tileY, currTileLevel + 1);
-  return { "quadkey": tileQuadkey }
+TileManager.prototype.getFirstQuadkey = function (lam0, phi0, currTileLevel) {
+  let { tileX, tileY } = this.getTileXY(lam0, phi0, currTileLevel); 
+  let tileQuadkey = this.tileXYToQuadkey(tileX, tileY, currTileLevel);
+  return tileQuadkey;
 }
 
 TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
@@ -172,11 +172,10 @@ TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
 
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
   let tileInfos = [];
-  //  get a tile above the top level to determine quadrant
-  let prevTile = this.getPreLevel(lam0, phi0, currTileLevel);
+  let prevTile = null;
 
   for (let level = currTileLevel; level >= 2; level--) {
-    let currTileQuadkey = prevTile.quadkey.slice(0, -1);
+    let currTileQuadkey = prevTile ? prevTile.quadkey.slice(0, -1) : this.getFirstQuadkey(lam0, phi0, level);
     let currTileXYZ = quadkeyToTileXY(currTileQuadkey);
     let currTile = {
       "xyz": currTileXYZ, "quadkey": currTileQuadkey,
