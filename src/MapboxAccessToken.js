@@ -1,10 +1,9 @@
 
-import 'dotenv/config';
 let mapbox_access_token;
-if (process.env.NODE_ENV === 'development') {
-    mapbox_access_token = process.env.DEV;
+if (import.meta.env.MODE === 'development') {
+    mapbox_access_token = import.meta.env.VITE_DEV_KEY;
 }
-else if (process.env.NODE_ENV === 'production') {
-    mapbox_access_token = process.env.PROD;
+else if (import.meta.env.MODE === 'production') {
+    mapbox_access_token = import.meta.env.VITE_PROD_KEY;
 }
 export { mapbox_access_token };

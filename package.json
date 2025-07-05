@@ -5,23 +5,15 @@
   "description": "",
   "source": "./index.html",
   "type": "module",
-  "scripts": {
-    "start": "rm -rf dist && parcel",
-    "build": "rm -rf dist && parcel build"
-  },
   "license": "GPLv3",
+  "scripts": {
+    "dev": "vite",
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "devDependencies": {
-    "buffer": "^6.0.3",
-    "crypto-browserify": "^3.12.1",
-    "dotenv": "^16.5.0",
-    "events": "^3.3.0",
-    "os-browserify": "^0.3.0",
-    "parcel": "^2.15.2",
-    "path-browserify": "^1.0.1",
-    "process": "^0.11.10",
-    "stream-browserify": "^3.0.0",
-    "string_decoder": "^1.3.0",
-    "vm-browserify": "^1.1.2"
+    "vite": "^7.0.0"
   },
   "dependencies": {
     "hammerjs": "^2.0.8"
