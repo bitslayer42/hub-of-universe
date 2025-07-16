@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite",
     "start": "vite",
+    "host": "vite --host",
     "build": "vite build",
     "preview": "vite preview"
   },

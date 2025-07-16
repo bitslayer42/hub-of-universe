@@ -39,6 +39,7 @@ let Main = function () {
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
+  this.animationFrames = 80; // number of frames to animate before stopping
 
   document.addEventListener('DOMContentLoaded', () => {
     this.getQueryParams(); // check for url params
@@ -88,7 +89,15 @@ let Main = function () {
       getNewTiles = true;
     }
     this.mapView.render(getNewTiles);
-    this.requestId = requestAnimationFrame(this.animation);
+    this.animationFrames--;
+    console.log("Animation frames left: " + this.animationFrames);
+    if (this.animationFrames > 0) {
+      this.requestId = requestAnimationFrame(this.animation);
+    } else {
+      console.log("Animation finished.");
+      this.animationFrames = 80; // reset for next time
+      this.mapView.render(true);
+    }
   };
 
   this.startup = (rasterProj) => {
@@ -149,6 +158,9 @@ let Main = function () {
       height = canvas.clientHeight;
     (canvas.width == width && canvas.height == height) ||
       ((canvas.width = width), (canvas.height = height));
+    cancelAnimationFrame(this.requestId)
+    this.requestId = requestAnimationFrame(this.animation);
+
   };
 
   this.setTileLevel = () => {
@@ -184,11 +196,11 @@ let Main = function () {
       }
     }
     let local = params.get("local");
-    if (local=="") {
+    if (local == "") {
       this.debug = "local";
     }
     let red = params.get("red");
-    if (red=="") {
+    if (red == "") {
       this.debug = "red";
     }
   };
@@ -220,10 +232,11 @@ let Main = function () {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
+    cancelAnimationFrame(this.requestId)
+    this.requestId = requestAnimationFrame(this.animation);
   };
 
   this.handlePinch = (event) => {
-    // console.log("handlePinch", event.scale, this.viewStatus.zoomScale);
     if (event.scale > 1.0) {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.05;
     }
@@ -231,23 +244,26 @@ let Main = function () {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.05;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
+    cancelAnimationFrame(this.requestId)
+    this.requestId = requestAnimationFrame(this.animation);
   };
 
-  this.getZoomRate = (i) => {
-    if (i < 1) {
-        return 100;
-    } else if (i < 10) {
-        return 300;
-    } else if (i < 100) {
-        return 500;
-    } else if (i < 1000) {
-        return 1000;
-    } else if (i < 10000) {
-        return 10000;
-    } else if (i < 100000) {
-        return 50000;
+  this.getPanRate = (zoomScale) => {
+    // how far should we pan given current zoom level?
+    if (zoomScale < 1) {
+      return 100;
+    } else if (zoomScale < 10) {
+      return 300;
+    } else if (zoomScale < 100) {
+      return 500;
+    } else if (zoomScale < 1000) {
+      return 1000;
+    } else if (zoomScale < 10000) {
+      return 10000;
+    } else if (zoomScale < 100000) {
+      return 50000;
     } else {
-        return i;
+      return zoomScale;
     }
   }
 
@@ -257,9 +273,9 @@ let Main = function () {
       if (null != canv_xy) {
         if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
-          let deltaZoomRate = this.getZoomRate(this.viewStatus.zoomScale);
-          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaZoomRate;
-          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaZoomRate;
+          let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
+          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaPanRate;
+          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaPanRate;
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda - deltaX;
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0); // limit phi to -90 to 90 degrees
@@ -276,6 +292,7 @@ let Main = function () {
     if (canv_xy) {
       event.preventDefault();
       this.viewStatus.dragPrevPos = canv_xy;
+      this.requestId = requestAnimationFrame(this.animation);
     };
   };
 
@@ -294,6 +311,7 @@ let Main = function () {
       this.viewStatus.lam0 = lam_phi.lambda;
       this.viewStatus.phi0 = lam_phi.phi;
       this.viewStatus.targetLambdaPhi = lam_phi; // set target lambda, phi for interpolater
+      this.requestId = requestAnimationFrame(this.animation);
     }
   };
 
