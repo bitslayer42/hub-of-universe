@@ -59,7 +59,7 @@ ImageCache.prototype.loadImage_ = function (url, info) {
   }
   let cache = this;
   let debug = this.debug;
-  image.onload = function () {
+  image.onload = async function () {
     cache.ongoingImageLoads.splice(cache.ongoingImageLoads.indexOf(image), 1);
     if (cache.createTexture == null) return;
     let tex = cache.createTexture(image);
@@ -70,15 +70,17 @@ ImageCache.prototype.loadImage_ = function (url, info) {
 
     // For DEBUG: Draw a red border around each loaded image
     if (debug == "red") {
-      let canvas = document.createElement('canvas');
-      canvas.width = 256;
-      canvas.height = 256;
+      // let canvas = document.createElement('canvas');
+      // canvas.width = 256;
+      // canvas.height = 256;
+      let canvas = new OffscreenCanvas(256, 256);
       let ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0);
       ctx.strokeStyle = 'red';
       ctx.lineWidth = 5;
       ctx.strokeRect(0, 0, image.width, image.height);
-      image.src = canvas.toDataURL();
+      const blob = await canvas.convertToBlob({ type: 'image/png' });
+      image.src = URL.createObjectURL(blob);
     }
   };
   this.ongoingImageLoads.push(image);
