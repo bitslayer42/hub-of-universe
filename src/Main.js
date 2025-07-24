@@ -90,11 +90,11 @@ let Main = function () {
     }
     this.mapView.render(getNewTiles);
     this.animationFrames--;
-    console.log("Animation frames left: " + this.animationFrames);
+    // console.log("Animation frames left: " + this.animationFrames);
     if (this.animationFrames > 0) {
       this.requestId = requestAnimationFrame(this.animation);
     } else {
-      console.log("Animation finished.");
+      // console.log("Animation finished.");
       this.animationFrames = 80; // reset for next time
       this.mapView.render(true);
     }
@@ -232,7 +232,7 @@ let Main = function () {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    cancelAnimationFrame(this.requestId)
+    cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
   };
 
@@ -244,7 +244,7 @@ let Main = function () {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.05;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    cancelAnimationFrame(this.requestId)
+    cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
   };
 

@@ -52,6 +52,7 @@ let ImageCache = function (cache_opts) {
 
 
 ImageCache.prototype.loadImage_ = function (url, info) {
+  const { promise, resolve, reject } = Promise.withResolvers();
   this.loading[url] = true;
   let image = new Image();
   if (this.crossOrigin != null) {
@@ -59,8 +60,9 @@ ImageCache.prototype.loadImage_ = function (url, info) {
   }
   let cache = this;
   let debug = this.debug;
+  let redImage;
   image.onload = async function () {
-    cache.ongoingImageLoads.splice(cache.ongoingImageLoads.indexOf(image), 1);
+    cache.ongoingImageLoads.splice(cache.ongoingImageLoads.indexOf(image), 1); //remove from ongoing load list
     if (cache.createTexture == null) return;
     let tex = cache.createTexture(image);
     if (tex) {
@@ -70,9 +72,6 @@ ImageCache.prototype.loadImage_ = function (url, info) {
 
     // For DEBUG: Draw a red border around each loaded image
     if (debug == "red") {
-      // let canvas = document.createElement('canvas');
-      // canvas.width = 256;
-      // canvas.height = 256;
       let canvas = new OffscreenCanvas(256, 256);
       let ctx = canvas.getContext('2d');
       ctx.drawImage(image, 0, 0);
@@ -80,9 +79,18 @@ ImageCache.prototype.loadImage_ = function (url, info) {
       ctx.lineWidth = 5;
       ctx.strokeRect(0, 0, image.width, image.height);
       const blob = await canvas.convertToBlob({ type: 'image/png' });
-      image.src = URL.createObjectURL(blob);
+      redImage = new Image();
+      redImage.src = URL.createObjectURL(blob);
+      // console.log("DEBUG: Image loaded with red border", url);
+      resolve(redImage);
     }
-  };
+  }
+  if (debug == "red") {
+    promise.then((redImage) => {
+      image.src = redImage.src; // Use the red bordered image
+    });
+  }
+
   this.ongoingImageLoads.push(image);
   // use local debug tile
   if (debug == "local") {
