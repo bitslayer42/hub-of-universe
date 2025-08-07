@@ -1,3 +1,5 @@
+import { off } from "hammerjs";
+
 let TileManager = function (tile_opts, rasterProj) {
   this.rasterProj = rasterProj;
   // this.canvasSize = { width: null, height: null };
@@ -27,7 +29,9 @@ TileManager.prototype.getTileXY = function (lam0, phi0, level) {
   let pixelY = (0.5 - Math.log((1 + sinPhi0) / (1 - sinPhi0)) / (4 * Math.PI)) * this.tileSize * Math.pow(2, level);
   let tileX = Math.floor(pixelX / this.tileSize);
   let tileY = Math.floor(pixelY / this.tileSize);
-  return { tileX, tileY };
+  let centerOffsetX = pixelX / this.tileSize % 1;
+  let centerOffsetY = pixelY / this.tileSize % 1;
+  return { tileX, tileY, centerOffsetX, centerOffsetY };
 }
 
 TileManager.prototype.tileXYToQuadkey = function (tileX, tileY, level) {
@@ -154,9 +158,10 @@ TileManager.prototype.getAdjacentTiles = function (currTile) {
 }
 
 TileManager.prototype.getFirstQuadkey = function (lam0, phi0, currTileLevel) {
-  let { tileX, tileY } = this.getTileXY(lam0, phi0, currTileLevel); 
+  let { tileX, tileY, centerOffsetX, centerOffsetY } = this.getTileXY(lam0, phi0, currTileLevel); 
   let tileQuadkey = this.tileXYToQuadkey(tileX, tileY, currTileLevel);
-  return tileQuadkey;
+  let centerOffset = {X: centerOffsetX, Y: centerOffsetY};
+  return { tileQuadkey, centerOffset };
 }
 
 TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
@@ -173,9 +178,15 @@ TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
   let tileInfos = [];
   let prevTile = null;
-
+  let centerOffset;
   for (let level = currTileLevel; level >= 2; level--) {
-    let currTileQuadkey = prevTile ? prevTile.quadkey.slice(0, -1) : this.getFirstQuadkey(lam0, phi0, level);
+    let currTileQuadkey;
+    if (prevTile ){
+      currTileQuadkey = prevTile.quadkey.slice(0, -1);
+    } else { // first tile
+      ({ tileQuadkey: currTileQuadkey, centerOffset } = this.getFirstQuadkey(lam0, phi0, level));
+    }
+    // let currTileQuadkey = prevTile ? prevTile.quadkey.slice(0, -1) : this.getFirstQuadkey(lam0, phi0, level);
     let currTileXYZ = quadkeyToTileXY(currTileQuadkey);
     let currTile = {
       "xyz": currTileXYZ, "quadkey": currTileQuadkey,
@@ -191,7 +202,10 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
     tile.rect = this.getRectFromXYZ(tile);
     tile.url = getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
   }
-  return tileInfos.reverse();
+  // return tileInfos.reverse();
+  // return ({ tileArray: [tileInfos[0]], centerOffset });
+  return ({ tileArray: tileInfos.reverse(), centerOffset });
+
 };
 
 export { TileManager };

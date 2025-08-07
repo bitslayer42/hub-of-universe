@@ -10,6 +10,7 @@ let ShaderProgram = function(gl) {
   this.locViewXY2_ = null;
   this.locDataCoord1_ = null;
   this.locDataCoord2_ = null;
+  this.locCenterOffset_ = null;
   this.locFixedTextureSize_ = null;
   this.locRenderColor_ = null;
   this.locRenderType_ = null;
@@ -29,7 +30,8 @@ ShaderProgram.UNIT_RECT_TRIANGLE_STRIP = new Float32Array([
 
 ShaderProgram.RENDER_TYPE_TEXTURE = 0;        // dim=2, dataType=GeoGraphic
 ShaderProgram.RENDER_TYPE_POINT_TEXTURE = 1;  // dim=0, dataType=XYCoordinates
-ShaderProgram.RENDER_TYPE_POLYLINE = 2;       // dim=1, dataType=??
+ShaderProgram.RENDER_TYPE_POLYLINE = 2;       
+ShaderProgram.RENDER_TYPE_FLAT_TEXTURE = 3;        
 
 
 ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
@@ -60,6 +62,7 @@ ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
   this.locViewXY2_ = this.gl_.getUniformLocation(this.program_, "uViewXY2");
   this.locDataCoord1_ = this.gl_.getUniformLocation(this.program_, "uDataCoord1");
   this.locDataCoord2_ = this.gl_.getUniformLocation(this.program_, "uDataCoord2");
+  this.locCenterOffset_ = this.gl_.getUniformLocation(this.program_, "uCenterOffset");
   this.locFixedTextureSize_ = this.gl_.getUniformLocation(this.program_, "uFixedTextureSize");
   this.locRenderColor_ = this.gl_.getUniformLocation(this.program_, "uRenderColor");
   this.locRenderType_ = this.gl_.getUniformLocation(this.program_, "uRenderType");
@@ -113,8 +116,8 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
   this.gl_.uniform1f(this.locAlpha_, alpha);
   this.gl_.uniform4f(this.locRenderColor_, lineColor.r, lineColor.g, lineColor.b, lineColor.a);
   this.gl_.uniform2f(this.locProjCenter_, lam0, phi0);
-  this.gl_.uniform2f(this.locViewXY1_, viewRect[0], viewRect[1]);
-  this.gl_.uniform2f(this.locViewXY2_, viewRect[2], viewRect[3]);
+  this.gl_.uniform2f(this.locViewXY1_, viewRect[0], viewRect[1]); // -PI,-PI
+  this.gl_.uniform2f(this.locViewXY2_, viewRect[2], viewRect[3]); // +PI,+PI
   this.gl_.uniform1i(this.locTexture_, 0);
   this.gl_.uniform1f(this.locUnifScale_, zoomScale);
 
@@ -142,15 +145,15 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
 // };
 
 //  TODO 要検討. To study
-ShaderProgram.prototype.renderIconTexture = function(texture, iconSize, xyPos) {
-  this.gl_.bindTexture(this.gl_.TEXTURE_2D, texture);
-  this.gl_.uniform2f(this.locDataCoord1_, xyPos.x, xyPos.y);
-  this.gl_.uniform2f(this.locDataCoord2_, 0, 0);
-  this.gl_.uniform2f(this.locFixedTextureSize_, iconSize.width, iconSize.height);
-  this.gl_.drawArrays(this.gl_.TRIANGLE_STRIP, 0, 4);
-};
+// ShaderProgram.prototype.renderIconTexture = function(texture, iconSize, xyPos) {
+//   this.gl_.bindTexture(this.gl_.TEXTURE_2D, texture);
+//   this.gl_.uniform2f(this.locDataCoord1_, xyPos.x, xyPos.y);
+//   this.gl_.uniform2f(this.locDataCoord2_, 0, 0);
+//   this.gl_.uniform2f(this.locFixedTextureSize_, iconSize.width, iconSize.height);
+//   this.gl_.drawArrays(this.gl_.TRIANGLE_STRIP, 0, 4);
+// };
 
-ShaderProgram.prototype.renderTexture = function(texture, region) {
+ShaderProgram.prototype.renderTexture = function(texture, region, centerOffset) {
   let lam1 = region[0];
   let phi1 = region[1];
   let lam2 = region[2];
@@ -159,24 +162,25 @@ ShaderProgram.prototype.renderTexture = function(texture, region) {
   this.gl_.bindTexture(this.gl_.TEXTURE_2D, texture);
   this.gl_.uniform2f(this.locDataCoord1_, lam1, phi1);
   this.gl_.uniform2f(this.locDataCoord2_, lam2, phi2);
+  this.gl_.uniform2f(this.locCenterOffset_, centerOffset.X, centerOffset.Y);
   this.gl_.drawArrays(this.gl_.TRIANGLE_STRIP, 0, 4);
 };
 
-ShaderProgram.prototype.renderPolyline = function(points) {
-  this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, new Float32Array(points));
-  this.gl_.drawArrays(this.gl_.LINE_STRIP, 0, points.length / 2);
-};
+// ShaderProgram.prototype.renderPolyline = function(points) {
+//   this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, new Float32Array(points));
+//   this.gl_.drawArrays(this.gl_.LINE_STRIP, 0, points.length / 2);
+// };
 
-ShaderProgram.prototype.setPolylineData = function(points) {
-  this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, new Float32Array(points));
-};
+// ShaderProgram.prototype.setPolylineData = function(points) {
+//   this.gl_.bufferSubData(this.gl_.ARRAY_BUFFER, 0, new Float32Array(points));
+// };
 
-ShaderProgram.prototype.renderPolylineData = function(numPoints, ty) {
-  if (typeof ty !== 'undefined') {
-    this.gl_.uniform1f(this.locTranslateY_, ty);    //  NOTICE uTranslateY, tmerc独自. Original
-  }
-  this.gl_.drawArrays(this.gl_.LINE_STRIP, 0, numPoints / 2);
-};
+// ShaderProgram.prototype.renderPolylineData = function(numPoints, ty) {
+//   if (typeof ty !== 'undefined') {
+//     this.gl_.uniform1f(this.locTranslateY_, ty);    //  NOTICE uTranslateY, tmerc独自. Original
+//   }
+//   this.gl_.drawArrays(this.gl_.LINE_STRIP, 0, numPoints / 2);
+// };
 
 /* ------------------------------------------------------------ */
 export { ShaderProgram };

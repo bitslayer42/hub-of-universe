@@ -18,6 +18,7 @@ let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   };
   //
   this.tileInfos = null;
+  this.centerOffset = null;
   this.getURL = null;
   this.calculateLevel = null;
   this.currTileLevel = 0;
@@ -110,8 +111,9 @@ MapView.prototype.createTexture = function (img) {
 
 
 MapView.prototype.getTileInfos_ = function () {
-  this.tileInfos = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL);
-  // console.log("MapView.tileInfos.length: ", this.tileInfos.length);
+  let { tileArray, centerOffset } = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL);
+  this.tileInfos = tileArray;
+  this.centerOffset = centerOffset;
 };
 
 
@@ -145,7 +147,7 @@ MapView.prototype.render_ = function () {
   ]);
   this.rasterProj.prepareRender(texCoords, [-Math.PI, -Math.PI, Math.PI, Math.PI]);
   if (0 < targetTextures.length) {
-    this.rasterProj.renderTextures(targetTextures);
+    this.rasterProj.renderTextures(targetTextures, this.centerOffset);
   }
 };
 

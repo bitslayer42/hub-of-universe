@@ -3,11 +3,11 @@ import { Projection } from './Projection.js';
 
 /* ------------------------------------------------------------ */
 
-const RasterProj = function() {
+const RasterProj = function () {
   this.shader_ = null;
   //
   this.backColor_ = { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
-  this.graticuleColor_ = { r: 0.88, g: 0.88, b: 0.88, a: 1.0};
+  this.graticuleColor_ = { r: 0.88, g: 0.88, b: 0.88, a: 1.0 };
   this.alpha_ = 1.0;
   //
   this.projection = new Projection(0.0, 0.0, 0.01);   // public
@@ -16,10 +16,10 @@ const RasterProj = function() {
   this.zoomScale = 0.01; // 0 > zoomScale >= 40
 };
 
-RasterProj.prototype.init = function(gl) {
+RasterProj.prototype.init = function (gl) {
   this.shader_ = new ShaderProgram(gl);
   let ret = this.shader_.init(RasterProj.VERTEX_SHADER_STR, RasterProj.FRAGMENT_SHADER_STR);
-  if ( !ret ) {
+  if (!ret) {
     return false;
   }
 
@@ -29,45 +29,50 @@ RasterProj.prototype.init = function(gl) {
   return true;
 };
 
-RasterProj.prototype.setAlpha = function(alpha) {
+RasterProj.prototype.setAlpha = function (alpha) {
   this.alpha_ = alpha;
 };
 
-RasterProj.prototype.setProjCenter = function(lam0, phi0) {
+RasterProj.prototype.setProjCenter = function (lam0, phi0) {
   this.projection = new Projection(lam0, phi0, this.zoomScale);
 };
 
-RasterProj.prototype.clear = function(canvasSize) {
+RasterProj.prototype.clear = function (canvasSize) {
   this.shader_.clear(canvasSize);
 };
 
-RasterProj.prototype.prepareRender = function(texCoords, viewRect) {
+RasterProj.prototype.prepareRender = function (texCoords, viewRect) {
   this.shader_.prepareRender(viewRect, texCoords, this.projection.lam0, this.projection.phi0, this.alpha_, this.graticuleColor_, this.zoomScale);
 };
 
 // c- Renders textures at locations specified in textureInfos
-RasterProj.prototype.renderTextures = function(textureInfos) {
-  this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
-  for ( let i = 0; i < textureInfos.length; ++i ) {
+RasterProj.prototype.renderTextures = function (textureInfos, centerOffset) {
+  for (let i = 0; i < textureInfos.length; ++i) {
+    if (i == textureInfos.length - 1) { // center tile
+      this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_FLAT_TEXTURE);
+    } else {
+      this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
+    }
+
     let texture = textureInfos[i][0];
     let region = textureInfos[i][1];
-    this.shader_.renderTexture(texture, region);
+    this.shader_.renderTexture(texture, region, centerOffset);
   }
 };
 
 // c- Renders an icon at the center of the map 
-RasterProj.prototype.renderOverlays = function(centerIcon, iconSize) {
-  this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_POINT_TEXTURE);
-  this.shader_.renderIconTexture(centerIcon, iconSize, { x:0.0, y:0.0});
-};
+// RasterProj.prototype.renderOverlays = function(centerIcon, iconSize) {
+//   this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_POINT_TEXTURE);
+//   this.shader_.renderIconTexture(centerIcon, iconSize, { x:0.0, y:0.0});
+// };
 
-RasterProj.prototype.setScale = function(zoomScale) {
+RasterProj.prototype.setScale = function (zoomScale) {
   this.zoomScale = zoomScale;
   this.projection.setScale(zoomScale);
 }
 
 /*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*/
-RasterProj.VERTEX_SHADER_STR = /*glsl*/`#version 300 es
+RasterProj.VERTEX_SHADER_STR = /*.glsl*/`#version 300 es
   precision highp float;
   in vec2 aPosition;
   in vec2 aTexCoord;
@@ -86,11 +91,12 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   uniform sampler2D uTexture;
   in vec2 vTexCoord;
   uniform lowp int uRenderType;
-  uniform vec2 uProjCenter;
-  uniform vec2 uViewXY1;
-  uniform vec2 uViewXY2;
-  uniform vec2 uDataCoord1;
-  uniform vec2 uDataCoord2;
+  uniform vec2 uProjCenter; // lam0, phi0
+  uniform vec2 uViewXY1;    // -PI,-PI
+  uniform vec2 uViewXY2;    // +PI,+PI
+  uniform vec2 uDataCoord1; // lam1, phi1: top left corner of current texture: radians
+  uniform vec2 uDataCoord2; // lam2, phi2: bot right corner of current texture: radians
+  uniform vec2 uCenterOffset; // central point offset in center tile
   uniform vec2 uFixedTextureSize;    //  アイコンサイズ（画面比） Icon size (screen ratio)
   uniform vec4 uRenderColor;
   uniform float uAlpha;
@@ -150,22 +156,30 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   }
 
   void main() {
-  //  画面上の点 vTexCoord ([-1,-1]-[1,1]) をXY平面上の点にマッピング 
-  //. Map the point vTexCoord ([-1, -1] - [1, 1]) on the screen to a point on the XY plane
-    vec2 xy = mix(uViewXY1, uViewXY2, vTexCoord);
-
-    if ( uRenderType == 0 ) {    //  Texture (map)
+  // Map the texture point vTexCoord ([0,0] - [1,1]) to a point on the XY plane
+    vec2 xy = mix(uViewXY1, uViewXY2, vTexCoord); // lerp from -PI,-PI to +PI,+PI, inverse so rationalizes it
+    if ( uRenderType == 0 ) {    //  Texture (map) RENDER_TYPE_TEXTURE
 
       vec2 lp = proj_inverse(uProjCenter, xy);
 
       vec2 ts = (lp - uDataCoord1) / (uDataCoord2 - uDataCoord1);
-      float inXY = inner_xy(xy);
-      vec2 inData = step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts);
-      vec4 OutputColor = texture(uTexture, ts) * inData.x * inData.y * inXY;
+      vec2 inData = step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts); // cut off outside of texture
+      vec4 OutputColor = texture(uTexture, ts) * inData.x * inData.y;
       OutputColor.a *= clamp(uAlpha, 0.0, 1.0);
       fragColor = OutputColor;
+    }
+    else 
+      if ( uRenderType == 3 ) {  // center tile rendered flat RENDER_TYPE_FLAT_TEXTURE
 
-  //   } else if ( uRenderType == 1 ) {  //  PointTexture (icon)
+        vec2 lp = vec2(xy.x + uCenterOffset.x, xy.y + (1.0 - uCenterOffset.y));
+
+        vec2 inData = step(vec2(0.0, 0.0), lp) - step(vec2(1.0, 1.0), lp); // cut off outside of texture
+        vec4 OutputColor = texture(uTexture, lp) * inData.x * inData.y;
+        if (length(xy) < 0.4) {
+          fragColor = OutputColor;
+        }
+      }
+  //  else if ( uRenderType == 1 ) {  //  PointTexture (icon)
 
   // //   XY平面上の点を画像上の点[0,0]-[1,1]にマッピングする 
   // //.  Map a point on the XY plane to a point [0, 0] - [1, 1] on the image
@@ -176,11 +190,12 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   //     vec4 OutputColor = texture(uTexture, ts) * inData.x * inData.y;
   //     fragColor = OutputColor;
 
-  //   } else if ( uRenderType == 2 ) {  //  Polyline (Graticules)
+  // } 
+  // else if ( uRenderType == 2 ) {  //  Polyline (Graticules)
   
   //       fragColor = uRenderColor;
   
-      }
+      // }
     }
 
 `;
