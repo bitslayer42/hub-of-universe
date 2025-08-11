@@ -122,6 +122,10 @@ let Main = function () {
     mc.on("tap", this.handleDoubleTap);
 
     window.WheelEvent && document.addEventListener("wheel", this.handleWheel, false);
+
+
+    document.addEventListener('keydown', this.handleKeydown);
+
     this.init(rasterProj);
   };
 
@@ -223,6 +227,20 @@ let Main = function () {
     }
     return [left, top];
   };
+
+  this.handleKeydown = (event) => {
+    // console.log("Key pressed: " + event.key);
+    if (event.key == '=' || event.key == '+') {
+      // zoom in
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.1;
+    } else if (event.key === '-' || event.key === '_') {
+      // zoom out
+      this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
+    } else return; // ignore other keys
+    this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
+    cancelAnimationFrame(this.requestId);
+    this.requestId = requestAnimationFrame(this.animation);
+  }
 
   this.handleWheel = (event) => {
     if (event.deltaY < 0) {
