@@ -158,27 +158,28 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   void main() {
   // Map the texture point vTexCoord ([0,0] - [1,1]) to a point on the XY plane
     vec2 xy = mix(uViewXY1, uViewXY2, vTexCoord); // lerp from -PI,-PI to +PI,+PI, inverse so rationalizes it
-    if ( uRenderType == 0 ) {    //  Texture (map) RENDER_TYPE_TEXTURE
+    // if ( uRenderType == 0 ) {    //  Texture (map) RENDER_TYPE_TEXTURE
 
       vec2 lp = proj_inverse(uProjCenter, xy);
 
       vec2 ts = (lp - uDataCoord1) / (uDataCoord2 - uDataCoord1);
+      float inXY = inner_xy(xy);
       vec2 inData = step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts); // cut off outside of texture
-      vec4 OutputColor = texture(uTexture, ts) * inData.x * inData.y;
+      vec4 OutputColor = texture(uTexture, ts) * inData.x * inData.y * inXY;
       OutputColor.a *= clamp(uAlpha, 0.0, 1.0);
       fragColor = OutputColor;
-    }
-    else 
-      if ( uRenderType == 3 ) {  // center tile rendered flat RENDER_TYPE_FLAT_TEXTURE
+    // }
+    // else 
+    //   if ( uRenderType == 3 ) {  // center tile rendered flat RENDER_TYPE_FLAT_TEXTURE
 
-        vec2 lp = vec2(xy.x + uCenterOffset.x, xy.y + (1.0 - uCenterOffset.y));
+    //     vec2 lp = vec2(xy.x + uCenterOffset.x, xy.y + (1.0 - uCenterOffset.y));
 
-        vec2 inData = step(vec2(0.0, 0.0), lp) - step(vec2(1.0, 1.0), lp); // cut off outside of texture
-        vec4 OutputColor = texture(uTexture, lp) * inData.x * inData.y;
-        if (length(xy) < 0.4) {
-          fragColor = OutputColor;
-        }
-      }
+    //     vec2 inData = step(vec2(0.0, 0.0), lp) - step(vec2(1.0, 1.0), lp); // cut off outside of texture
+    //     vec4 OutputColor = texture(uTexture, lp) * inData.x * inData.y;
+    //     // if (length(xy) < 0.4) {
+    //       fragColor = OutputColor;
+    //     // }
+    //   }
   //  else if ( uRenderType == 1 ) {  //  PointTexture (icon)
 
   // //   XY平面上の点を画像上の点[0,0]-[1,1]にマッピングする 

@@ -35,8 +35,8 @@ let Main = function () {
     // phi0: -33.9242542 * 0.0174533, // 0.7104078658215001
   };
   this.zoomMin = 0.01;
-  this.zoomMax = 30_000_000.01;
-  this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
+  this.zoomMax = 1_000_000.01;
+  this.maxTileLevel = 18; // tile levels 0 to maxTileLevel
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
   this.animationFrames = 80; // number of frames to animate before stopping
@@ -321,7 +321,6 @@ let Main = function () {
   };
 
   this.handleDoubleTap = (event) => {
-    console.log("handleDoubleTap");
     let canv_xy = this.checkAndGetGesturePos(event);
     if (canv_xy) {
       event.preventDefault();

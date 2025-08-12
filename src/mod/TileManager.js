@@ -6,23 +6,14 @@ let TileManager = function (tile_opts, rasterProj) {
   // this.tilesAcross = 0;
   // // this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
-  // //
-  // if (typeof tile_opts !== 'undefined') {
-  //   if ('canvasSize' in tile_opts) {
-  //     this.canvasSize = tile_opts.canvasSize;
-  //     this.tilesAcross = this.canvasSize.width / this.tileSize; // how many tiles fill the canvas
-  // //     this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross; // size of a tile in radians
-  //   }
-  // }
+  this.centerOffset = {X: 0, Y: 0}; // offset of center point within center tile
+  this.centerQuadkey = null; // quadkey of tile at center of map
 };
 
 TileManager.prototype.resizeCanvas = function (canvasSize) {
-  // this.canvasSize = canvasSize;
-  // this.tilesAcross = this.canvasSize.width / this.tileSize;
-  // this.tileMaxSize = 2.0 * Math.PI / this.tilesAcross;
 }
 
-TileManager.prototype.getTileXY = function (lam0, phi0, level) {
+TileManager.prototype.getCenterTileInfo = function (lam0, phi0, level) {
   // Get tile at center of map
   let sinPhi0 = Math.sin(phi0);
   let pixelX = ((lam0 + Math.PI) / (2 * Math.PI)) * this.tileSize * Math.pow(2, level);
@@ -31,7 +22,8 @@ TileManager.prototype.getTileXY = function (lam0, phi0, level) {
   let tileY = Math.floor(pixelY / this.tileSize);
   let centerOffsetX = pixelX / this.tileSize % 1;
   let centerOffsetY = pixelY / this.tileSize % 1;
-  return { tileX, tileY, centerOffsetX, centerOffsetY };
+  this.centerOffset = {X: centerOffsetX, Y: centerOffsetY};
+  this.centerQuadkey = this.tileXYToQuadkey(tileX, tileY, level);
 }
 
 TileManager.prototype.tileXYToQuadkey = function (tileX, tileY, level) {
@@ -158,7 +150,7 @@ TileManager.prototype.getAdjacentTiles = function (currTile) {
 }
 
 TileManager.prototype.getFirstQuadkey = function (lam0, phi0, currTileLevel) {
-  let { tileX, tileY, centerOffsetX, centerOffsetY } = this.getTileXY(lam0, phi0, currTileLevel); 
+  let { tileX, tileY, centerOffsetX, centerOffsetY } = this.getCenterTileInfo(lam0, phi0, currTileLevel); 
   let tileQuadkey = this.tileXYToQuadkey(tileX, tileY, currTileLevel);
   let centerOffset = {X: centerOffsetX, Y: centerOffsetY};
   return { tileQuadkey, centerOffset };
@@ -176,17 +168,17 @@ TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
 }
 
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
+  // console.log("getTileInfos", lam0, phi0, currTileLevel);
   let tileInfos = [];
   let prevTile = null;
-  let centerOffset;
+  this.getCenterTileInfo(lam0, phi0, currTileLevel);
   for (let level = currTileLevel; level >= 2; level--) {
     let currTileQuadkey;
     if (prevTile ){
       currTileQuadkey = prevTile.quadkey.slice(0, -1);
     } else { // first tile
-      ({ tileQuadkey: currTileQuadkey, centerOffset } = this.getFirstQuadkey(lam0, phi0, level));
+      currTileQuadkey = this.centerQuadkey;
     }
-    // let currTileQuadkey = prevTile ? prevTile.quadkey.slice(0, -1) : this.getFirstQuadkey(lam0, phi0, level);
     let currTileXYZ = quadkeyToTileXY(currTileQuadkey);
     let currTile = {
       "xyz": currTileXYZ, "quadkey": currTileQuadkey,
@@ -204,7 +196,7 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
   }
   // return tileInfos.reverse();
   // return ({ tileArray: [tileInfos[0]], centerOffset });
-  return ({ tileArray: tileInfos.reverse(), centerOffset });
+  return ({ tileArray: tileInfos.reverse(), centerOffset: this.centerOffset });
 
 };
 
