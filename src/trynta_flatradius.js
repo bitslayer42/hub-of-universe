@@ -15,7 +15,7 @@ const RasterProj = function () {
   this.numberOfPoints = 64;
   this.zoomScale = 0.01; // 0 > zoomScale >= 40
   this.ringRadius = null; // radius of flat center disk in radians
-  this.flatRatio = null;    // ratio of projectedFlatRadius / flatRadius
+  this.flatRatio = null;    // ratio of projectedRingRadius / ringRadius
 
 };
 
@@ -89,8 +89,8 @@ RasterProj.prototype.setFlatRatio = function (ringRadius) {
   this.ringRadius = ringRadius;
   let lambda = this.projection.lam0;
   let phi = this.projection.phi0 + ringRadius;
-  let {x,y} = this.projection.forward(lambda, phi);
-  this.flatRatio = y / ringRadius; // ratio of projectedFlatRadius / flatRadius
+  let {x, y} = this.projection.forward(lambda, phi);
+  this.flatRatio = y / ringRadius; // ratio of projectedringRadius / ringRadius
   // console.log("setFlatRatio: ", { 
   //   lambda, phi, 
   //   lam0: this.projection.lam0, phi0: this.projection.phi0, 
@@ -130,9 +130,9 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   uniform float uAlpha;
   uniform float uScale;       //  スケール zoom in zoomScale
   uniform float uRingRadius;  // radius of flat center disk in radians
-  uniform float uFlatRatio;   // ratio of projectedFlatRadius / flatRadius  
+  uniform float uFlatRatio;   // ratio of projectedringRadius / ringRadius  
 
-  // const float flatradius = 0.0001;
+  // const float ringRadius = 0.0001;
   const float epsilon = 0.00001;
   // float flatratio = 0.0002; // ratio of
 
@@ -142,43 +142,52 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   const float atanSinhPi = 1.48442222; // atan(sinh(pi)) = max phi for web merc
   out vec4 fragColor;
 
-  vec2 proj_inverse(vec2 center, vec2 xy) {
-    // Fisheye effect
-    vec2 xy_1 = xy / pi; // circle radius 1.0
-    float rho_fe = length(xy_1);
+  vec2 web_merc(float lambda, float phi) {      //  Web Mercator
+    if (abs(phi) < atanSinhPi) {
+      phi = asinh(tan(phi)) * 0.5;
+    }
+    return vec2(lambda, phi);
+  }
+
+  vec2 fisheye(vec2 xy) {      //  fisheye effect
+    xy = xy / pi; // circle radius 1.0
+    float rho = length(xy);
 
     float theta = atan(xy.y, xy.x);
-    float fisheyeR = (exp(rho_fe * log(1.0 + uScale)) - 1.0) / uScale;    
-    vec2 xy_fe = vec2(cos(theta) * fisheyeR * pi, sin(theta) * fisheyeR * pi);
-    
-    // Inverse of azimuthal equidistant projection
+    float fisheyeR = (exp(rho * log(1.0 + uScale)) - 1.0) / uScale;
+    return vec2(cos(theta) * fisheyeR * pi, sin(theta) * fisheyeR * pi);
+  }
+
+  vec2 proj_inverse(vec2 center, vec2 xy) {  // lat/lon from map coords
+    xy = fisheye(xy);
     float sinPhi0 = sin(center.y);
     float cosPhi0 = cos(center.y);
 
-    float rho = length(xy_fe);
+    float rho = length(xy);
 
     if (rho > uRingRadius - epsilon && rho < uRingRadius + epsilon) { // near border
-
       float lambda = 0.0;
       float phi = 0.0;
       return vec2(lambda, phi);
     }
-    // if (rho < uRingRadius) { // inside disk
-    //   // float xflat = (xy.x + uProjCenter.x) * uFlatRatio;
-    //   // float yflat = (xy.y + (1.0 - uProjCenter.y)) * uFlatRatio;
-    //   float xflat = (xy.x + uProjCenter.x) / uFlatRatio;
-    //   float yflat = (xy.y + (1.0 - uProjCenter.y)) / uFlatRatio;      
-    //   return vec2(xflat , yflat);
-    // }
 
-    float phi = asin( clamp( cos(rho) * sinPhi0 + xy_fe.y * sin(rho) * cosPhi0 / rho, -1.0, 1.0 ) );
-    float lambda = mod( center.x + atan( xy_fe.x * sin(rho), rho * cosPhi0 * cos(rho) - xy_fe.y * sinPhi0 * sin(rho) ) + pi, 2.0 * pi ) - pi;
-
-    // Adj phi for web mercator
-    if (abs(phi) < atanSinhPi) { // not for poles
-      phi = asinh(tan(phi)) * 0.5;
+    if ( rho < epsilon ) {
+      return center;
     }
-    return vec2(lambda, phi);
+    if ( rho - epsilon > xyRadius ) {
+      rho = xyRadius;
+    }
+
+    float c_rh = rho;
+
+    float cos_c = cos(c_rh);
+    float sin_c = sin(c_rh);
+
+    float phi = asin( clamp( cos_c * sinPhi0 + xy.y * sin_c * cosPhi0 / rho, -1.0, 1.0 ) );
+    float lam = mod( center.x + atan( xy.x * sin_c, rho * cosPhi0 * cos_c - xy.y * sinPhi0 * sin_c ) + pi, 2.0 * pi ) - pi;
+    vec2 lamphi = web_merc(lam,phi);
+
+    return lamphi;
   }
 
   float inner_xy(vec2 xy) { // returns zero outside of circle
@@ -188,16 +197,25 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   void main() {
   // Map the texture point vTexCoord ([0,0] - [1,1]) to a point on the XY plane
     vec2 xy = mix(uViewXY1, uViewXY2, vTexCoord); // lerp from -PI,-PI to +PI,+PI, inverse so rationalizes it
-    // if ( uRenderType == 0 ) {    //  Texture (map) RENDER_TYPE_TEXTURE
-
+    float rho = length(xy);
+    vec2 ts;
+    // if (rho < uRingRadius) { // inside disk
+    //   float xflat = xy.x * uFlatRatio;
+    //   float yflat = xy.y * uFlatRatio;
+    //   ts = vec2(xflat, yflat);
+    //   fragColor = vec4(1.0, 1.0, 1.0, 1.0); // white
+    //   return;
+    // }
+    // else {
       vec2 lp = proj_inverse(uProjCenter, xy);
-
-      vec2 ts = (lp - uDataCoord1) / (uDataCoord2 - uDataCoord1);
+      ts = (lp - uDataCoord1) / (uDataCoord2 - uDataCoord1);
       float inXY = inner_xy(xy);
       vec2 inData = step(vec2(0.0, 0.0), ts) - step(vec2(1.0, 1.0), ts); // cut off outside of texture
       vec4 OutputColor = texture(uTexture, ts) * inData.x * inData.y * inXY;
       OutputColor.a *= clamp(uAlpha, 0.0, 1.0);
       fragColor = OutputColor;
+    // }
+    // if ( uRenderType == 0 ) {    //  Texture (map) RENDER_TYPE_TEXTURE
     // }
     // else 
     //   if ( uRenderType == 3 ) {  // center tile rendered flat RENDER_TYPE_FLAT_TEXTURE

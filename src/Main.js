@@ -33,10 +33,14 @@ let Main = function () {
     // phi0: 51.4807135 * 0.0174533, // 0.89850833693
     // lam0: 18.6506277 * 0.0174533, // -1.29174307860817 // Cape Town
     // phi0: -33.9242542 * 0.0174533, // 0.7104078658215001
+    // lam0: 0.0, // 0.0 // center of world
+    // phi0: 0.0, // 0.0
   };
   this.zoomMin = 0.01;
   this.zoomMax = 1_000_000.01;
   this.maxTileLevel = 18; // tile levels 0 to maxTileLevel
+  this.ringRadius = 0.0001; // radius of flat center disk in radians
+
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
   this.animationFrames = 80; // number of frames to animate before stopping
@@ -85,6 +89,7 @@ let Main = function () {
     }
     if (this.prevScale != this.viewStatus.zoomScale) {
       this.rasterProj.setScale(this.viewStatus.zoomScale);
+      this.rasterProj.setFlatRatio(this.ringRadius);
       this.prevScale = this.viewStatus.zoomScale;
       getNewTiles = true;
     }

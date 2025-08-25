@@ -15,6 +15,8 @@ let ShaderProgram = function(gl) {
   this.locRenderColor_ = null;
   this.locRenderType_ = null;
   this.locUnifScale_ = null;
+  this.locRingRadius_ = null; // radius of flat center disk in radians
+  this.locFlatRatio_ = null;
   this.locTranslateY_ = null;   //  TODO tmerc独自の処理の調整. Adjust your own processing
 };
 
@@ -67,6 +69,8 @@ ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
   this.locRenderColor_ = this.gl_.getUniformLocation(this.program_, "uRenderColor");
   this.locRenderType_ = this.gl_.getUniformLocation(this.program_, "uRenderType");
   this.locUnifScale_ = this.gl_.getUniformLocation(this.program_, "uScale");
+  this.locRingRadius_ = this.gl_.getUniformLocation(this.program_, "uRingRadius");
+  this.locFlatRatio_ = this.gl_.getUniformLocation(this.program_, "uFlatRatio");
   //this.gl_.blendFunc(this.gl_.SRC_ALPHA, this.gl_.ONE);
   this.gl_.blendFunc(this.gl_.SRC_ALPHA, this.gl_.ONE_MINUS_SRC_ALPHA);
 
@@ -110,7 +114,7 @@ ShaderProgram.prototype.setRenderType = function(type) {
   this.gl_.uniform1i(this.locRenderType_, type);
 };
 
-ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0, alpha, lineColor, zoomScale) {
+ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0, alpha, lineColor, zoomScale, ringRadius, flatRatio) {
   this.gl_.useProgram(this.program_);
 
   this.gl_.uniform1f(this.locAlpha_, alpha);
@@ -120,6 +124,10 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
   this.gl_.uniform2f(this.locViewXY2_, viewRect[2], viewRect[3]); // +PI,+PI
   this.gl_.uniform1i(this.locTexture_, 0);
   this.gl_.uniform1f(this.locUnifScale_, zoomScale);
+  this.gl_.uniform1f(this.locRingRadius_, ringRadius);
+  this.gl_.uniform1f(this.locFlatRatio_, flatRatio);
+
+  console.log("prepareRender: ", {ringRadius, flatRatio, lam0, phi0, zoomScale});
 
   if ( this.locTranslateY_ != null ) {
     this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自 Original

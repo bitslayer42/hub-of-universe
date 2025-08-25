@@ -1,19 +1,14 @@
-import { ProjMath } from "./mod/ProjMath.js";
+import { ProjMath } from "./src/mod/ProjMath.js";
 
 
-let Projection = function(lam0, phi0, zoomScale, opt_divn) {
+let Projection = function(lam0, phi0, zoomScale) {
   // this.rando = Math.random();
   this.lam0 = lam0;
   this.phi0 = phi0;
-  this.divN_ = (typeof opt_divn !== 'undefined') ? opt_divn : 180;
   //
   this.sin_phi0_ = Math.sin(phi0);
   this.cos_phi0_ = Math.cos(phi0);
   this.zoomScale = zoomScale;
-};
-
-Projection.prototype.getProjCenter = function() {
-  return { lambda: this.lam0, phi: this.phi0 };
 };
 
 //////////////////////////////////
@@ -76,7 +71,7 @@ Projection.prototype.inv_fisheye = function(x, y) {
 
 Projection.prototype.inverse = function(x, y) {// Called from getLambdaPhiPointFromWindow (handleDoubleTap)
   [x, y] = this.inv_fisheye(x, y);
-
+console.log("after fisheye ", {x, y});
   let rh2 = x * x + y * y;
   if ( ProjMath.PI_SQ < rh2 )   return null;
 
@@ -106,9 +101,24 @@ Projection.prototype.inverse = function(x, y) {// Called from getLambdaPhiPointF
   return { lambda: lam, phi: phi };
 };
 
-//////////////////////////////////
-Projection.prototype.setScale = function(zoomScale) {
-  this.zoomScale = zoomScale;
-}
+
 /* -------------------------------------------------------------------------- */
-export { Projection };
+// let lam0 = -71.0576282 * 0.0174533; // // -1.24019010226 // Beantown
+// let phi0 = 42.3587364 * 0.0174533; //  0.73929973401
+// let lam_p  = -74.0113949 * 0.0174533; // -1.29174307860817 // Fraunces Tavern
+// let phi_p  = 40.703355 * 0.0174533; // 0.7104078658215001
+let lam0 = 0.0;
+let phi0 = 0.0;
+let lam_p  = 0.0;
+let phi_p  = 0.0001;
+let zoomScale = 10_000_000.01; // 300.01 is the default zoomScale
+let projection = new Projection(lam0, phi0, zoomScale);    
+console.log("Projection projection: ", projection, lam_p, phi_p);
+let {x,y} = projection.forward(lam_p, phi_p);
+console.log("Projection forward: ", {x, y});
+let {lambda, phi} = projection.inverse(x, y);
+console.log("Projection inverse: ", {lambda, phi});
+// console.log("Projection inverse from 0,0: ", projection.inverse(0, 0)); // Should be lam0, phi0
+// console.log("Projection forward from 0,0: ", projection.forward(0, 0)); // Should be x,y = 0,0
+
+
