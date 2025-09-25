@@ -23,10 +23,10 @@ let Main = function () {
     // Center of map: lam0 longitude, phi0 latitude in radians -82.5,35.3
     // lam0: -74.0113949 * 0.0174533, // -1.29174307860817 // Fraunces Tavern
     // phi0: 40.703355 * 0.0174533, // 0.7104078658215001
-    // lam0: -1.34406026074966, // DC capitol
-    // phi0: 0.6787546684457174, // 
-    lam0: -71.0576282 * 0.0174533, // // -1.24019010226 // Beantown
-    phi0: 42.3587364 * 0.0174533, //  0.73929973401
+    lam0: -1.34406026074966, // DC capitol
+    phi0: 0.6787546684457174, // 
+    // lam0: -71.0576282 * 0.0174533, // // -1.24019010226 // Beantown
+    // phi0: 42.3587364 * 0.0174533, //  0.73929973401
     // lam0: -80.4505307 * 0.0174533, // -1.40412724747   // Key Largo
     // phi0: 25.0900724 * 0.0174533, // 0.43790456061
     // lam0: -0.0816255 * 0.0174533, // -0.00142463433 London
@@ -35,11 +35,13 @@ let Main = function () {
     // phi0: -33.9242542 * 0.0174533, // 0.7104078658215001
     // lam0: 0.0, // 0.0 // center of world
     // phi0: 0.0, // 0.0
+    // lam0: -0.785017, //greenland white
+    // phi0: 1.15794,
   };
   this.zoomMin = 0.01;
   this.zoomMax = 1_000_000.01;
   this.maxTileLevel = 18; // tile levels 0 to maxTileLevel
-  this.ringRadius = 0.0001; // radius of flat center disk in radians
+  this.ringRadius = 0.001; // radius of flat center disk in radians
 
   this.rasterProj = null;
   this.debug = false; // "local", "red", false

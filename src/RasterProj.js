@@ -88,8 +88,8 @@ RasterProj.prototype.setScale = function (zoomScale) {
 RasterProj.prototype.setFlatRatio = function (ringRadius) {
   this.ringRadius = ringRadius;
   let lambda = this.projection.lam0;
-  let phi = this.projection.phi0 + ringRadius;
-  let {x,y} = this.projection.forward(lambda, phi);
+  let phi = this.projection.phi0 + ringRadius; // a lambda, phi on the north edge of the flat disk
+  let {x,y} = this.projection.forward(lambda, phi); // projected x,y of that point
   this.flatRatio = y / ringRadius; // ratio of projectedFlatRadius / flatRadius
   // console.log("setFlatRatio: ", { 
   //   lambda, phi, 
@@ -133,7 +133,7 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   uniform float uFlatRatio;   // ratio of projectedFlatRadius / flatRadius  
 
   // const float flatradius = 0.0001;
-  const float epsilon = 0.00001;
+
   // float flatratio = 0.0002; // ratio of
 
   const float pi = 3.14159265;
@@ -143,10 +143,10 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   out vec4 fragColor;
 
   vec2 proj_inverse(vec2 center, vec2 xy) {
+    float epsilon = uRingRadius / 50.0; // 0.00001;
     // Fisheye effect
     vec2 xy_1 = xy / pi; // circle radius 1.0
     float rho_fe = length(xy_1);
-
     float theta = atan(xy.y, xy.x);
     float fisheyeR = (exp(rho_fe * log(1.0 + uScale)) - 1.0) / uScale;    
     vec2 xy_fe = vec2(cos(theta) * fisheyeR * pi, sin(theta) * fisheyeR * pi);
@@ -158,18 +158,27 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
     float rho = length(xy_fe);
 
     if (rho > uRingRadius - epsilon && rho < uRingRadius + epsilon) { // near border
-
-      float lambda = 0.0;
+      // if (uFlatRatio > 25500.0 && uFlatRatio < 25600.0) { 
+      //     return vec2(0.0, 0.0); //even
+      // } else {
+      //     return vec2(-0.785017, 1.15794);
+      // }
+      float lambda = 0.0; // ocean black
       float phi = 0.0;
+      // float lambda = -0.785017; //greenland white
+      // float phi = 1.15794;
       return vec2(lambda, phi);
     }
-    // if (rho < uRingRadius) { // inside disk
-    //   // float xflat = (xy.x + uProjCenter.x) * uFlatRatio;
-    //   // float yflat = (xy.y + (1.0 - uProjCenter.y)) * uFlatRatio;
-    //   float xflat = (xy.x + uProjCenter.x) / uFlatRatio;
-    //   float yflat = (xy.y + (1.0 - uProjCenter.y)) / uFlatRatio;      
-    //   return vec2(xflat , yflat);
-    // }
+    if (rho <= uRingRadius) {
+        // Inside the ring - draw flat
+        // Convert screen coordinates to web mercator coordinates
+        // Scale by uFlatRatio to match the projection scale at the ring boundary
+        float xflat = (xy.x / uFlatRatio) + center.x;
+        // float yflat = asinh(tan((xy.y / uFlatRatio) + center.y)) * 0.5;
+        float yflat = (xy.y / uFlatRatio) + center.y;
+        float yflat_webmerc = asinh(tan(yflat)) * 0.5;
+        return vec2(xflat, yflat_webmerc);
+    } 
 
     float phi = asin( clamp( cos(rho) * sinPhi0 + xy_fe.y * sin(rho) * cosPhi0 / rho, -1.0, 1.0 ) );
     float lambda = mod( center.x + atan( xy_fe.x * sin(rho), rho * cosPhi0 * cos(rho) - xy_fe.y * sinPhi0 * sin(rho) ) + pi, 2.0 * pi ) - pi;
