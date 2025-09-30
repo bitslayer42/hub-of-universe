@@ -6,7 +6,6 @@ let TileManager = function (tile_opts, rasterProj) {
   // this.tilesAcross = 0;
   // // this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
-  this.centerOffset = {X: 0, Y: 0}; // offset of center point within center tile
   this.centerQuadkey = null; // quadkey of tile at center of map
 };
 
@@ -20,9 +19,6 @@ TileManager.prototype.getCenterTileInfo = function (lam0, phi0, level) {
   let pixelY = (0.5 - Math.log((1 + sinPhi0) / (1 - sinPhi0)) / (4 * Math.PI)) * this.tileSize * Math.pow(2, level);
   let tileX = Math.floor(pixelX / this.tileSize);
   let tileY = Math.floor(pixelY / this.tileSize);
-  let centerOffsetX = pixelX / this.tileSize % 1;
-  let centerOffsetY = pixelY / this.tileSize % 1;
-  this.centerOffset = {X: centerOffsetX, Y: centerOffsetY};
   this.centerQuadkey = this.tileXYToQuadkey(tileX, tileY, level);
 }
 
@@ -149,13 +145,6 @@ TileManager.prototype.getAdjacentTiles = function (currTile) {
   return tileInfos;
 }
 
-TileManager.prototype.getFirstQuadkey = function (lam0, phi0, currTileLevel) {
-  let { tileX, tileY, centerOffsetX, centerOffsetY } = this.getCenterTileInfo(lam0, phi0, currTileLevel); 
-  let tileQuadkey = this.tileXYToQuadkey(tileX, tileY, currTileLevel);
-  let centerOffset = {X: centerOffsetX, Y: centerOffsetY};
-  return { tileQuadkey, centerOffset };
-}
-
 TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
   //  push all four level one tiles to the tileInfos array
   let levelOneTiles = [
@@ -168,7 +157,7 @@ TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
 }
 
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
-  // console.log("getTileInfos", lam0, phi0, currTileLevel);
+  console.log("getTileInfos", lam0, phi0, currTileLevel);
   let tileInfos = [];
   let prevTile = null;
   this.getCenterTileInfo(lam0, phi0, currTileLevel);
@@ -194,9 +183,7 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
     tile.rect = this.getRectFromXYZ(tile);
     tile.url = getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
   }
-  // return tileInfos.reverse();
-  // return ({ tileArray: [tileInfos[0]], centerOffset });
-  return ({ tileArray: tileInfos.reverse(), centerOffset: this.centerOffset });
+  return tileInfos.reverse();
 
 };
 

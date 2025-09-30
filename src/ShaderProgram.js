@@ -10,7 +10,6 @@ let ShaderProgram = function(gl) {
   this.locViewXY2_ = null;
   this.locDataCoord1_ = null;
   this.locDataCoord2_ = null;
-  this.locCenterOffset_ = null;
   this.locFixedTextureSize_ = null;
   this.locRenderColor_ = null;
   this.locRenderType_ = null;
@@ -64,7 +63,6 @@ ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
   this.locViewXY2_ = this.gl_.getUniformLocation(this.program_, "uViewXY2");
   this.locDataCoord1_ = this.gl_.getUniformLocation(this.program_, "uDataCoord1");
   this.locDataCoord2_ = this.gl_.getUniformLocation(this.program_, "uDataCoord2");
-  this.locCenterOffset_ = this.gl_.getUniformLocation(this.program_, "uCenterOffset");
   this.locFixedTextureSize_ = this.gl_.getUniformLocation(this.program_, "uFixedTextureSize");
   this.locRenderColor_ = this.gl_.getUniformLocation(this.program_, "uRenderColor");
   this.locRenderType_ = this.gl_.getUniformLocation(this.program_, "uRenderType");
@@ -127,7 +125,7 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
   this.gl_.uniform1f(this.locRingRadius_, ringRadius);
   this.gl_.uniform1f(this.locFlatRatio_, flatRatio);
 
-  console.log("prepareRender: ", {ringRadius, flatRatio, lam0, phi0, zoomScale});
+  // console.log("prepareRender: ", {ringRadius, flatRatio, lam0, phi0, zoomScale});
 
   if ( this.locTranslateY_ != null ) {
     this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自 Original
@@ -161,7 +159,7 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
 //   this.gl_.drawArrays(this.gl_.TRIANGLE_STRIP, 0, 4);
 // };
 
-ShaderProgram.prototype.renderTexture = function(texture, region, centerOffset) {
+ShaderProgram.prototype.renderTexture = function(texture, region) {
   let lam1 = region[0];
   let phi1 = region[1];
   let lam2 = region[2];
@@ -170,7 +168,6 @@ ShaderProgram.prototype.renderTexture = function(texture, region, centerOffset) 
   this.gl_.bindTexture(this.gl_.TEXTURE_2D, texture);
   this.gl_.uniform2f(this.locDataCoord1_, lam1, phi1);
   this.gl_.uniform2f(this.locDataCoord2_, lam2, phi2);
-  this.gl_.uniform2f(this.locCenterOffset_, centerOffset.X, centerOffset.Y);
   this.gl_.drawArrays(this.gl_.TRIANGLE_STRIP, 0, 4);
 };
 

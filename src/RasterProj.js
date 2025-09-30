@@ -59,7 +59,7 @@ RasterProj.prototype.prepareRender = function (texCoords, viewRect) {
 };
 
 // c- Renders textures at locations specified in textureInfos
-RasterProj.prototype.renderTextures = function (textureInfos, centerOffset) {
+RasterProj.prototype.renderTextures = function (textureInfos) {
   for (let i = 0; i < textureInfos.length; ++i) {
     if (i == textureInfos.length - 1) { // center tile
       this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_FLAT_TEXTURE);
@@ -69,7 +69,7 @@ RasterProj.prototype.renderTextures = function (textureInfos, centerOffset) {
 
     let texture = textureInfos[i][0];
     let region = textureInfos[i][1];
-    this.shader_.renderTexture(texture, region, centerOffset);
+    this.shader_.renderTexture(texture, region);
   }
 };
 
@@ -124,7 +124,6 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   uniform vec2 uViewXY2;    // +PI,+PI
   uniform vec2 uDataCoord1; // lam1, phi1: top left corner of current texture: radians
   uniform vec2 uDataCoord2; // lam2, phi2: bot right corner of current texture: radians
-  uniform vec2 uCenterOffset; // central point offset in center tile
   uniform vec2 uFixedTextureSize;    //  アイコンサイズ（画面比） Icon size (screen ratio)
   uniform vec4 uRenderColor;
   uniform float uAlpha;
@@ -137,49 +136,24 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
   // float flatratio = 0.0002; // ratio of
 
   const float pi = 3.14159265;
-  const float blurRatio = 0.015;
+  const float blurRatio = 0.015; // planet haze
   const float xyRadius = pi;
   const float atanSinhPi = 1.48442222; // atan(sinh(pi)) = max phi for web merc
   out vec4 fragColor;
 
-  vec2 proj_inverse(vec2 center, vec2 xy) {
-    float epsilon = uRingRadius / 50.0; // 0.00001;
-    // Fisheye effect
-    vec2 xy_1 = xy / pi; // circle radius 1.0
-    float rho_fe = length(xy_1);
-    float theta = atan(xy.y, xy.x);
-    float fisheyeR = (exp(rho_fe * log(1.0 + uScale)) - 1.0) / uScale;    
-    vec2 xy_fe = vec2(cos(theta) * fisheyeR * pi, sin(theta) * fisheyeR * pi);
-    
-    // Inverse of azimuthal equidistant projection
+  vec2 inner_flat(vec2 center, vec2 xy) {
+    // Inside the ring - draw flat
+    // Convert screen coordinates to web mercator coordinates
+    // Scale by uFlatRatio to match the projection scale at the ring boundary
+    float xflat = (xy.x / uFlatRatio) + center.x;
+    float yflat = asinh(tan((xy.y / uFlatRatio) + center.y)) * 0.5;
+    return vec2(xflat, yflat);
+  }
+
+  vec2 outer_projected(vec2 center, vec2 xy_fe, float rho) {
+        // Inverse of azimuthal equidistant projection
     float sinPhi0 = sin(center.y);
     float cosPhi0 = cos(center.y);
-
-    float rho = length(xy_fe);
-
-    if (rho > uRingRadius - epsilon && rho < uRingRadius + epsilon) { // near border
-      // if (uFlatRatio > 25500.0 && uFlatRatio < 25600.0) { 
-      //     return vec2(0.0, 0.0); //even
-      // } else {
-      //     return vec2(-0.785017, 1.15794);
-      // }
-      float lambda = 0.0; // ocean black
-      float phi = 0.0;
-      // float lambda = -0.785017; //greenland white
-      // float phi = 1.15794;
-      return vec2(lambda, phi);
-    }
-    if (rho <= uRingRadius) {
-        // Inside the ring - draw flat
-        // Convert screen coordinates to web mercator coordinates
-        // Scale by uFlatRatio to match the projection scale at the ring boundary
-        float xflat = (xy.x / uFlatRatio) + center.x;
-        // float yflat = asinh(tan((xy.y / uFlatRatio) + center.y)) * 0.5;
-        float yflat = (xy.y / uFlatRatio) + center.y;
-        float yflat_webmerc = asinh(tan(yflat)) * 0.5;
-        return vec2(xflat, yflat_webmerc);
-    } 
-
     float phi = asin( clamp( cos(rho) * sinPhi0 + xy_fe.y * sin(rho) * cosPhi0 / rho, -1.0, 1.0 ) );
     float lambda = mod( center.x + atan( xy_fe.x * sin(rho), rho * cosPhi0 * cos(rho) - xy_fe.y * sinPhi0 * sin(rho) ) + pi, 2.0 * pi ) - pi;
 
@@ -188,6 +162,66 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
       phi = asinh(tan(phi)) * 0.5;
     }
     return vec2(lambda, phi);
+  }
+
+  vec2 proj_inverse(vec2 center, vec2 xy) {
+    float epsilon = 0.0001; // uRingRadius / 2.0; //0.00001
+    // Fisheye effect
+    vec2 xy_1 = xy / pi; // circle radius 1.0
+    float rho_fe = length(xy_1);
+    float theta = atan(xy.y, xy.x);
+    float fisheyeR = (exp(rho_fe * log(1.0 + uScale)) - 1.0) / uScale;    
+    vec2 xy_fe = vec2(cos(theta) * fisheyeR * pi, sin(theta) * fisheyeR * pi);
+    
+    float rho = length(xy_fe);
+
+
+    // // USING rere BLACK WHITE
+    // if (rho <= rere) { // inside ring: flat
+    //     return vec2(0.0, 0.0);
+    // } else 
+    // if (rho < uRingRadius + epsilon) { // Smooth transition at the boundary
+    //     return vec2(-0.785017, 1.15794); //greenland white
+    // } 
+    // else { // outside ring: projected
+    //   return outer_projected(center, xy_fe, rho);
+    // }
+
+    // USING rere
+    // float rere    = 0.001; // debug ring radius
+    // if (rho <= rere) { // inside ring: flat
+    //     return inner_flat(center, xy);
+    // } else if (rho < rere + epsilon) { // Smooth transition at the boundary
+    //     float t = (rho - rere) / epsilon;
+    //     vec2 flatCoords = inner_flat(center, xy);
+    //     vec2 projectedCoords = outer_projected(center, xy_fe, rho);
+    //                                 // return vec2(0.0); // debug black circle
+    //     return mix( // Interpolate
+    //       flatCoords,
+    //       projectedCoords,
+    //       smoothstep(0.0, 1.0, t)
+    //     );  
+    // } else { // outside ring: projected
+    //   return outer_projected(center, xy_fe, rho);
+    // }
+
+
+    if (rho <= uRingRadius) { // inside ring: flat
+        return inner_flat(center, xy);
+    } else if (rho < uRingRadius + epsilon) { // Smooth transition at the boundary
+        // return vec2(-0.785017, 1.15794); //greenland white
+        float t = (rho - uRingRadius) / epsilon;
+        vec2 flatCoords = inner_flat(center, xy);
+        vec2 projectedCoords = outer_projected(center, xy_fe, rho);
+                                    // return vec2(0.0); // debug black circle
+        return mix( // Interpolate
+          flatCoords,
+          projectedCoords,
+          smoothstep(0.0, 1.0, t)
+        );  
+    } else { // outside ring: projected
+      return outer_projected(center, xy_fe, rho);
+    }
   }
 
   float inner_xy(vec2 xy) { // returns zero outside of circle
@@ -211,7 +245,7 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
     // else 
     //   if ( uRenderType == 3 ) {  // center tile rendered flat RENDER_TYPE_FLAT_TEXTURE
 
-    //     vec2 lp = vec2(xy.x + uCenterOffset.x, xy.y + (1.0 - uCenterOffset.y));
+    //     vec2 lp = vec2(xy.x + moo.x, xy.y + (1.0 - moo.y));
 
     //     vec2 inData = step(vec2(0.0, 0.0), lp) - step(vec2(1.0, 1.0), lp); // cut off outside of texture
     //     vec4 OutputColor = texture(uTexture, lp) * inData.x * inData.y;

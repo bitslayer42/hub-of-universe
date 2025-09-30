@@ -31,7 +31,7 @@ Projection.prototype.fwd_fisheye = function(x, y) {
   return [ Math.cos(theta) * fisheyeR * Math.PI, Math.sin(theta) * fisheyeR * Math.PI ];
 }
 
-Projection.prototype.forward = function(lambda, phi) {
+Projection.prototype.forward = function(lambda, phi) { //called from setFlatRatio
   // let wm = this.frw_web_merc(lambda, phi);
   let wm = { lam: lambda, phi: phi };
   let sin_phi = Math.sin(wm.phi);
