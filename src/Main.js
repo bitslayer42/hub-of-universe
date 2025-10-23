@@ -16,7 +16,7 @@ let Main = function () {
     drag: false,
     dragPrevPos: null, // canvas x y from upper left corner
     pinchPrevScale: null,
-    zoomScale: 3e+2, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 3e+6, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
@@ -130,7 +130,6 @@ let Main = function () {
 
     window.WheelEvent && document.addEventListener("wheel", this.handleWheel, false);
 
-
     document.addEventListener('keydown', this.handleKeydown);
 
     this.init(rasterProj);
@@ -217,11 +216,15 @@ let Main = function () {
   };
 
   this.setQueryParams = () => {
-    // let params = new URLSearchParams(window.location.search);
-    // params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
-    // params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
-    // params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
-    // window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    this.savelocCheckbox = document.getElementById('saveloc');
+
+    if (this.savelocCheckbox.checked) {
+      let params = new URLSearchParams(window.location.search);
+      params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
+      params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+      params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+    }
   }
 
   //returns pixels 0,0 top left of canvas
