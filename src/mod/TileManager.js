@@ -1,5 +1,3 @@
-import { off } from "hammerjs";
-
 let TileManager = function (tile_opts, rasterProj) {
   this.rasterProj = rasterProj;
   // this.canvasSize = { width: null, height: null };

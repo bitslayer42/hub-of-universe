@@ -61,11 +61,7 @@ RasterProj.prototype.prepareRender = function (texCoords, viewRect) {
 // c- Renders textures at locations specified in textureInfos
 RasterProj.prototype.renderTextures = function (textureInfos) {
   for (let i = 0; i < textureInfos.length; ++i) {
-    if (i == textureInfos.length - 1) { // center tile
-      this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_FLAT_TEXTURE);
-    } else {
-      this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
-    }
+    this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
 
     let texture = textureInfos[i][0];
     let region = textureInfos[i][1];
@@ -175,37 +171,6 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
     
     float rho = length(xy_fe);
 
-
-    // // USING rere BLACK WHITE
-    // if (rho <= rere) { // inside ring: flat
-    //     return vec2(0.0, 0.0);
-    // } else 
-    // if (rho < uRingRadius + epsilon) { // Smooth transition at the boundary
-    //     return vec2(-0.785017, 1.15794); //greenland white
-    // } 
-    // else { // outside ring: projected
-    //   return outer_projected(center, xy_fe, rho);
-    // }
-
-    // USING rere
-    // float rere    = 0.001; // debug ring radius
-    // if (rho <= rere) { // inside ring: flat
-    //     return inner_flat(center, xy);
-    // } else if (rho < rere + epsilon) { // Smooth transition at the boundary
-    //     float t = (rho - rere) / epsilon;
-    //     vec2 flatCoords = inner_flat(center, xy);
-    //     vec2 projectedCoords = outer_projected(center, xy_fe, rho);
-    //                                 // return vec2(0.0); // debug black circle
-    //     return mix( // Interpolate
-    //       flatCoords,
-    //       projectedCoords,
-    //       smoothstep(0.0, 1.0, t)
-    //     );  
-    // } else { // outside ring: projected
-    //   return outer_projected(center, xy_fe, rho);
-    // }
-
-
     if (rho <= uRingRadius) { // inside ring: flat
         return inner_flat(center, xy);
     } else if (rho < uRingRadius + epsilon) { // Smooth transition at the boundary
@@ -242,17 +207,6 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
       OutputColor.a *= clamp(uAlpha, 0.0, 1.0);
       fragColor = OutputColor;
     // }
-    // else 
-    //   if ( uRenderType == 3 ) {  // center tile rendered flat RENDER_TYPE_FLAT_TEXTURE
-
-    //     vec2 lp = vec2(xy.x + moo.x, xy.y + (1.0 - moo.y));
-
-    //     vec2 inData = step(vec2(0.0, 0.0), lp) - step(vec2(1.0, 1.0), lp); // cut off outside of texture
-    //     vec4 OutputColor = texture(uTexture, lp) * inData.x * inData.y;
-    //     // if (length(xy) < 0.4) {
-    //       fragColor = OutputColor;
-    //     // }
-    //   }
   //  else if ( uRenderType == 1 ) {  //  PointTexture (icon)
 
   // //   XY平面上の点を画像上の点[0,0]-[1,1]にマッピングする 

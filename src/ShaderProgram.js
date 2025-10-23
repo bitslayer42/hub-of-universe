@@ -28,12 +28,9 @@ ShaderProgram.UNIT_RECT_TRIANGLE_STRIP = new Float32Array([
     +1.0, +1.0
   ]);
 
-
 ShaderProgram.RENDER_TYPE_TEXTURE = 0;        // dim=2, dataType=GeoGraphic
 ShaderProgram.RENDER_TYPE_POINT_TEXTURE = 1;  // dim=0, dataType=XYCoordinates
 ShaderProgram.RENDER_TYPE_POLYLINE = 2;       
-ShaderProgram.RENDER_TYPE_FLAT_TEXTURE = 3;        
-
 
 ShaderProgram.prototype.init = function(vertShaderStr, fragShaderStr) {
   let vertexShader = this.loadShader_(this.gl_.VERTEX_SHADER, vertShaderStr);
