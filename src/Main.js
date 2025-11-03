@@ -16,7 +16,7 @@ let Main = function () {
     drag: false,
     dragPrevPos: null, // canvas x y from upper left corner
     pinchPrevScale: null,
-    zoomScale: 3e+6, // zoomMin >= zoomScale >= zoomMax
+    zoomScale: 3e+2, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
     currTileLevel: null,
@@ -45,7 +45,8 @@ let Main = function () {
 
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
-  this.animationFrames = 80; // number of frames to animate before stopping
+  this.animationFramesInit = 80; // number of frames to animate before stopping
+  this.animationFrames = this.animationFramesInit;
 
   document.addEventListener('DOMContentLoaded', () => {
     this.getQueryParams(); // check for url params
@@ -102,8 +103,9 @@ let Main = function () {
       this.requestId = requestAnimationFrame(this.animation);
     } else {
       // console.log("Animation finished.");
-      this.animationFrames = 80; // reset for next time
+      this.animationFrames = this.animationFramesInit; // reset for next time
       this.mapView.render(true);
+      this.setQueryParams();
     }
   };
 
@@ -218,13 +220,11 @@ let Main = function () {
   this.setQueryParams = () => {
     this.savelocCheckbox = document.getElementById('saveloc');
 
-    if (this.savelocCheckbox.checked) {
-      let params = new URLSearchParams(window.location.search);
-      params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
-      params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
-      params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
-      window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-    }
+    let params = new URLSearchParams(window.location.search);
+    params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
+    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   }
 
   //returns pixels 0,0 top left of canvas
@@ -240,42 +240,36 @@ let Main = function () {
 
   this.handleKeydown = (event) => {
     // console.log("Key pressed: " + event.key);
-      switch (event.key) {
-        case '=':
-        case '+':
-          // zoom in
-          this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.1;
-          break;
-        case '-':
-        case '_':
-          // zoom out
-          this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
-          break;
-
-        case "ArrowUp":
-          console.log("Up arrow pressed!");
-          // Add your logic for the Up arrow here
-          break;
-        case "ArrowDown":
-          console.log("Down arrow pressed!");
-          // Add your logic for the Down arrow here
-          break;
-        case "ArrowLeft":
-          console.log("Left arrow pressed!");
-          // Add your logic for the Left arrow here
-          break;
-        case "ArrowRight":
-          console.log("Right arrow pressed!");
-          // Add your logic for the Right arrow here
-          break;
-        default:
-      // Handle other keys or do nothing
-      break;
-  }
+    switch (event.key) {
+      case '=':
+      case '+':
+        // zoom in
+        this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.1;
+        break;
+      case '-':
+      case '_':
+        // zoom out
+        this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
+        break;
+      case "ArrowUp":
+        console.log("ArrowUp");
+        this.lat0 += this.getPanRate(this.viewStatus.zoomScale);
+        break;
+      case "ArrowDown":
+        this.lat0 -= this.getPanRate(this.viewStatus.zoomScale);
+        break;
+      case "ArrowLeft":
+        this.lon0 -= this.getPanRate(this.viewStatus.zoomScale);
+        break;
+      case "ArrowRight":
+        this.lon0 += this.getPanRate(this.viewStatus.zoomScale);
+        break;
+      default:
+        break;
+    }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
-    this.setQueryParams();
   }
 
   this.handleWheel = (event) => {
@@ -288,7 +282,6 @@ let Main = function () {
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
-    this.setQueryParams();
   };
 
   this.handlePinch = (event) => {
@@ -356,7 +349,6 @@ let Main = function () {
     this.viewStatus.drag = false;
     this.viewStatus.dragPrevPos = null;
     this.mapView.render(true); // render to get new tiles if necessary
-    this.setQueryParams();
   };
 
   this.handleDoubleTap = (event) => {
@@ -368,7 +360,6 @@ let Main = function () {
       this.viewStatus.phi0 = lam_phi.phi;
       this.viewStatus.targetLambdaPhi = lam_phi; // set target lambda, phi for interpolater
       this.requestId = requestAnimationFrame(this.animation);
-      this.setQueryParams();
     }
   };
 

@@ -155,7 +155,7 @@ TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
 }
 
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
-  console.log("getTileInfos", lam0, phi0, currTileLevel);
+  // console.log("getTileInfos", lam0, phi0, currTileLevel);
   let tileInfos = [];
   let prevTile = null;
   this.getCenterTileInfo(lam0, phi0, currTileLevel);
