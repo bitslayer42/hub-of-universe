@@ -171,21 +171,19 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
     
     float rho = length(xy_fe);
 
-    if (rho <= uRingRadius) { // inside ring: flat
-        return inner_flat(center, xy);
-    } else if (rho < uRingRadius + epsilon) { // Smooth transition at the boundary
-        // return vec2(-0.785017, 1.15794); //greenland white
-        float t = (rho - uRingRadius) / epsilon;
-        vec2 flatCoords = inner_flat(center, xy);
-        vec2 projectedCoords = outer_projected(center, xy_fe, rho);
-                                    // return vec2(0.0); // debug black circle
-        return mix( // Interpolate
-          flatCoords,
-          projectedCoords,
-          smoothstep(0.0, 1.0, t)
-        );  
-    } else { // outside ring: projected
+    if (rho > uRingRadius + epsilon || abs(center.y) >= atanSinhPi) { // outside ring: projected
       return outer_projected(center, xy_fe, rho);
+    } else if (rho <= uRingRadius) {                                  // inside ring: flat
+      return inner_flat(center, xy);
+    } else {                                                // Smooth transition at the boundary
+      float t = (rho - uRingRadius) / epsilon;
+      vec2 flatCoords = inner_flat(center, xy);
+      vec2 projectedCoords = outer_projected(center, xy_fe, rho);
+      return mix( // Interpolate
+        flatCoords,
+        projectedCoords,
+        smoothstep(0.0, 1.0, t)
+      );
     }
   }
 
