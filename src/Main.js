@@ -1,7 +1,7 @@
 import { Interpolater } from "./mod/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterProj } from './RasterProj.js';
-import { mapbox_access_token } from './MapboxAccessToken.js';
+import { mapbox_access_token, google_access_token } from './AccessTokens.js';
 import 'hammerjs';
 
 let Main = function () {
@@ -22,6 +22,10 @@ let Main = function () {
     currTileLevel: null,
 
   };
+  this.layerSelect = document.querySelector('#layer');
+  this.selectedLayer = this.layerSelect.value;
+  this.googleSessions = [];
+
 
   var locations = [ // lat, log * 0.0174533
     [-1.29174307860817, 0.7104078658215001], // Fraunces Tavern NYC -74.0113949 40.703355
@@ -48,14 +52,14 @@ let Main = function () {
   this.animationFramesInit = 80; // number of frames to animate before stopping
   this.animationFrames = this.animationFramesInit;
 
-  document.addEventListener('DOMContentLoaded', () => {
+  document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
-    this.canvas = document.getElementById('webglCanvas');
+    this.canvas = document.querySelector('#webglCanvas');
     this.resizeCanvas(this.canvas);
 
     this.rasterProj = new RasterProj();
     this.rasterProj.setScale(this.viewStatus.zoomScale);
-    this.startup(this.rasterProj); // sets up this.canvas, webgl, and hammer, and calls init
+    await this.startup(this.rasterProj); // sets up this.canvas, webgl, and hammer, and calls init
     this.animation(); // starts animation
   });
 
@@ -66,6 +70,7 @@ let Main = function () {
   });
 
   this.animation = () => {
+    if (!this.mapView) return;
     let getNewTiles = false;
     let currTime = new Date().getTime();
     this.setTileLevel();
@@ -98,24 +103,25 @@ let Main = function () {
     }
     this.mapView.render(getNewTiles);
     this.animationFrames--;
-    // console.log("Animation frames left: " + this.animationFrames);
+    console.log("Animation frames left: " + this.animationFrames);
     if (this.animationFrames > 0) {
       this.requestId = requestAnimationFrame(this.animation);
     } else {
-      // console.log("Animation finished.");
+      console.log("Animation finished.");
       this.animationFrames = this.animationFramesInit; // reset for next time
       this.mapView.render(true);
       this.setQueryParams();
     }
   };
 
-  this.startup = (rasterProj) => {
+  this.startup = async (rasterProj) => {
     this.gl = this.canvas.getContext("webgl2");
     if (!this.gl) {
       return void alert("Failed to setup WebGL.");
     }
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost, false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored, false);
+    this.layerSelect.addEventListener('change', this.handleLayerChange.bind(this), false);
 
     let mc = new Hammer.Manager(this.canvas, {
       recognizers: [
@@ -134,10 +140,11 @@ let Main = function () {
 
     document.addEventListener('keydown', this.handleKeydown);
 
-    this.init(rasterProj);
+    this.googleSessions = await this.getSessions();
+    await this.init(rasterProj);
   };
 
-  this.init = (rasterProj) => {
+  this.init = async (rasterProj) => {
     let canvasInfo = this.canvas.getBoundingClientRect(); //read-only left, top, right, bottom, x, y, width, height properties of this.canvas
     let canvasSize = {
       width: canvasInfo.width,
@@ -156,10 +163,7 @@ let Main = function () {
     this.mapView = new MapView(this.gl, rasterProj, canvasSize, tile_opts, cache_opts);
     this.mapView.setProjCenter(this.viewStatus.lam0, this.viewStatus.phi0);
 
-    //Add custom function to MapView
-    this.mapView.getURL = function (z, x, y) {
-      return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
-    };
+    await this.setLayer();
 
     this.setTileLevel();
     this.mapView.requestImagesIfNecessary();
@@ -178,11 +182,7 @@ let Main = function () {
   this.setTileLevel = () => {
     this.viewStatus.currTileLevel = Math.round(Math.log10(this.viewStatus.zoomScale) * 3.0);// Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel), 0);
-    // let consolelamphi = this.mapView.getProjCenter();
-    // console.log("TileLvl: " + this.viewStatus.currTileLevel,
-    //   " ZoomScl: " + this.viewStatus.zoomScale,
-    //   // " latlon0: " + consolelamphi.lambda / 0.0174533 + " " + consolelamphi.phi / 0.0174533,
-    // );
+    // console.log("TileLvl: " + this.viewStatus.currTileLevel," + ZoomScl: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
   }
 
@@ -217,9 +217,85 @@ let Main = function () {
     }
   };
 
-  this.setQueryParams = () => {
-    this.savelocCheckbox = document.getElementById('saveloc');
+  this.getSessions = async () => { // Get Google Maps Tile API sessions for satellite, roadmap, terrain
+    const language = navigator.language || "en-US";
+    const locale = new Intl.Locale(language);
+    const region = locale.region || "US";
+    let google_body = {
+      "language": language,
+      "region": region,
+    };
 
+    google_body.layerTypes = ["layerRoadmap"];
+    google_body.styles = [ // only used for roadmap
+      {
+        "featureType": "all",
+        elementType: "labels.text",
+        "stylers": [
+          { "visibility": "off" }
+        ]
+      },
+      {
+        "featureType": "road",
+        "elementType": "labels.text",
+        "stylers": [
+          { "visibility": "on" }
+        ]
+      }
+    ];
+    let mapTypes = ["satellite", "roadmap", "terrain"];
+    let sessionKeys = [];
+    for (let type of mapTypes) {
+      google_body.mapType = type;
+      // fetch session for each type
+      const google_api_session = await fetch(`https://tile.googleapis.com/v1/createSession?key=AIzaSyClBtxCSpwQ7urX6L3ANbVy4atCvaXDwzk`, {
+        method: "POST",
+        body: JSON.stringify(google_body),
+        headers: {
+          "Content-Type": "application/json",
+        }
+      })
+        .then(response => response.text())
+        .catch(error => {
+          console.error('Error fetching Google Maps Tile Session:', error);
+        });
+      const google_api_session_json = JSON.parse(google_api_session);
+      sessionKeys.push(google_api_session_json.session);
+    };
+    return (sessionKeys);
+  };
+
+  this.setLayer = async () => { // which map layer to use
+    let sessionKey = null;
+    let layerSelect = document.querySelector('.attribution');
+    if (this.selectedLayer === "mapbox_satellite") {
+      layerSelect.innerHTML = `© <a href="https://www.mapbox.com/about/maps">Mapbox</a> 
+        © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>
+        © <a href="https://www.maxar.com/">Maxar</a>
+        <strong><a href="https://apps.mapbox.com/feedback/" target="_blank">Improve this map</a></strong>`;
+
+      this.mapView.getURL = function (z, x, y) { //Add custom function to MapView
+        return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
+      }
+    } else if (this.selectedLayer.slice(0, 6) === "google") {
+      layerSelect.innerHTML = `Map data @2025 Google`;
+
+      if (this.selectedLayer === "google_satellite") {
+        sessionKey = this.googleSessions[0];
+      } else if (this.selectedLayer === "google_roadmap") {
+        sessionKey = this.googleSessions[1];
+      } else if (this.selectedLayer === "google_terrain") {
+        sessionKey = this.googleSessions[2];
+      }
+
+      this.mapView.getURL = function (z, x, y) { //Add custom function to MapView
+        return `https://tile.googleapis.com/v1/2dtiles/${z}/${x}/${y}?session=${sessionKey}&key=${google_access_token}`;
+      }
+    }
+
+  };
+
+  this.setQueryParams = () => {
     let params = new URLSearchParams(window.location.search);
     params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
     params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
@@ -238,6 +314,13 @@ let Main = function () {
     return [left, top];
   };
 
+  this.handleLayerChange = async (event) => {
+    this.selectedLayer = event.target.value;
+    await this.setLayer();
+    await this.init(this.rasterProj);
+    this.animation();
+  };
+
   this.handleKeydown = (event) => {
     // console.log("Key pressed: " + event.key);
     switch (event.key) {
@@ -251,19 +334,19 @@ let Main = function () {
         // zoom out
         this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
         break;
-      case "ArrowUp":
-        console.log("ArrowUp");
-        this.lat0 += this.getPanRate(this.viewStatus.zoomScale);
-        break;
-      case "ArrowDown":
-        this.lat0 -= this.getPanRate(this.viewStatus.zoomScale);
-        break;
-      case "ArrowLeft":
-        this.lon0 -= this.getPanRate(this.viewStatus.zoomScale);
-        break;
-      case "ArrowRight":
-        this.lon0 += this.getPanRate(this.viewStatus.zoomScale);
-        break;
+      // case "ArrowUp":
+      //   console.log("ArrowUp");
+      //   this.lat0 += this.getPanRate(this.viewStatus.zoomScale);
+      //   break;
+      // case "ArrowDown":
+      //   this.lat0 -= this.getPanRate(this.viewStatus.zoomScale);
+      //   break;
+      // case "ArrowLeft":
+      //   this.lon0 -= this.getPanRate(this.viewStatus.zoomScale);
+      //   break;
+      // case "ArrowRight":
+      //   this.lon0 += this.getPanRate(this.viewStatus.zoomScale);
+      //   break;
       default:
         break;
     }
@@ -369,7 +452,7 @@ let Main = function () {
   };
 
   this.handleContextRestored = (event) => {
-    init(), (this.requestId = requestAnimationFrame(animation));
+    this.init(this.rasterProj), (this.requestId = requestAnimationFrame(animation));
   };
 
 };
