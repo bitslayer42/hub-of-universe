@@ -65,7 +65,8 @@ html {
 
 .attribution {
     position: absolute;
-    color: white;
+    color: rgb(185, 185, 185);;
+    font-size: small;
     padding: 5px;
     bottom: 5px;
     right: 5px;
