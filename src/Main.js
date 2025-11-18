@@ -1,10 +1,11 @@
 import { Interpolater } from "./mod/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterProj } from './RasterProj.js';
-import { mapbox_access_token, google_access_token } from './AccessTokens.js';
 import 'hammerjs';
 
 let Main = function () {
+  let mapbox_access_token = import.meta.env.VITE_MAPBOX_KEY;
+  let google_access_token = import.meta.env.VITE_GOOGLE_KEY;
   this.interpolateTimeSpan = 1e3;
   this.gl = null;
   this.canvas = null;
@@ -248,7 +249,7 @@ let Main = function () {
     for (let type of mapTypes) {
       google_body.mapType = type;
       // fetch session for each type
-      const google_api_session = await fetch(`https://tile.googleapis.com/v1/createSession?key=AIzaSyClBtxCSpwQ7urX6L3ANbVy4atCvaXDwzk`, {
+      const google_api_session = await fetch(`https://tile.googleapis.com/v1/createSession?key=${google_access_token}`, {
         method: "POST",
         body: JSON.stringify(google_body),
         headers: {
