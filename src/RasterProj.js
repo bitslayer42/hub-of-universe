@@ -176,6 +176,7 @@ RasterProj.FRAGMENT_SHADER_STR = /*glsl*/`#version 300 es
     } else if (rho <= uRingRadius) {                                  // inside ring: flat
       return inner_flat(center, xy);
     } else {                                                // Smooth transition at the boundary
+      // return vec2( -0.785017, 1.15794); // debug with white ring
       float t = (rho - uRingRadius) / epsilon;
       vec2 flatCoords = inner_flat(center, xy);
       vec2 projectedCoords = outer_projected(center, xy_fe, rho);

@@ -45,7 +45,7 @@ let Main = function () {
   this.zoomMin = 0.01;
   this.zoomMax = 3e+6;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
-  this.ringRadius = 0.00001; // radius of flat center disk in radians // 0.00001
+  this.ringRadius = 0.000001; // radius of flat center disk in radians // 0.00001
 
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
@@ -103,11 +103,11 @@ let Main = function () {
     }
     this.mapView.render(getNewTiles);
     this.animationFrames--;
-    console.log("Animation frames left: " + this.animationFrames);
+    // console.log("Animation frames left: " + this.animationFrames);
     if (this.animationFrames > 0) {
       this.requestId = requestAnimationFrame(this.animation);
     } else {
-      console.log("Animation finished.");
+      // console.log("Animation finished.");
       this.animationFrames = this.animationFramesInit; // reset for next time
       this.mapView.render(true);
       this.setQueryParams();
@@ -182,7 +182,7 @@ let Main = function () {
   this.setTileLevel = () => {
     this.viewStatus.currTileLevel = Math.round(Math.log10(this.viewStatus.zoomScale) * 3.0);// Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel), 0);
-    // console.log("TileLvl: " + this.viewStatus.currTileLevel," + ZoomScl: " + this.viewStatus.zoomScale);
+    console.log("TileLvl: " + this.viewStatus.currTileLevel," + ZoomScl: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
   }
 
@@ -267,7 +267,7 @@ let Main = function () {
     if (this.selectedLayer === "mapbox_satellite") {
       layerSelect.innerHTML = `© <a href="https://www.mapbox.com/about/maps">Mapbox</a> 
         © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>
-        © <a href="https://www.maxar.com/">Maxar</a>
+        © <a href="https://www.maxar.com/">Maxar</a><br>
         <strong><a href="https://apps.mapbox.com/feedback/" target="_blank">Improve this map</a></strong>`;
 
       this.mapView.getURL = function (z, x, y) { //Add custom function to MapView
@@ -293,8 +293,8 @@ let Main = function () {
   this.setQueryParams = () => {
     let params = new URLSearchParams(window.location.search);
     params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
-    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(6)); // radians to degrees
-    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(6)); // radians to degrees
+    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(4)); // radians to degrees
+    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(4)); // radians to degrees
     window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   }
 

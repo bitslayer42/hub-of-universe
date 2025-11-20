@@ -180,6 +180,7 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
   for (const tile of tileInfos) {
     tile.rect = this.getRectFromXYZ(tile);
     tile.url = getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
+    // console.log(tile.url); //.slice(0, 50) + "...");
   }
   return tileInfos.reverse();
 
