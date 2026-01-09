@@ -9,7 +9,9 @@ let Main = function () {
   let google_access_token = import.meta.env.VITE_GOOGLE_KEY;
   this.interpolateTimeSpan = 1e3;
   this.gl = null;
+  // this.cityCtx = null;
   this.canvas = null;
+  // this.cityCanvas = null;
   this.mapView = null;
   this.requestId = null;
   this.prevTime = null;
@@ -39,7 +41,7 @@ let Main = function () {
     [-1.4407952048317003, 0.6212504054863001], // hub of universe
   ];
   // Center of map: lam0 longitude, phi0 latitude in radians -82.551449,35.595011
-  var locat = 8;
+  var locat = 0;
   [this.viewStatus.lam0, this.viewStatus.phi0] = locations[locat];
 
   this.zoomMin = 0.01;
@@ -55,7 +57,9 @@ let Main = function () {
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
     this.canvas = document.querySelector('#webglCanvas');
+    // this.cityCanvas = document.querySelector('#cityCanvas');
     this.resizeCanvas(this.canvas);
+    // this.resizeCanvases(this.canvas, this.cityCanvas);
 
     this.rasterProj = new RasterProj();
     this.rasterProj.setScale(this.viewStatus.zoomScale);
@@ -65,6 +69,7 @@ let Main = function () {
 
   window.addEventListener('resize', () => {
     this.resizeCanvas(this.canvas);
+    // this.resizeCanvases(this.canvas, this.cityCanvas);
     this.mapView.resizeCanvas(this.canvas);
     this.rasterProj.clear(this.canvas);
   });
@@ -119,6 +124,10 @@ let Main = function () {
     if (!this.gl) {
       return void alert("Failed to setup WebGL.");
     }
+    // this.cityCtx = this.cityCanvas.getContext("2d");
+    // this.cityCtx.lineWidth = 40;
+    // this.cityCtx.strokeRect(50, 50, this.cityCanvas.width-50, this.cityCanvas.height-50);
+
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost.bind(this), false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored.bind(this), false);
     this.layerSelect.addEventListener('change', this.handleLayerChange.bind(this), false);
@@ -168,12 +177,15 @@ let Main = function () {
     this.setTileLevel();
     this.mapView.requestImagesIfNecessary();
   };
-
+  
+    // this.resizeCanvases = (canvas, cityCanvas) => {
   this.resizeCanvas = (canvas) => {
     let width = canvas.clientWidth,
       height = canvas.clientHeight;
     (canvas.width == width && canvas.height == height) ||
       ((canvas.width = width), (canvas.height = height));
+      //       ((canvas.width = width), (canvas.height = height),
+      // (cityCanvas.width = width), (cityCanvas.height = height));
     cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
     // console.log("Canvas resized to: " + width + " x " + height);
@@ -182,7 +194,7 @@ let Main = function () {
   this.setTileLevel = () => {
     this.viewStatus.currTileLevel = Math.round(Math.log10(this.viewStatus.zoomScale) * 3.0);// Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel), 0);
-    console.log("TileLvl: " + this.viewStatus.currTileLevel," + ZoomScl: " + this.viewStatus.zoomScale);
+    // console.log("TileLvl: " + this.viewStatus.currTileLevel," + ZoomScl: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
   }
 
@@ -239,7 +251,7 @@ let Main = function () {
         "stylers": [ { "visibility": "on" } ]
       }
     ];
-    let mapTypes = ["satellite", "roadmap", "terrain"];
+    let mapTypes = ["satellite", "roadmap"/*, "terrain"*/];
     let sessionKeys = [];
     for (let type of mapTypes) {
       google_body.mapType = type;
@@ -265,10 +277,10 @@ let Main = function () {
     let sessionKey = null;
     let layerSelect = document.querySelector('.attribution');
     if (this.selectedLayer === "mapbox_satellite") {
-      layerSelect.innerHTML = `© <a href="https://www.mapbox.com/about/maps">Mapbox</a> 
+      layerSelect.innerHTML = `<span style="max-width: 50%">© <a href="https://www.mapbox.com/about/maps">Mapbox</a> 
         © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>
         © <a href="https://www.maxar.com/">Maxar</a><br>
-        <strong><a href="https://apps.mapbox.com/feedback/" target="_blank">Improve this map</a></strong>`;
+        <strong><a href="https://apps.mapbox.com/feedback/" target="_blank">Improve this map</a></strong></span>`;
 
       this.mapView.getURL = function (z, x, y) { //Add custom function to MapView
         return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
@@ -280,8 +292,8 @@ let Main = function () {
         sessionKey = this.googleSessions[0];
       } else if (this.selectedLayer === "google_roadmap") {
         sessionKey = this.googleSessions[1];
-      } else if (this.selectedLayer === "google_terrain") {
-        sessionKey = this.googleSessions[2];
+      // } else if (this.selectedLayer === "google_terrain") {
+      //   sessionKey = this.googleSessions[2];
       }
 
       this.mapView.getURL = function (z, x, y) { //Add custom function to MapView

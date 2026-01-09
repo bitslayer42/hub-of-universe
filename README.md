@@ -9,8 +9,10 @@ and
 
     .env.development, 
 
-each with the two variables:
+each with the 3 variables:
 
     VITE_MAPBOX_KEY=
 
     VITE_GOOGLE_KEY=
+
+    VITE_HUB_API_KEY=

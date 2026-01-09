@@ -5,6 +5,7 @@ let TileManager = function (tile_opts, rasterProj) {
   // // this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
   this.centerQuadkey = null; // quadkey of tile at center of map
+  this.cityList = []; // list of cities in current view
 };
 
 TileManager.prototype.resizeCanvas = function (canvasSize) {
@@ -154,11 +155,37 @@ TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
   tileInfos.push(...levelOneTiles);
 }
 
+TileManager.prototype.fetchCities = async function (centerQuadkey) {
+  let api_key = import.meta.env.VITE_HUB_API_KEY;
+
+  const params = new URLSearchParams();
+  params.append("quadkey", centerQuadkey);
+  params.append("apikey", api_key);
+
+  // fetch(`https://api.hubofuniverse.com/cities?${params}`, {
+  fetch(`http://localhost:8787/cities?${params}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    this.cityList = data || [];
+    console.log("Fetched cities:", this.cityList);
+  })
+  .catch(error => {
+    console.error("Error fetching cities:", error);
+    this.cityList = [];
+  });
+}
+
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
   // console.log("getTileInfos", lam0, phi0, currTileLevel);
   let tileInfos = [];
   let prevTile = null;
   this.getCenterTileInfo(lam0, phi0, currTileLevel);
+  this.fetchCities(this.centerQuadkey);
   for (let level = currTileLevel; level >= 2; level--) {
     let currTileQuadkey;
     if (prevTile ){
