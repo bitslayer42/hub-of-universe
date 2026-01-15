@@ -76,7 +76,6 @@ html {
     color: rgb(185, 185, 185);
 }
 
-/* #webglCanvas, #cityCanvas { */
 #webglCanvas {
     /* position: absolute; */
     width: 100%;

@@ -9,9 +9,7 @@ let Main = function () {
   let google_access_token = import.meta.env.VITE_GOOGLE_KEY;
   this.interpolateTimeSpan = 1e3;
   this.gl = null;
-  // this.cityCtx = null;
   this.canvas = null;
-  // this.cityCanvas = null;
   this.mapView = null;
   this.requestId = null;
   this.prevTime = null;
@@ -57,9 +55,7 @@ let Main = function () {
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
     this.canvas = document.querySelector('#webglCanvas');
-    // this.cityCanvas = document.querySelector('#cityCanvas');
     this.resizeCanvas(this.canvas);
-    // this.resizeCanvases(this.canvas, this.cityCanvas);
 
     this.rasterProj = new RasterProj();
     this.rasterProj.setScale(this.viewStatus.zoomScale);
@@ -69,7 +65,6 @@ let Main = function () {
 
   window.addEventListener('resize', () => {
     this.resizeCanvas(this.canvas);
-    // this.resizeCanvases(this.canvas, this.cityCanvas);
     this.mapView.resizeCanvas(this.canvas);
     this.rasterProj.clear(this.canvas);
   });
@@ -124,9 +119,6 @@ let Main = function () {
     if (!this.gl) {
       return void alert("Failed to setup WebGL.");
     }
-    // this.cityCtx = this.cityCanvas.getContext("2d");
-    // this.cityCtx.lineWidth = 40;
-    // this.cityCtx.strokeRect(50, 50, this.cityCanvas.width-50, this.cityCanvas.height-50);
 
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost.bind(this), false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored.bind(this), false);
@@ -178,14 +170,11 @@ let Main = function () {
     this.mapView.requestImagesIfNecessary();
   };
   
-    // this.resizeCanvases = (canvas, cityCanvas) => {
   this.resizeCanvas = (canvas) => {
     let width = canvas.clientWidth,
       height = canvas.clientHeight;
     (canvas.width == width && canvas.height == height) ||
       ((canvas.width = width), (canvas.height = height));
-      //       ((canvas.width = width), (canvas.height = height),
-      // (cityCanvas.width = width), (cityCanvas.height = height));
     cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
     // console.log("Canvas resized to: " + width + " x " + height);

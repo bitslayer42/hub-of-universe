@@ -162,8 +162,8 @@ TileManager.prototype.fetchCities = async function (centerQuadkey) {
   params.append("quadkey", centerQuadkey);
   params.append("apikey", api_key);
 
-  // fetch(`https://api.hubofuniverse.com/cities?${params}`, {
-  fetch(`http://localhost:8787/cities?${params}`, {
+  // console.log(`${import.meta.env.VITE_CITIES_URL}?${params}`);
+  fetch(`${import.meta.env.VITE_CITIES_URL}?${params}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json"
