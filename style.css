@@ -48,6 +48,17 @@ html {
     writing-mode: horizontal-tb;
 }
 
+#citynames {
+    pointer-events: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    writing-mode: horizontal-tb;
+    border: 1px solid green;
+}
+
 .title-text {
     position: absolute;
     font: 2em "Lato", sans-serif;
@@ -57,7 +68,7 @@ html {
 
 .controls {
     position: absolute;
-    font: "Lato", sans-serif;
+    font: 1em "Lato", sans-serif;
     color: white;
     padding: 5px;
     bottom: 5px;
@@ -89,4 +100,39 @@ html {
     .flex-inner {
         writing-mode: horizontal-tb;
     }
+}
+
+.word {
+  pointer-events: none;
+  position: absolute;
+  /* absolute positioning inside the relative container */
+  white-space: nowrap;
+  user-select: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+  /* font-size is handled on the SVG <text> so the SVG can size to the text */
+  color: transparent;
+  /* keep fallback text hidden — SVG <text> provides fill */
+  background: transparent;
+  transform-origin: center center;
+  transition: transform 200ms linear;
+  overflow: visible;
+  /* allow strokes to render outside the SVG box */
+  pointer-events: none;
+  cursor: default;
+}
+
+/* style the SVG text: fill + stroked outline for crisp edges */
+.word text {
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
+  font-size: clamp(10px, 1.6vw, 16px);
+  font-weight: 700;
+  fill: #fff;
+  stroke: rgba(0, 0, 0, 0.95);
+  stroke-width: 0.9px;
+  paint-order: stroke;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.45));
+  dominant-baseline: hanging;
 }

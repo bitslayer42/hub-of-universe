@@ -1,3 +1,5 @@
+import { placeCities } from './CityNames.js';
+
 let TileManager = function (tile_opts, rasterProj) {
   this.rasterProj = rasterProj;
   // this.canvasSize = { width: null, height: null };
@@ -72,7 +74,7 @@ TileManager.prototype.getRectFromXYZ = function (tile) {
 
 TileManager.prototype.getNSWEtiles = function (tile, tileList = [N, S, W, E, NE, NW, SE, SW]) {
   // Get the tiles surrounding the given tile that are specified by the parameter tileList
-  // which is an array of strings which can include: [N, S, W, E, NE, NW, SE, SW]
+  // which is an array which can include: [N, S, W, E, NE, NW, SE, SW]
   let N = 0, NE = 1, E = 2, SE = 3, S = 4, SW = 5, W = 6, NW = 7;
   let tiles = [];
   let { x, y, z } = tile.xyz;
@@ -162,7 +164,6 @@ TileManager.prototype.fetchCities = async function (centerQuadkey) {
   params.append("quadkey", centerQuadkey);
   params.append("apikey", api_key);
 
-  // console.log(`${import.meta.env.VITE_CITIES_URL}?${params}`);
   fetch(`${import.meta.env.VITE_CITIES_URL}?${params}`, {
     method: "GET",
     headers: {
@@ -172,7 +173,7 @@ TileManager.prototype.fetchCities = async function (centerQuadkey) {
   .then(response => response.json())
   .then(data => {
     this.cityList = data || [];
-    console.log("Fetched cities:", this.cityList);
+    placeCities(this.cityList, this.rasterProj.projection);
   })
   .catch(error => {
     console.error("Error fetching cities:", error);
