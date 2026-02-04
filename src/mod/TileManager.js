@@ -1,13 +1,10 @@
-import { placeCities } from './CityNames.js';
-
-let TileManager = function (tile_opts, rasterProj) {
-  this.rasterProj = rasterProj;
+let TileManager = function (tile_opts, showCities) {
+  this.showCities = showCities; // Function in MapView
   // this.canvasSize = { width: null, height: null };
   // this.tilesAcross = 0;
   // // this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
   this.centerQuadkey = null; // quadkey of tile at center of map
-  this.cityList = []; // list of cities in current view
 };
 
 TileManager.prototype.resizeCanvas = function (canvasSize) {
@@ -157,36 +154,12 @@ TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
   tileInfos.push(...levelOneTiles);
 }
 
-TileManager.prototype.fetchCities = async function (centerQuadkey) {
-  let api_key = import.meta.env.VITE_HUB_API_KEY;
-
-  const params = new URLSearchParams();
-  params.append("quadkey", centerQuadkey);
-  params.append("apikey", api_key);
-
-  fetch(`${import.meta.env.VITE_CITIES_URL}?${params}`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json"
-    }
-  })
-  .then(response => response.json())
-  .then(data => {
-    this.cityList = data || [];
-    placeCities(this.cityList, this.rasterProj.projection);
-  })
-  .catch(error => {
-    console.error("Error fetching cities:", error);
-    this.cityList = [];
-  });
-}
-
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl) {
   // console.log("getTileInfos", lam0, phi0, currTileLevel);
   let tileInfos = [];
   let prevTile = null;
   this.getCenterTileInfo(lam0, phi0, currTileLevel);
-  this.fetchCities(this.centerQuadkey);
+  this.showCities(this.centerQuadkey);
   for (let level = currTileLevel; level >= 2; level--) {
     let currTileQuadkey;
     if (prevTile ){

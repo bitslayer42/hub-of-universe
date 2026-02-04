@@ -1,17 +1,21 @@
 import { TileManager } from "./mod/TileManager.js";
-import { ImageCache } from "./mod/ImageCache.js";
+import { ImageCache, LRUCache } from "./mod/ImageCache.js";
 
 let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.gl = gl;
   this.rasterProj = imgProj;
+  this.cityList = []; // list of cities in current view
 
   this.canvasSize = canvasSize;
+  this.citynames = document.getElementById('citynames');
   //
-  this.tileManager = new TileManager(tile_opts, this.rasterProj);
+  this.tileManager = new TileManager(tile_opts, this.showCities.bind(this));
   this.prevTileInfos_ = null;
   this.prevWindow_ = null;
   //
   this.imageCache = new ImageCache(cache_opts);
+  this.cityCache = new LRUCache(1000);
+  //
   let self = this;
   this.imageCache.createTexture = function (img) {
     return self.createTexture(img);
@@ -108,6 +112,69 @@ MapView.prototype.createTexture = function (img) {
   return tex;
 };
 
+// Called from TileManager
+MapView.prototype.showCities = async function (centerQuadkey) {
+  this.cityList = this.cityCache.get(centerQuadkey);
+  if (this.cityList) {
+    this.placeCities(this.cityList, this.rasterProj.projection);
+    return;
+  }
+  this.requestCities_(centerQuadkey);
+}
+
+MapView.prototype.requestCities_ = function (centerQuadkey) {
+  let api_key = import.meta.env.VITE_HUB_API_KEY;
+
+  const params = new URLSearchParams();
+  params.append("quadkey", centerQuadkey);
+  params.append("apikey", api_key);
+
+  fetch(`${import.meta.env.VITE_CITIES_URL}?${params}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  })
+  .then(response => response.json())
+  .then(data => {
+    this.cityList = data || [];
+    this.cityCache.put(centerQuadkey, this.cityList);
+    this.placeCities(this.cityList, this.rasterProj.projection);
+  })
+  .catch(error => {
+    console.error("Error fetching cities:", error);
+    this.cityList = [];
+  });
+};
+
+MapView.prototype.placeCities = function(cityList, projection){  
+  this.citynames.innerHTML = '';
+  const rect = this.citynames.getBoundingClientRect();
+
+  for(let city of cityList){
+    let { x, y } = projection.forward(
+      city.longitude * Math.PI / 180,
+      city.latitude * Math.PI / 180
+    );
+    x = (x / (2 * Math.PI) + 0.5) * rect.width;
+    y = (0.5 - y / (2 * Math.PI)) * rect.height;
+    // create an SVG element with a single <text> child so we can use vector strokes
+    const wordText = city.name;
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const svg = document.createElementNS(svgNS, 'svg');
+    svg.classList.add('word'); // for css
+    svg.setAttribute('xmlns', svgNS);
+    svg.style.overflow = 'visible';
+
+    const textEl = document.createElementNS(svgNS, 'text');
+    textEl.setAttribute('x', x);
+    textEl.setAttribute('y', y);
+    textEl.textContent = wordText;
+
+    svg.appendChild(textEl);
+    this.citynames.appendChild(svg);
+  }
+}
 
 MapView.prototype.getTileInfos_ = function () {
   let tileArray = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL);

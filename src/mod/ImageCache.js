@@ -125,4 +125,4 @@ ImageCache.prototype.clearOngoingImageLoads = function () {
   this.ongoingImageLoads = [];
 };
 
-export { ImageCache };
+export { ImageCache, LRUCache };
