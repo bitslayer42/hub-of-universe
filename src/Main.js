@@ -95,6 +95,7 @@ let Main = function () {
       );
       this.viewStatus.targetLambdaPhi = null;
     }
+    // zoom in/out
     if (this.prevScale != this.viewStatus.zoomScale) {
       this.rasterProj.setScale(this.viewStatus.zoomScale);
       this.rasterProj.setFlatRatio(this.ringRadius);
@@ -270,19 +271,18 @@ let Main = function () {
         © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>
         © <a href="https://www.maxar.com/">Maxar</a><br>
         <strong><a href="https://apps.mapbox.com/feedback/" target="_blank">Improve this map</a></strong></span>`;
-
+      this.mapView.setCityFontColor("white");
       this.mapView.getURL = function (z, x, y) { //Add custom function to MapView
         return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
       }
     } else if (this.selectedLayer.slice(0, 6) === "google") {
       layerSelect.innerHTML = `Map data @2025 Google`;
-
       if (this.selectedLayer === "google_satellite") {
+        this.mapView.setCityFontColor("white");
         sessionKey = this.googleSessions[0];
       } else if (this.selectedLayer === "google_roadmap") {
+        this.mapView.setCityFontColor("black");
         sessionKey = this.googleSessions[1];
-      // } else if (this.selectedLayer === "google_terrain") {
-      //   sessionKey = this.googleSessions[2];
       }
 
       this.mapView.getURL = function (z, x, y) { //Add custom function to MapView

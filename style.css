@@ -48,7 +48,7 @@ html {
     writing-mode: horizontal-tb;
 }
 
-#citynames {
+#citydiv {
     pointer-events: none;
     position: absolute;
     top: 0;
@@ -56,7 +56,6 @@ html {
     height: 100%;
     width: 100%;
     writing-mode: horizontal-tb;
-    border: 1px solid green;
 }
 
 .title-text {
@@ -128,6 +127,14 @@ html {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial;
   font-size: clamp(10px, 1.6vw, 16px);
   font-weight: 700;
+}
+
+.word text.black {
+    fill: #555;
+    stroke: none;
+}
+
+.word text.white {
   fill: #fff;
   stroke: rgba(0, 0, 0, 0.95);
   stroke-width: 0.9px;

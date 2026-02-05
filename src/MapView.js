@@ -4,17 +4,14 @@ import { ImageCache, LRUCache } from "./mod/ImageCache.js";
 let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.gl = gl;
   this.rasterProj = imgProj;
-  this.cityList = []; // list of cities in current view
 
   this.canvasSize = canvasSize;
-  this.citynames = document.getElementById('citynames');
   //
   this.tileManager = new TileManager(tile_opts, this.showCities.bind(this));
   this.prevTileInfos_ = null;
   this.prevWindow_ = null;
   //
   this.imageCache = new ImageCache(cache_opts);
-  this.cityCache = new LRUCache(1000);
   //
   let self = this;
   this.imageCache.createTexture = function (img) {
@@ -28,6 +25,11 @@ let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   // this.prevTileLevel = null;
   this.lam0 = 0;
   this.phi0 = 0;
+
+  this.cityList = []; // list of cities in current view
+  this.cityDiv = document.getElementById('citydiv');
+  this.cityCache = new LRUCache(1000);
+  this.cityFontColor = "black";
 };
 
 MapView.prototype.clearTileInfoCache_ = function () {
@@ -56,6 +58,9 @@ MapView.prototype.setTileLevel = function (currTileLevel) {
   this.currTileLevel = currTileLevel;
 };
 
+MapView.prototype.setCityFontColor = function(color) {
+  this.cityFontColor = color;
+};
 
 MapView.prototype.getViewPointFromWindow = function (canvX, canvY) {
   let scaleX_ = (Math.PI * 2) / this.canvasSize.width; // convert pixel to pi
@@ -116,7 +121,7 @@ MapView.prototype.createTexture = function (img) {
 MapView.prototype.showCities = async function (centerQuadkey) {
   this.cityList = this.cityCache.get(centerQuadkey);
   if (this.cityList) {
-    this.placeCities(this.cityList, this.rasterProj.projection);
+    this.placeCities_(this.cityList, this.rasterProj.projection);
     return;
   }
   this.requestCities_(centerQuadkey);
@@ -139,7 +144,7 @@ MapView.prototype.requestCities_ = function (centerQuadkey) {
   .then(data => {
     this.cityList = data || [];
     this.cityCache.put(centerQuadkey, this.cityList);
-    this.placeCities(this.cityList, this.rasterProj.projection);
+    this.placeCities_(this.cityList, this.rasterProj.projection);
   })
   .catch(error => {
     console.error("Error fetching cities:", error);
@@ -147,18 +152,18 @@ MapView.prototype.requestCities_ = function (centerQuadkey) {
   });
 };
 
-MapView.prototype.placeCities = function(cityList, projection){  
-  this.citynames.innerHTML = '';
-  const rect = this.citynames.getBoundingClientRect();
-
-  for(let city of cityList){
+MapView.prototype.placeCities_ = function(cityList, projection){  
+  this.cityDiv.innerHTML = '';
+  const rect = this.cityDiv.getBoundingClientRect();
+  this.cityList = cityList || [];
+  for(let city of this.cityList){
     let { x, y } = projection.forward(
       city.longitude * Math.PI / 180,
       city.latitude * Math.PI / 180
     );
     x = (x / (2 * Math.PI) + 0.5) * rect.width;
     y = (0.5 - y / (2 * Math.PI)) * rect.height;
-    // create an SVG element with a single <text> child so we can use vector strokes
+    // create an SVG element with a single <text> child to use vector strokes
     const wordText = city.name;
     const svgNS = 'http://www.w3.org/2000/svg';
     const svg = document.createElementNS(svgNS, 'svg');
@@ -167,12 +172,14 @@ MapView.prototype.placeCities = function(cityList, projection){
     svg.style.overflow = 'visible';
 
     const textEl = document.createElementNS(svgNS, 'text');
+    textEl.classList.add(this.cityFontColor); // for css
+
     textEl.setAttribute('x', x);
     textEl.setAttribute('y', y);
     textEl.textContent = wordText;
 
     svg.appendChild(textEl);
-    this.citynames.appendChild(svg);
+    this.cityDiv.appendChild(svg);
   }
 }
 
@@ -214,6 +221,7 @@ MapView.prototype.render_ = function () {
   if (0 < targetTextures.length) {
     this.rasterProj.renderTextures(targetTextures);
   }
+  this.placeCities_(this.cityList, this.rasterProj.projection);
 };
 
 
