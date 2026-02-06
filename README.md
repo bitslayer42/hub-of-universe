@@ -23,6 +23,7 @@ each with the 3 variables:
 Run:
 
     ```
+    npm run build
     git add .
     git commit
     git push

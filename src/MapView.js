@@ -58,7 +58,7 @@ MapView.prototype.setTileLevel = function (currTileLevel) {
   this.currTileLevel = currTileLevel;
 };
 
-MapView.prototype.setCityFontColor = function(color) {
+MapView.prototype.setCityFontColor = function (color) {
   this.cityFontColor = color;
 };
 
@@ -140,47 +140,62 @@ MapView.prototype.requestCities_ = function (centerQuadkey) {
       "Content-Type": "application/json"
     }
   })
-  .then(response => response.json())
-  .then(data => {
-    this.cityList = data || [];
-    this.cityCache.put(centerQuadkey, this.cityList);
-    this.placeCities_(this.cityList, this.rasterProj.projection);
-  })
-  .catch(error => {
-    console.error("Error fetching cities:", error);
-    this.cityList = [];
-  });
+    .then(response => response.json())
+    .then(data => {
+      this.cityList = data || [];
+      this.cityCache.put(centerQuadkey, this.cityList);
+      this.placeCities_(this.cityList, this.rasterProj.projection);
+    })
+    .catch(error => {
+      console.error("Error fetching cities:", error);
+      this.cityList = [];
+    });
 };
 
-MapView.prototype.placeCities_ = function(cityList, projection){  
+MapView.prototype.placeCities_ = function (cityList, projection) {
   this.cityDiv.innerHTML = '';
   const rect = this.cityDiv.getBoundingClientRect();
   this.cityList = cityList || [];
-  for(let city of this.cityList){
+  for (let city of this.cityList) {
     let { x, y } = projection.forward(
       city.longitude * Math.PI / 180,
       city.latitude * Math.PI / 180
     );
-    x = (x / (2 * Math.PI) + 0.5) * rect.width;
-    y = (0.5 - y / (2 * Math.PI)) * rect.height;
-    // create an SVG element with a single <text> child to use vector strokes
-    const wordText = city.name;
-    const svgNS = 'http://www.w3.org/2000/svg';
-    const svg = document.createElementNS(svgNS, 'svg');
-    svg.classList.add('word'); // for css
-    svg.setAttribute('xmlns', svgNS);
-    svg.style.overflow = 'visible';
+    x = ( x / (2 * Math.PI) + 0.5) * rect.width;
+    y = (-y / (2 * Math.PI) + 0.5) * rect.height;
 
-    const textEl = document.createElementNS(svgNS, 'text');
-    textEl.classList.add(this.cityFontColor); // for css
+    const worddiv = document.createElement('div');
+    worddiv.classList.add('word'); // for css
+    worddiv.classList.add(this.cityFontColor); // for css
+    worddiv.style.left = `${x}px`;
+    worddiv.style.top = `${y}px`;
 
-    textEl.setAttribute('x', x);
-    textEl.setAttribute('y', y);
-    textEl.textContent = wordText;
-
-    svg.appendChild(textEl);
-    this.cityDiv.appendChild(svg);
+    worddiv.textContent = city.name;
+    this.cityDiv.appendChild(worddiv);
   }
+    // After elements are in the DOM test for overlap and hide if necessary
+    const children = Array.from(this.cityDiv.children);
+    const placedRects = [];
+    const padding = 0; // minimum space between words
+
+    children.forEach(child => {
+      const cRect = child.getBoundingClientRect();
+      const x = parseInt(child.style.left);
+      const y = parseInt(child.style.top);
+      const w = parseInt(cRect.width);
+      const h = parseInt(cRect.height);
+
+      const candidate = { left: x - w / 2 - padding, top: y - h / 2 - padding, right: x + w / 2 + padding, bottom: y + h / 2 + padding };
+
+      const collision = placedRects.some(r => !(candidate.right < r.left || candidate.left > r.right || candidate.bottom < r.top || candidate.top > r.bottom));
+      if (collision) {
+        child.style.display = 'none';
+      } else {
+        placedRects.push({ name: child.textContent, left: candidate.left, top: candidate.top, right: candidate.right, bottom: candidate.bottom });
+      }
+      // child.style.left = `${left}px`;
+      // child.style.top = `${top}px`;
+    });
 }
 
 MapView.prototype.getTileInfos_ = function () {

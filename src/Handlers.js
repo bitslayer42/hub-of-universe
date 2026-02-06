@@ -129,6 +129,7 @@ export const Handlers = {
   handleDoubleTap(event) {
     let canv_xy = this.checkAndGetGesturePos(event);
     if (canv_xy) {
+      // console.log(`Double tap at canvas coordinates: (${canv_xy[0]}, ${canv_xy[1]})`);
       event.preventDefault();
       let lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
       this.viewStatus.lam0 = lam_phi.lambda;

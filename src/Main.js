@@ -39,10 +39,10 @@ let Main = function () {
     [-1.4407952048317003, 0.6212504054863001], // hub of universe
   ];
   // Center of map: lam0 longitude, phi0 latitude in radians -82.551449,35.595011
-  var locat = 8;
+  var locat = 0;
   [this.viewStatus.lam0, this.viewStatus.phi0] = locations[locat];
 
-  this.zoomMin = 0.01;
+  this.zoomMin = 10.0;
   this.zoomMax = 3e+6;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.ringRadius = 0.000001; // radius of flat center disk in radians // 0.00001
