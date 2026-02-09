@@ -2,7 +2,6 @@ import { Interpolater } from "./mod/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterProj } from './RasterProj.js';
 import { Handlers } from './Handlers.js';
-import 'hammerjs';
 
 let Main = function () {
   let mapbox_access_token = import.meta.env.VITE_MAPBOX_KEY;
@@ -17,7 +16,10 @@ let Main = function () {
   this.viewStatus = {
     drag: false,
     dragPrevPos: null, // canvas x y from upper left corner
-    pinchPrevScale: null,
+    pinching: false,
+    pinchPrevDistance: null,
+    lastTapTime: 0,
+    lastTapPos: null,
     zoomScale: 3e+2, // zoomMin >= zoomScale >= zoomMax
     targetLambdaPhi: null,
     interpolater: null,
@@ -125,18 +127,15 @@ let Main = function () {
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored.bind(this), false);
     this.layerSelect.addEventListener('change', this.handleLayerChange.bind(this), false);
 
-    let mc = new Hammer.Manager(this.canvas, {
-      recognizers: [
-        [Hammer.Pinch, { enable: true, }],
-        [Hammer.Pan, { enable: true, }],
-        [Hammer.Tap, { enable: true, taps: 2, }],
-      ]
-    });
-    mc.on("pinch", this.handlePinch.bind(this));
-    mc.on("pan", this.handlePan.bind(this));
-    mc.on("panstart", this.handlePanStart.bind(this));
-    mc.on("panend pancancel", this.handlePanEnd.bind(this));
-    mc.on("tap", this.handleDoubleTap.bind(this));
+    // Mouse and touch event listeners
+    this.canvas.addEventListener("mousedown", this.handlePointerDown.bind(this), false);
+    this.canvas.addEventListener("mousemove", this.handlePointerMove.bind(this), false);
+    this.canvas.addEventListener("mouseup", this.handlePointerUp.bind(this), false);
+    this.canvas.addEventListener("dblclick", this.handleDoubleTap.bind(this), false);
+    
+    this.canvas.addEventListener("touchstart", this.handleTouchStart.bind(this), false);
+    this.canvas.addEventListener("touchmove", this.handleTouchMove.bind(this), false);
+    this.canvas.addEventListener("touchend", this.handleTouchEnd.bind(this), false);
 
     window.WheelEvent && document.addEventListener("wheel", this.handleWheel.bind(this), false);
 

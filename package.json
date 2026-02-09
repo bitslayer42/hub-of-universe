@@ -16,8 +16,5 @@
   "devDependencies": {
     "vite": "^7.0.0",
     "vite-console-forward-plugin": "^2.0.1"
-  },
-  "dependencies": {
-    "hammerjs": "^2.0.8"
   }
 }
