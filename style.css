@@ -93,6 +93,7 @@ html {
     display: block;
     background-color: transparent;
     border: none;
+    touch-action: none;
 }
 
 @media (max-aspect-ratio: 1/1) {

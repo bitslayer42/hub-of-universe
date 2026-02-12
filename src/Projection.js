@@ -74,7 +74,7 @@ Projection.prototype.inv_fisheye = function(x, y) {
   return [ Math.cos(theta) * fisheyeR * Math.PI, Math.sin(theta) * fisheyeR * Math.PI ];
 }
 
-Projection.prototype.inverse = function(x, y) {// Called from getLambdaPhiPointFromWindow (handleDoubleTap)
+Projection.prototype.inverse = function(x, y) {// Called from getLambdaPhiPointFromWindow (handleDoubleClick)
   [x, y] = this.inv_fisheye(x, y);
 
   let rh2 = x * x + y * y;

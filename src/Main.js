@@ -128,11 +128,11 @@ let Main = function () {
     this.layerSelect.addEventListener('change', this.handleLayerChange.bind(this), false);
 
     // Mouse and touch event listeners
-    this.canvas.addEventListener("mousedown", this.handlePointerDown.bind(this), false);
-    this.canvas.addEventListener("mousemove", this.handlePointerMove.bind(this), false);
-    this.canvas.addEventListener("mouseup", this.handlePointerUp.bind(this), false);
-    this.canvas.addEventListener("dblclick", this.handleDoubleTap.bind(this), false);
-    
+    this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this), false);
+    this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this), false);
+    this.canvas.addEventListener("mouseup", this.handleMouseUp.bind(this), false);
+    this.canvas.addEventListener("dblclick", this.handleDoubleClick.bind(this), false);
+
     this.canvas.addEventListener("touchstart", this.handleTouchStart.bind(this), false);
     this.canvas.addEventListener("touchmove", this.handleTouchMove.bind(this), false);
     this.canvas.addEventListener("touchend", this.handleTouchEnd.bind(this), false);
@@ -169,7 +169,7 @@ let Main = function () {
     this.setTileLevel();
     this.mapView.requestImagesIfNecessary();
   };
-  
+
   this.resizeCanvas = (canvas) => {
     let width = canvas.clientWidth,
       height = canvas.clientHeight;
@@ -232,12 +232,12 @@ let Main = function () {
       {
         "featureType": "all",
         "elementType": "labels.text",
-        "stylers": [ { "visibility": "off" } ]
+        "stylers": [{ "visibility": "off" }]
       },
       {
         "featureType": "road",
         "elementType": "labels.text",
-        "stylers": [ { "visibility": "on" } ]
+        "stylers": [{ "visibility": "on" }]
       }
     ];
     let mapTypes = ["satellite", "roadmap"/*, "terrain"*/];
@@ -291,6 +291,7 @@ let Main = function () {
   };
 
   this.setQueryParams = () => {
+    // console.log(`Setting query params.${this.viewStatus.lam0}, ${this.viewStatus.phi0}, ${this.viewStatus.zoomScale}`);
     let params = new URLSearchParams(window.location.search);
     params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
     params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(4)); // radians to degrees
