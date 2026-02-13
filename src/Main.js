@@ -41,7 +41,7 @@ let Main = function () {
     [-1.4407952048317003, 0.6212504054863001], // hub of universe
   ];
   // Center of map: lam0 longitude, phi0 latitude in radians -82.551449,35.595011
-  var locat = 0;
+  var locat = 2;
   [this.viewStatus.lam0, this.viewStatus.phi0] = locations[locat];
 
   this.zoomMin = 10.0;
