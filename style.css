@@ -92,7 +92,6 @@ html {
     height: 100%;
     display: block;
     background-color: transparent;
-    border: 1px solid green;
     touch-action: none;
 }
 
@@ -100,8 +99,11 @@ html {
     .flex-inner {
         writing-mode: horizontal-tb;
     }
-    .controls, .attribution{
-        bottom: -30px;
+    .controls{
+        bottom: -25px;
+    }
+    .attribution{
+        bottom: -55px;
     }
 }
 
