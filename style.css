@@ -92,13 +92,16 @@ html {
     height: 100%;
     display: block;
     background-color: transparent;
-    border: none;
+    border: 1px solid green;
     touch-action: none;
 }
 
 @media (max-aspect-ratio: 1/1) {
     .flex-inner {
         writing-mode: horizontal-tb;
+    }
+    .controls, .attribution{
+        bottom: -30px;
     }
 }
 

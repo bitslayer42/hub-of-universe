@@ -23,8 +23,25 @@ each with the 3 variables:
 Run:
 
     ```
-    npm run build
     git add .
     git commit
     git push
     ```
+
+## Variables
+
+    VITE_MAPBOX_KEY=
+
+    VITE_GOOGLE_KEY=
+
+    VITE_HUB_API_KEY=
+
+    VITE_CITIES_URL=https://api.hubofuniverse.com/cities
+
+Variables are in .env.development for local dev and manually entered in the Cloudflare console under "Build secrets" for prod.
+
+## Build config in Cloudflare console
+
+- Build command: npm run build
+- Deploy command: npx wrangler deploy
+- Build secrets (see variables above)
