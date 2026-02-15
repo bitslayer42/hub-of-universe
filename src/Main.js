@@ -57,7 +57,7 @@ let Main = function () {
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
     this.canvas = document.querySelector('#webglCanvas');
-    this.resizeCanvas(this.canvas);
+    await this.resizeCanvas(this.canvas);
 
     this.rasterProj = new RasterProj();
     this.rasterProj.setScale(this.viewStatus.zoomScale);
@@ -65,12 +65,12 @@ let Main = function () {
     this.animation(); // starts animation
   });
 
-  window.addEventListener('resize', () => {
-    this.resizeCanvas(this.canvas);
+  window.addEventListener('resize', async () => {
+    await this.resizeCanvas(this.canvas);
     this.mapView.resizeCanvas(this.canvas);
     this.rasterProj.clear(this.canvas);
   });
-
+  
   this.animation = () => {
     if (!this.mapView) return;
     let getNewTiles = false;
@@ -170,7 +170,7 @@ let Main = function () {
     this.mapView.requestImagesIfNecessary();
   };
 
-  this.resizeCanvas = (canvas) => {
+  this.resizeCanvas = async (canvas) => {
     let width = canvas.clientWidth,
       height = canvas.clientHeight;
     (canvas.width == width && canvas.height == height) ||

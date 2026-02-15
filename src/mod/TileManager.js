@@ -1,14 +1,9 @@
 let TileManager = function (tile_opts, showCities) {
   this.showCities = showCities; // Function in MapView
-  // this.canvasSize = { width: null, height: null };
-  // this.tilesAcross = 0;
-  // // this.tileMaxSize = 0;
   this.tileSize = 256; // tile size in pixels
   this.centerQuadkey = null; // quadkey of tile at center of map
 };
 
-TileManager.prototype.resizeCanvas = function (canvasSize) {
-}
 
 TileManager.prototype.getCenterTileInfo = function (lam0, phi0, level) {
   // Get tile at center of map

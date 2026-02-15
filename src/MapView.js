@@ -51,7 +51,6 @@ MapView.prototype.getProjCenter = function () {
 MapView.prototype.resizeCanvas = function (canvas) {
   this.canvasSize.width = canvas.width;
   this.canvasSize.height = canvas.height;
-  this.tileManager.resizeCanvas(this.canvasSize);
 }
 
 MapView.prototype.setTileLevel = function (currTileLevel) {
