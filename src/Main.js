@@ -171,10 +171,8 @@ let Main = function () {
   };
 
   this.resizeCanvas = async (canvas) => {
-    let width = canvas.clientWidth,
-      height = canvas.clientHeight;
-    (canvas.width == width && canvas.height == height) ||
-      ((canvas.width = width), (canvas.height = height));
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
     cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
     // console.log("Canvas resized to: " + width + " x " + height);
