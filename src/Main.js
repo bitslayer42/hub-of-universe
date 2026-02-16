@@ -9,10 +9,7 @@ let Main = function () {
   this.interpolateTimeSpan = 1e3;
   this.gl = null;
   this.canvas = document.querySelector('#webglCanvas');
-  this.canvas.width = this.canvas.clientWidth;
-  this.canvas.height = this.canvas.clientHeight;
-    this.messagesBox = document.querySelector('.messages');
-    this.messagesBox.innerHTML = `${this.canvas.width} x ${this.canvas.height}`;
+  this.messagesBox = document.querySelector('.messages');
   this.mapView = null;
   this.requestId = null;
   this.prevTime = null;
@@ -29,8 +26,8 @@ let Main = function () {
     interpolater: null,
     currTileLevel: null,
   };
-  this.layerSelect = document.querySelector('#layer');
-  this.selectedLayer = this.layerSelect.value;
+  this.layerSelectBox = document.querySelector('select#layer');
+  this.selectedLayer = this.layerSelectBox.value;
   this.googleSessions = [];
 
   var locations = [ // lat, log * 0.0174533
@@ -57,6 +54,7 @@ let Main = function () {
   this.debug = false; // "local", "red", false
   this.animationFramesInit = 80; // number of frames to animate before stopping
   this.animationFrames = this.animationFramesInit;
+  this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere on <br> the map to go there fast!"}, 180000);
 
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
@@ -128,7 +126,7 @@ let Main = function () {
 
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost.bind(this), false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored.bind(this), false);
-    this.layerSelect.addEventListener('change', this.handleLayerChange.bind(this), false);
+    this.layerSelectBox.addEventListener('change', this.handleLayerChange.bind(this), false);
 
     // Mouse and touch event listeners
     this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this), false);
@@ -265,9 +263,9 @@ let Main = function () {
 
   this.setLayer = async () => { // which map layer to use
     let sessionKey = null;
-    let layerSelect = document.querySelector('.attribution');
+    let attributionBox = document.querySelector('.attribution');
     if (this.selectedLayer === "mapbox_satellite") {
-      layerSelect.innerHTML = `<span style="max-width: 50%">© <a href="https://www.mapbox.com/about/maps">Mapbox</a> 
+      attributionBox.innerHTML = `<span style="max-width: 50%">© <a href="https://www.mapbox.com/about/maps">Mapbox</a> 
         © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>
         © <a href="https://www.maxar.com/">Maxar</a><br>
         <strong><a href="https://apps.mapbox.com/feedback/" target="_blank">Improve this map</a></strong></span>`;
@@ -275,8 +273,8 @@ let Main = function () {
       this.mapView.getURL = function (z, x, y) { //Add custom function to MapView
         return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
       }
-    } else if (this.selectedLayer.slice(0, 6) === "google") {
-      layerSelect.innerHTML = `Map data @2025 Google`;
+    } else if (this.selectedLayer.slice(0, 6) === "google") { // google_satellite, google_roadmap
+      attributionBox.innerHTML = `Map data @2025 Google`;
       if (this.selectedLayer === "google_satellite") {
         this.mapView.setCityFontColor("white");
         sessionKey = this.googleSessions[0];

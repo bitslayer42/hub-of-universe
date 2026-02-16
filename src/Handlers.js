@@ -273,6 +273,9 @@ export const Handlers = {
 
   ///////////////////////////////////////////////////////////////
   handleDoubleClick(event) {
+    clearTimeout(this.messageTimeoutID); // clear any existing message timeout
+    this.messagesBox.innerHTML = ""; // clear messages on double click
+    
     let canv_xy = this.checkAndGetGesturePos(event.clientX, event.clientY);
     if (canv_xy) {
       // console.log(`Double tap at canvas coordinates: (${canv_xy[0]}, ${canv_xy[1]})`);
