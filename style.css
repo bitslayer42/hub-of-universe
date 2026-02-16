@@ -61,7 +61,7 @@ html {
 .title-text {
     position: absolute;
     font: 2em "Lato", sans-serif;
-    color: white;
+    color: rgb(153, 215, 184);
     padding: 5px;
 }
 

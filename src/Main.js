@@ -8,7 +8,9 @@ let Main = function () {
   let google_access_token = import.meta.env.VITE_GOOGLE_KEY;
   this.interpolateTimeSpan = 1e3;
   this.gl = null;
-  this.canvas = null;
+  this.canvas = document.querySelector('#webglCanvas');
+  this.canvas.width = this.canvas.clientWidth;
+  this.canvas.height = this.canvas.clientHeight;
   this.mapView = null;
   this.requestId = null;
   this.prevTime = null;
@@ -56,7 +58,6 @@ let Main = function () {
 
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
-    this.canvas = document.querySelector('#webglCanvas');
     await this.resizeCanvas(this.canvas);
 
     this.rasterProj = new RasterProj();
@@ -70,7 +71,7 @@ let Main = function () {
     this.mapView.resizeCanvas(this.canvas);
     this.rasterProj.clear(this.canvas);
   });
-  
+
   this.animation = () => {
     if (!this.mapView) return;
     let getNewTiles = false;
