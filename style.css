@@ -61,10 +61,17 @@ html {
 .title-text {
     position: absolute;
     font: 2em "Lato", sans-serif;
-    color: rgb(153, 215, 184);
+    color: white;
     padding: 5px;
 }
 
+.messages {
+    position: absolute;
+    font: 1em "Lato", sans-serif;
+    color: white;
+    padding: 5px;
+    right: 5px;
+}
 .controls {
     position: absolute;
     font: 1em "Lato", sans-serif;
