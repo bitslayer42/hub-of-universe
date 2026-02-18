@@ -54,7 +54,7 @@ let Main = function () {
   this.debug = false; // "local", "red", false
   this.animationFramesInit = 80; // number of frames to animate before stopping
   this.animationFrames = this.animationFramesInit;
-  this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere on <br> the map to go there fast!"}, 180000);
+  this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere <br>to go there fast!"}, 180000);
 
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params

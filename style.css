@@ -112,6 +112,12 @@ html {
     .attribution{
         bottom: -55px;
     }
+    .title-text {
+        top: -60px;
+    }
+    .messages {
+        top: -30px;
+    }
 }
 
 .word {
