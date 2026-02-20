@@ -1,5 +1,4 @@
-let TileManager = function (tile_opts, showCities) {
-  this.showCities = showCities; // Function in MapView
+let TileManager = function (tile_opts) {
   this.tileSize = 256; // tile size in pixels
   this.centerQuadkey = null; // quadkey of tile at center of map
 };
@@ -154,7 +153,6 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
   let tileInfos = [];
   let prevTile = null;
   this.getCenterTileInfo(lam0, phi0, currTileLevel);
-  this.showCities(this.centerQuadkey);
   for (let level = currTileLevel; level >= 2; level--) {
     let currTileQuadkey;
     if (prevTile ){

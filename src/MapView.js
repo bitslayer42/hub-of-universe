@@ -7,7 +7,7 @@ let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
 
   this.canvasSize = canvasSize;
   //
-  this.tileManager = new TileManager(tile_opts, this.showCities.bind(this));
+  this.tileManager = new TileManager(tile_opts);
   this.prevTileInfos_ = null;
   this.prevWindow_ = null;
   //
@@ -25,6 +25,8 @@ let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   // this.prevTileLevel = null;
   this.lam0 = 0;
   this.phi0 = 0;
+  this.lat0 = 0;
+  this.lon0 = 0;
 
   this.cityList = []; // list of cities in current view
   this.cityDiv = document.getElementById('citydiv');
@@ -116,22 +118,25 @@ MapView.prototype.createTexture = function (img) {
   return tex;
 };
 
-// Called from TileManager
-MapView.prototype.showCities = async function (centerQuadkey) {
-  this.cityList = this.cityCache.get(centerQuadkey);
-  if (this.cityList) {
-    this.placeCities_(this.cityList, this.rasterProj.projection);
+MapView.prototype.showCities_ = async function () {
+  this.lat0 = this.phi0 * 180 / Math.PI; // convert to degrees
+  this.lon0 = this.lam0 * 180 / Math.PI; // convert to degrees
+  this.cityList = this.cityCache.get([this.lat0, this.lon0, this.currTileLevel]);
+  if (!this.cityList) {
+    this.requestCities_([this.lat0, this.lon0, this.currTileLevel]);
     return;
   }
-  this.requestCities_(centerQuadkey);
+  this.placeCities_(this.cityList, this.rasterProj.projection);
 }
 
 MapView.prototype.requestCities_ = function (centerQuadkey) {
   let api_key = import.meta.env.VITE_HUB_API_KEY;
 
   const params = new URLSearchParams();
-  params.append("quadkey", centerQuadkey);
   params.append("apikey", api_key);
+  params.append("lat", this.lat0);
+  params.append("lon", this.lon0);
+  params.append("level", this.currTileLevel);
 
   fetch(`${import.meta.env.VITE_CITIES_URL}?${params}`, {
     method: "GET",
@@ -142,8 +147,8 @@ MapView.prototype.requestCities_ = function (centerQuadkey) {
     .then(response => response.json())
     .then(data => {
       this.cityList = data || [];
-      this.cityCache.put(centerQuadkey, this.cityList);
-      this.placeCities_(this.cityList, this.rasterProj.projection);
+      this.cityCache.put([this.lat0, this.lon0, this.currTileLevel], this.cityList);
+      this.placeCities_(this.cityList);
     })
     .catch(error => {
       console.error("Error fetching cities:", error);
@@ -151,12 +156,12 @@ MapView.prototype.requestCities_ = function (centerQuadkey) {
     });
 };
 
-MapView.prototype.placeCities_ = function (cityList, projection) {
+MapView.prototype.placeCities_ = function (cityList) {
   this.cityDiv.innerHTML = '';
   const rect = this.cityDiv.getBoundingClientRect();
   this.cityList = cityList || [];
   for (let city of this.cityList) {
-    let { x, y } = projection.forward(
+    let { x, y } = this.rasterProj.projection.forward(
       city.longitude * Math.PI / 180,
       city.latitude * Math.PI / 180
     );
@@ -235,7 +240,7 @@ MapView.prototype.render_ = function () {
   if (0 < targetTextures.length) {
     this.rasterProj.renderTextures(targetTextures);
   }
-  this.placeCities_(this.cityList, this.rasterProj.projection);
+  this.showCities_();
 };
 
 
