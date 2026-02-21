@@ -54,7 +54,7 @@ let Main = function () {
   this.debug = false; // "local", "red", false
   this.animationFramesInit = 80; // number of frames to animate before stopping
   this.animationFrames = this.animationFramesInit;
-  this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere <br>to go there fast!"}, 180000);
+  this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere <br>to go there fast!" }, 180000);
 
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
@@ -293,8 +293,8 @@ let Main = function () {
     // console.log(`Setting query params.${this.viewStatus.lam0}, ${this.viewStatus.phi0}, ${this.viewStatus.zoomScale}`);
     let params = new URLSearchParams(window.location.search);
     params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
-    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(4)); // radians to degrees
-    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(4)); // radians to degrees
+    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(2)); // radians to degrees
+    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(2)); // radians to degrees
     window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   }
 

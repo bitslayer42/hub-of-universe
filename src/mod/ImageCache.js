@@ -23,6 +23,9 @@ class LRUCache {
     // console.log("cache size", this.cache.size);
   }
 
+  has(key) {
+    return this.cache.has(key);
+  }
 }
 
 

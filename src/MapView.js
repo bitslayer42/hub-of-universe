@@ -119,24 +119,24 @@ MapView.prototype.createTexture = function (img) {
 };
 
 MapView.prototype.showCities_ = async function () {
-  this.lat0 = this.phi0 * 180 / Math.PI; // convert to degrees
-  this.lon0 = this.lam0 * 180 / Math.PI; // convert to degrees
-  this.cityList = this.cityCache.get([this.lat0, this.lon0, this.currTileLevel]);
-  if (!this.cityList) {
-    this.requestCities_([this.lat0, this.lon0, this.currTileLevel]);
+  let lat0 = (this.phi0 * 180 / Math.PI).toFixed(2); // convert to degrees
+  let lon0 = (this.lam0 * 180 / Math.PI).toFixed(2); // convert to degrees
+  let mapkey = lat0 + "," + lon0 + "," + this.currTileLevel;
+  if (!this.cityCache.has(mapkey)) {
+    this.cityCache.put(mapkey, null); // placeholder to indicate loading
+    this.requestCities_(mapkey, lat0, lon0, this.currTileLevel);
     return;
   }
-  this.placeCities_(this.cityList, this.rasterProj.projection);
+  this.placeCities_(this.cityCache.get(mapkey, lat0, lon0, this.currTileLevel));
 }
 
-MapView.prototype.requestCities_ = function (centerQuadkey) {
+MapView.prototype.requestCities_ = function (mapkey, lat0, lon0, tileLevel) {
   let api_key = import.meta.env.VITE_HUB_API_KEY;
-
   const params = new URLSearchParams();
   params.append("apikey", api_key);
-  params.append("lat", this.lat0);
-  params.append("lon", this.lon0);
-  params.append("level", this.currTileLevel);
+  params.append("lat", lat0);
+  params.append("lon", lon0);
+  params.append("level", tileLevel);
 
   fetch(`${import.meta.env.VITE_CITIES_URL}?${params}`, {
     method: "GET",
@@ -147,8 +147,7 @@ MapView.prototype.requestCities_ = function (centerQuadkey) {
     .then(response => response.json())
     .then(data => {
       this.cityList = data || [];
-      this.cityCache.put([this.lat0, this.lon0, this.currTileLevel], this.cityList);
-      this.placeCities_(this.cityList);
+      this.cityCache.put(mapkey, this.cityList);
     })
     .catch(error => {
       console.error("Error fetching cities:", error);

@@ -47,6 +47,8 @@ export const Handlers = {
           let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda - (1 / deltaPanRate);
+          if (newLam0 < -Math.PI) newLam0 += (Math.PI * 2);
+          if (newLam0 > Math.PI) newLam0 -= (Math.PI * 2);
           this.mapView.setProjCenter(newLam0, curr_lam_phi.phi);
         }
         break;
@@ -55,6 +57,8 @@ export const Handlers = {
           let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda + (1 / deltaPanRate);
+          if (newLam0 < -Math.PI) newLam0 += (Math.PI * 2);
+          if (newLam0 > Math.PI) newLam0 -= (Math.PI * 2);
           this.mapView.setProjCenter(newLam0, curr_lam_phi.phi);
         }
         break;
@@ -120,6 +124,8 @@ export const Handlers = {
           let newLam0 = curr_lam_phi.lambda - deltaX;
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0);
           this.viewStatus.lam0 = newLam0;
+          if (this.viewStatus.lam0 < -Math.PI) this.viewStatus.lam0 += (Math.PI * 2);
+          if (this.viewStatus.lam0 > Math.PI) this.viewStatus.lam0 -= (Math.PI * 2);
           this.viewStatus.phi0 = newPhi0;
           this.mapView.setProjCenter(newLam0, newPhi0);
         }
@@ -191,6 +197,8 @@ export const Handlers = {
           let newLam0 = curr_lam_phi.lambda - deltaX;
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0);
           this.viewStatus.lam0 = newLam0;
+          if (this.viewStatus.lam0 < -Math.PI) this.viewStatus.lam0 += (Math.PI * 2);
+          if (this.viewStatus.lam0 > Math.PI) this.viewStatus.lam0 -= (Math.PI * 2);
           this.viewStatus.phi0 = newPhi0;
           this.mapView.setProjCenter(newLam0, newPhi0);
         }
@@ -275,13 +283,15 @@ export const Handlers = {
   handleDoubleClick(event) {
     clearTimeout(this.messageTimeoutID); // clear any existing message timeout
     this.messagesBox.innerHTML = ""; // clear messages on double click
-    
+
     let canv_xy = this.checkAndGetGesturePos(event.clientX, event.clientY);
     if (canv_xy) {
       // console.log(`Double tap at canvas coordinates: (${canv_xy[0]}, ${canv_xy[1]})`);
       event.preventDefault();
       let lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
       this.viewStatus.lam0 = lam_phi.lambda;
+      if (this.viewStatus.lam0 < -Math.PI) this.viewStatus.lam0 += (Math.PI * 2);
+      if (this.viewStatus.lam0 > Math.PI) this.viewStatus.lam0 -= (Math.PI * 2);
       this.viewStatus.phi0 = lam_phi.phi;
       this.viewStatus.targetLambdaPhi = lam_phi; // set target lambda, phi for interpolater
       this.requestId = requestAnimationFrame(this.animation);
