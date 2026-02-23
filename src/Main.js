@@ -163,7 +163,7 @@ let Main = function () {
 
     rasterProj.init(this.gl);
     this.mapView = new MapView(this.gl, rasterProj, canvasSize, tile_opts, cache_opts);
-    this.setProjCenter(this.viewStatus.lam0, this.viewStatus.phi0);
+    this.mapView.setProjCenter(this.viewStatus.lam0, this.viewStatus.phi0);
 
     await this.setLayer();
 
@@ -303,8 +303,8 @@ let Main = function () {
     // console.log(`Setting query params.${this.viewStatus.lam0}, ${this.viewStatus.phi0}, ${this.viewStatus.zoomScale}`);
     let params = new URLSearchParams(window.location.search);
     params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
-    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(2)); // radians to degrees
-    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(2)); // radians to degrees
+    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(4)); // radians to degrees
+    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(4)); // radians to degrees
     window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   }
 
