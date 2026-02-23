@@ -81,7 +81,7 @@ let Main = function () {
     let currPos;
     if (this.viewStatus.interpolater != null) { // Interpolater is running
       currPos = this.viewStatus.interpolater.getPos(currTime);
-      this.mapView.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
+      this.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
       if (this.viewStatus.interpolater.isFinished()) { // Interpolater finished
         this.viewStatus.interpolater = null;
         getNewTiles = true;
@@ -163,7 +163,7 @@ let Main = function () {
 
     rasterProj.init(this.gl);
     this.mapView = new MapView(this.gl, rasterProj, canvasSize, tile_opts, cache_opts);
-    this.mapView.setProjCenter(this.viewStatus.lam0, this.viewStatus.phi0);
+    this.setProjCenter(this.viewStatus.lam0, this.viewStatus.phi0);
 
     await this.setLayer();
 
@@ -177,6 +177,16 @@ let Main = function () {
     cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
     // console.log("Canvas resized to: " + width + " x " + height);
+  };
+
+  this.setProjCenter = (lam0, phi0) => {
+    if (lam0 != this.viewStatus.lam0 || phi0 !== this.viewStatus.phi0) {
+      if (lam0 < -Math.PI) lam0 += (Math.PI * 2);
+      if (lam0 > Math.PI) lam0 -= (Math.PI * 2);
+      this.viewStatus.lam0 = lam0;
+      this.viewStatus.phi0 = phi0;
+      this.mapView.setProjCenter(lam0, phi0);
+    }
   };
 
   this.setTileLevel = () => {

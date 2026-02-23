@@ -31,7 +31,7 @@ export const Handlers = {
           let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + (1 / deltaPanRate), Math.PI / 2.0), -Math.PI / 2.0);
-          this.mapView.setProjCenter(curr_lam_phi.lambda, newPhi0);
+          this.setProjCenter(curr_lam_phi.lambda, newPhi0);
         }
         break;
       case "ArrowDown":
@@ -39,7 +39,7 @@ export const Handlers = {
           let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi - (1 / deltaPanRate), Math.PI / 2.0), -Math.PI / 2.0);
-          this.mapView.setProjCenter(curr_lam_phi.lambda, newPhi0);
+          this.setProjCenter(curr_lam_phi.lambda, newPhi0);
         }
         break;
       case "ArrowLeft":
@@ -47,9 +47,7 @@ export const Handlers = {
           let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda - (1 / deltaPanRate);
-          if (newLam0 < -Math.PI) newLam0 += (Math.PI * 2);
-          if (newLam0 > Math.PI) newLam0 -= (Math.PI * 2);
-          this.mapView.setProjCenter(newLam0, curr_lam_phi.phi);
+          this.setProjCenter(newLam0, curr_lam_phi.phi);
         }
         break;
       case "ArrowRight":
@@ -57,9 +55,7 @@ export const Handlers = {
           let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda + (1 / deltaPanRate);
-          if (newLam0 < -Math.PI) newLam0 += (Math.PI * 2);
-          if (newLam0 > Math.PI) newLam0 -= (Math.PI * 2);
-          this.mapView.setProjCenter(newLam0, curr_lam_phi.phi);
+          this.setProjCenter(newLam0, curr_lam_phi.phi);
         }
         break;
       default:
@@ -123,11 +119,7 @@ export const Handlers = {
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda - deltaX;
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0);
-          this.viewStatus.lam0 = newLam0;
-          if (this.viewStatus.lam0 < -Math.PI) this.viewStatus.lam0 += (Math.PI * 2);
-          if (this.viewStatus.lam0 > Math.PI) this.viewStatus.lam0 -= (Math.PI * 2);
-          this.viewStatus.phi0 = newPhi0;
-          this.mapView.setProjCenter(newLam0, newPhi0);
+          this.setProjCenter(newLam0, newPhi0);
         }
         this.viewStatus.dragPrevPos = canv_xy;
       }
@@ -196,11 +188,7 @@ export const Handlers = {
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda - deltaX;
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0);
-          this.viewStatus.lam0 = newLam0;
-          if (this.viewStatus.lam0 < -Math.PI) this.viewStatus.lam0 += (Math.PI * 2);
-          if (this.viewStatus.lam0 > Math.PI) this.viewStatus.lam0 -= (Math.PI * 2);
-          this.viewStatus.phi0 = newPhi0;
-          this.mapView.setProjCenter(newLam0, newPhi0);
+          this.setProjCenter(newLam0, newPhi0);
         }
         this.viewStatus.dragPrevPos = canv_xy;
       }
