@@ -160,6 +160,7 @@ MapView.prototype.placeCities_ = function (cityList) {
   const rect = this.cityDiv.getBoundingClientRect();
   this.cityList = cityList || [];
   for (let city of this.cityList) {
+    let fontSize = -0.06 * city.level + 1.2; // Adjust font size from 0.6 to 1.2em based on city level 0-10
     let { x, y } = this.rasterProj.projection.forward(
       city.longitude * Math.PI / 180,
       city.latitude * Math.PI / 180
@@ -172,6 +173,7 @@ MapView.prototype.placeCities_ = function (cityList) {
     worddiv.classList.add(this.cityFontColor); // for css
     worddiv.style.left = `${x}px`;
     worddiv.style.top = `${y}px`;
+    worddiv.style.fontSize = `${fontSize}em`;
 
     worddiv.textContent = city.name;
     this.cityDiv.appendChild(worddiv);
