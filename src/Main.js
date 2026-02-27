@@ -45,7 +45,7 @@ let Main = function () {
   var locat = 2;
   [this.viewStatus.lam0, this.viewStatus.phi0] = locations[locat];
 
-  this.zoomMin = 10.0;
+  this.zoomMin = 0.1;
   this.zoomMax = 3e+6;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.ringRadius = 0.000001; // radius of flat center disk in radians // 0.00001

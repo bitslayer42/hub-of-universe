@@ -80,21 +80,21 @@ export const Handlers = {
   },
 
   getPanRate(zoomScale) {
-    // how far should we pan given current zoom level?    
+    // return higher numbers to move slower 
     if (zoomScale < 1) {
       return 100;
     } else if (zoomScale < 10) {
       return 300;
     } else if (zoomScale < 100) {
       return 500;
-    } else if (zoomScale < 1000) {
-      return 1000;
-    } else if (zoomScale < 10000) {
-      return 10000;
-    } else if (zoomScale < 100000) {
-      return 50000;
+    } else if (zoomScale < 1_000) {
+      return 1_000;
+    } else if (zoomScale < 10_000) {
+      return 10_000;
+    } else if (zoomScale < 100_000) {
+      return 50_000;
     } else {
-      return zoomScale;
+      return zoomScale * 3;
     }
   },
 
