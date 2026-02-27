@@ -98,7 +98,8 @@ MapView.prototype.render = function (getNewTiles) {
     this.requestImages_(this.tileInfos);
   }
   this.render_(this.tileInfos);
-}
+  this.showCities_(getNewTiles);
+};
 
 //  TODO この実装の詳細は別の場所にあるべきか Should this implementation's detail be in a different location?
 MapView.prototype.createTexture = function (img) {
@@ -118,18 +119,18 @@ MapView.prototype.createTexture = function (img) {
   return tex;
 };
 
-MapView.prototype.showCities_ = async function () {
+MapView.prototype.showCities_ = async function (getNewTiles) {
   let lat0 = (this.phi0 * 180 / Math.PI).toFixed(2); // convert to degrees
   let lon0 = (this.lam0 * 180 / Math.PI).toFixed(2); // convert to degrees
   let mapkey = lat0 + "," + lon0 + "," + this.currTileLevel;
-  if (!this.cityCache.has(mapkey)) {
-    this.cityCache.put(mapkey, null); // placeholder to indicate loading
+  if (!this.cityCache.has(mapkey) && getNewTiles) {
+    // this.cityCache.put(mapkey, null); // placeholder to indicate loading
     this.requestCities_(mapkey, lat0, lon0, this.currTileLevel);
     return;
   }
   this.cityCache.get(mapkey, lat0, lon0, this.currTileLevel);
   this.placeCities();
-}
+};
 
 MapView.prototype.requestCities_ = function (mapkey, lat0, lon0, tileLevel) {
   let api_key = import.meta.env.VITE_HUB_API_KEY;
@@ -142,7 +143,7 @@ MapView.prototype.requestCities_ = function (mapkey, lat0, lon0, tileLevel) {
   fetch(`${import.meta.env.VITE_CITIES_URL}?${params}`, {
     method: "GET",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "text/plain"
     }
   })
     .then(response => response.json())
@@ -241,7 +242,6 @@ MapView.prototype.render_ = function () {
   if (0 < targetTextures.length) {
     this.rasterProj.renderTextures(targetTextures);
   }
-  this.showCities_();
 };
 
 

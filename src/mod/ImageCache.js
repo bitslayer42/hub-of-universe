@@ -20,7 +20,7 @@ class LRUCache {
     } else {
       this.cache.set(key, value);
     }
-    // console.log("cache size", this.cache.size);
+    // console.log("cache size", this.cache.size, key);
   }
 
   has(key) {

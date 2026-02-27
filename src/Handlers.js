@@ -13,7 +13,8 @@ export const Handlers = {
     this.selectedLayer = event.target.value;
     await this.setLayer();
     await this.init(this.rasterProj);
-    this.animation();
+    this.requestId = requestAnimationFrame(this.animation);
+    this.mapView.render(true);
   },
 
   handleKeydown(event) {
