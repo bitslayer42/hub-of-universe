@@ -127,7 +127,8 @@ MapView.prototype.showCities_ = async function () {
     this.requestCities_(mapkey, lat0, lon0, this.currTileLevel);
     return;
   }
-  this.placeCities_(this.cityCache.get(mapkey, lat0, lon0, this.currTileLevel));
+  this.cityCache.get(mapkey, lat0, lon0, this.currTileLevel);
+  this.placeCities();
 }
 
 MapView.prototype.requestCities_ = function (mapkey, lat0, lon0, tileLevel) {
@@ -151,14 +152,13 @@ MapView.prototype.requestCities_ = function (mapkey, lat0, lon0, tileLevel) {
     })
     .catch(error => {
       console.error("Error fetching cities:", error);
-      this.cityList = [];
+      // this.cityList = [];
     });
 };
 
-MapView.prototype.placeCities_ = function (cityList) {
+MapView.prototype.placeCities = function () {
   this.cityDiv.innerHTML = '';
   const rect = this.cityDiv.getBoundingClientRect();
-  this.cityList = cityList || [];
   for (let city of this.cityList) {
     let fontSize = -0.06 * city.level + 1.2; // Adjust font size from 0.6 to 1.2em based on city level 0-10
     let { x, y } = this.rasterProj.projection.forward(
