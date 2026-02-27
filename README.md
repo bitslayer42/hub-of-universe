@@ -38,6 +38,8 @@ Run:
 
     VITE_CITIES_URL=https://api.hubofuniverse.com/cities
 
+    VITE_GEOLOCATION_KEY=
+    
 Variables are in .env.development for local dev and manually entered in the Cloudflare console under "Build secrets" for prod.
 
 ## Build config in Cloudflare console

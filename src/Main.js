@@ -6,6 +6,7 @@ import { Handlers } from './Handlers.js';
 let Main = function () {
   let mapbox_access_token = import.meta.env.VITE_MAPBOX_KEY;
   let google_access_token = import.meta.env.VITE_GOOGLE_KEY;
+  let geolocation_api_key = import.meta.env.VITE_GEOLOCATION_KEY;
   this.interpolateTimeSpan = 1e3;
   this.gl = null;
   this.canvas = document.querySelector('#webglCanvas');
@@ -59,6 +60,8 @@ let Main = function () {
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
     await this.resizeCanvas(this.canvas);
+
+    await this.getUsersLocation(false);
 
     this.rasterProj = new RasterProj();
     this.rasterProj.setScale(this.viewStatus.zoomScale);
@@ -308,8 +311,38 @@ let Main = function () {
     window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
   }
 
-  // Assign handler methods to this instance
-  Object.assign(this, Handlers);
+  this.getUsersLocation = async (getPrecise = false) => {
+    if(!getPrecise) {
+      // Use IP-based geolocation for a rough location (faster and doesn't require permission)
+      try {
+        const response = await fetch(`https://geolocation-db.com/json/${geolocation_api_key}`);
+        const data = await response.json();
+        this.viewStatus.lam0 = data.longitude * 0.0174533; // degrees to radians
+        this.viewStatus.phi0 = data.latitude * 0.0174533; // degrees to radians
+        // console.log(`IP-based location: ${data.latitude}, ${data.longitude}`);
+      } catch (error) {
+        console.error('Error fetching IP-based geolocation:', error);
+      }
+    } else if (navigator.geolocation) {
+      // Use precise geolocation if permission is granted
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.viewStatus.lam0 = position.coords.longitude * 0.0174533; // degrees to radians
+          this.viewStatus.phi0 = position.coords.latitude * 0.0174533; // degrees to radians
+          // console.log(`Precise location: ${position.coords.latitude}, ${position.coords.longitude}`);
+        },
+        (error) => {
+          console.warn(`Geolocation error (${error.code}): ${error.message}`);
+        }
+      );
+    } else {
+      console.warn("Geolocation is not supported by this browser.");
+    }
+  };
+//   this.requestId = requestAnimationFrame(this.animation);
+
+    // Assign handler methods to this instance
+    Object.assign(this, Handlers);
 };
 
 new Main();
