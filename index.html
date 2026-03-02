@@ -12,43 +12,44 @@
 
 <body>
     <div class="flex-outer">
+
+        <a href="/">
+            <div class="title-text">
+                <div>Hub of</div>
+                <div>Universe</div>
+            </div>
+        </a>
+        <div class="messages"></div>
         <div class="flex-inner">
             <div class="canv">
                 <div class="canvasbox">
-                    <a href="/">
-                        <div class="title-text">
-                            <div>Hub of</div>
-                            <div>Universe</div>
-                        </div>
-                    </a>
-                    <div class="messages"></div>
                     <canvas id="webglCanvas" width="1000" height="1000"></canvas>
-                    <div class="controls">
-                        <p>
-                            <label>
-                                <button id="myLocation">
-                                    <img src="./src/mod/mylocation.png">My location
-                                </button> 
-                            </label>
-                        </p>
-                        <p>
-                            <label>Display Labels<input type="checkbox" id="showCities" checked /></label>
-                        </p>
-                        <p>
-                            <label>Choose map
-                                <select id="layer">
-                                    <option value="mapbox_satellite" selected>Mapbox Satellite</option>
-                                    <option value="google_satellite">Google Satellite</option>
-                                    <option value="google_roadmap">Google Roadmap</option>
-                                </select>
-                            </label>
-                        </p>
-                    </div>
-                    <div class="attribution"></div>
                 </div>
                 <div id="citydiv"></div>
             </div>
         </div>
+        <div class="controls">
+            <p>
+                <label>
+                    <button id="myLocation">
+                        <img src="./src/mod/mylocation.png">My location
+                    </button>
+                </label>
+            </p>
+            <p>
+                <label>Display Labels<input type="checkbox" id="showCities" checked /></label>
+            </p>
+            <p>
+                <label>Choose map
+                    <select id="layer">
+                        <option value="mapbox_satellite" selected>Mapbox Satellite</option>
+                        <option value="google_satellite">Google Satellite</option>
+                        <option value="google_roadmap">Google Roadmap</option>
+                    </select>
+                </label>
+            </p>
+        </div>
+        <div class="attribution"></div>
     </div>
     <script>
         let canvas = document.querySelector('#webglCanvas');

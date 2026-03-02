@@ -65,6 +65,7 @@ html {
     font: 2em "Lato", sans-serif;
     color: white;
     padding: 5px;
+    z-index: 1;
 }
 
 .messages {
@@ -79,6 +80,7 @@ html {
     position: absolute;
     font: 1em "Lato", sans-serif;
     color: white;
+    left: 5px;
     bottom: 5px;
 }
 
@@ -100,7 +102,6 @@ html {
 }
 
 #webglCanvas {
-    /* position: absolute; */
     width: 100%;
     height: 100%;
     display: block;
@@ -108,7 +109,6 @@ html {
     touch-action: none;
 }
 
-/* From Uiverse.io by e-coders */
 button {
     appearance: none;
     background-color: transparent;
@@ -124,7 +124,7 @@ button {
     min-height: 3.75em;
     min-width: 0;
     outline: none;
-    padding: 0.8em 1em;
+    padding: 0 1em;
     text-align: center;
     text-decoration: none;
     transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
@@ -153,22 +153,6 @@ button:active {
 @media (max-aspect-ratio: 1/1) {
     .flex-inner {
         writing-mode: horizontal-tb;
-    }
-
-    .controls {
-        bottom: -25px;
-    }
-
-    .attribution {
-        bottom: -55px;
-    }
-
-    .title-text {
-        top: -60px;
-    }
-
-    .messages {
-        top: -30px;
     }
 }
 
