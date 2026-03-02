@@ -12,9 +12,20 @@ export const Handlers = {
   handleLayerChange: async function (event) {
     this.selectedLayer = event.target.value;
     await this.setLayer();
-    await this.init(this.rasterProj);
     this.requestId = requestAnimationFrame(this.animation);
-    this.mapView.render(true);
+    this.mapView.render(true, this.displayCities);
+  },
+
+  handleShowCitiesChange: async function (event) {
+    this.displayCities = event.target.checked;
+    this.mapView.render(true, this.displayCities);
+  },
+
+  handleMyLocationClick: async function () {
+    let lam_phi = await this.getUsersLocation(true);
+    if (lam_phi) { 
+      this.gotoLocation(lam_phi);
+    }
   },
 
   handleKeydown(event) {
@@ -130,7 +141,7 @@ export const Handlers = {
   handleMouseUp(event) {
     this.viewStatus.drag = false;
     this.viewStatus.dragPrevPos = null;
-    this.mapView.render(true);
+    this.mapView.render(true, this.displayCities);
   },
 
   ///////////////////////////////////////////////////////////////
@@ -264,7 +275,7 @@ export const Handlers = {
     if (event.touches.length === 0) {
       this.viewStatus.drag = false;
       this.viewStatus.dragPrevPos = null;
-      this.mapView.render(true);
+      this.mapView.render(true, this.displayCities);
     }
   },
 
@@ -278,13 +289,17 @@ export const Handlers = {
       // console.log(`Double tap at canvas coordinates: (${canv_xy[0]}, ${canv_xy[1]})`);
       event.preventDefault();
       let lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
-      this.viewStatus.lam0 = lam_phi.lambda;
-      if (this.viewStatus.lam0 < -Math.PI) this.viewStatus.lam0 += (Math.PI * 2);
-      if (this.viewStatus.lam0 > Math.PI) this.viewStatus.lam0 -= (Math.PI * 2);
-      this.viewStatus.phi0 = lam_phi.phi;
-      this.viewStatus.targetLambdaPhi = lam_phi; // set target lambda, phi for interpolater
-      this.requestId = requestAnimationFrame(this.animation);
+      this.gotoLocation(lam_phi);
     }
+  },
+
+  gotoLocation(lam_phi) {
+    this.viewStatus.lam0 = lam_phi.lambda;
+    if (this.viewStatus.lam0 < -Math.PI) this.viewStatus.lam0 += (Math.PI * 2);
+    if (this.viewStatus.lam0 > Math.PI) this.viewStatus.lam0 -= (Math.PI * 2);
+    this.viewStatus.phi0 = lam_phi.phi;
+    this.viewStatus.targetLambdaPhi = lam_phi; // set target lambda, phi for interpolater
+    this.requestId = requestAnimationFrame(this.animation);
   },
 
   handleContextLost(event) {

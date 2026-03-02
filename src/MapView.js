@@ -91,14 +91,18 @@ MapView.prototype.requestImagesIfNecessary = function () {
 };
 
 // Called from animation
-MapView.prototype.render = function (getNewTiles) {
+MapView.prototype.render = function (getNewTiles, showCities) {
   if (this.getURL == null) return;
   if (getNewTiles) {
     this.getTileInfos_();
     this.requestImages_(this.tileInfos);
   }
   this.render_(this.tileInfos);
-  this.showCities_(getNewTiles);
+  if (showCities) {
+    this.showCities_(getNewTiles);
+  } else {
+    this.clearCities();
+  }
 };
 
 //  TODO この実装の詳細は別の場所にあるべきか Should this implementation's detail be in a different location?
@@ -155,6 +159,10 @@ MapView.prototype.requestCities_ = function (mapkey, lat0, lon0, tileLevel) {
       console.error("Error fetching cities:", error);
       // this.cityList = [];
     });
+};
+
+MapView.prototype.clearCities = function () {
+  this.cityDiv.innerHTML = '';
 };
 
 MapView.prototype.placeCities = function () {

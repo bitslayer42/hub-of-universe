@@ -29,6 +29,10 @@ let Main = function () {
   };
   this.layerSelectBox = document.querySelector('select#layer');
   this.selectedLayer = this.layerSelectBox.value;
+  this.showCitiesCheckBox = document.querySelector('input#showCities');
+  this.displayCities = this.showCitiesCheckBox.checked;
+  this.mylocationButton = document.querySelector('button#myLocation');
+
   this.googleSessions = [];
 
   var locations = [ // lat, log * 0.0174533
@@ -53,7 +57,7 @@ let Main = function () {
 
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
-  this.animationFramesInit = 80; // number of frames to animate before stopping
+  this.animationFramesInit = 100; // number of frames to animate before pausing
   this.animationFrames = this.animationFramesInit;
   this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere <br>to go there fast!" }, 180000);
 
@@ -61,11 +65,15 @@ let Main = function () {
     this.getQueryParams(); // check for url params
     await this.resizeCanvas(this.canvas);
 
-    await this.getUsersLocation(false);
+    let lam_phi = await this.getUsersLocation(false);
+    if (lam_phi) {
+      this.viewStatus.lam0 = lam_phi.lambda;
+      this.viewStatus.phi0 = lam_phi.phi;
+    }
 
     this.rasterProj = new RasterProj();
     this.rasterProj.setScale(this.viewStatus.zoomScale);
-    await this.startup(this.rasterProj); // sets up this.canvas, webgl, and hammer, and calls init
+    await this.startup(this.rasterProj); // sets up this.canvas, webgl, and calls init
     this.animation(); // starts animation
   });
 
@@ -108,15 +116,16 @@ let Main = function () {
       this.prevScale = this.viewStatus.zoomScale;
       getNewTiles = true;
     }
-    this.mapView.render(getNewTiles);
+    this.mapView.render(getNewTiles, this.displayCities);
     this.animationFrames--;
     // console.log("Animation frames left: " + this.animationFrames);
     if (this.animationFrames > 0) {
+      cancelAnimationFrame(this.requestId);
       this.requestId = requestAnimationFrame(this.animation);
     } else {
       // console.log("Animation finished.");
       this.animationFrames = this.animationFramesInit; // reset for next time
-      this.mapView.render(true);
+      this.mapView.render(true, this.displayCities);
       this.setQueryParams();
     }
   };
@@ -130,6 +139,8 @@ let Main = function () {
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost.bind(this), false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored.bind(this), false);
     this.layerSelectBox.addEventListener('change', this.handleLayerChange.bind(this), false);
+    this.showCitiesCheckBox.addEventListener('change', this.handleShowCitiesChange.bind(this), false);
+    this.mylocationButton.addEventListener('click', this.handleMyLocationClick.bind(this), false);
 
     // Mouse and touch event listeners
     this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this), false);
@@ -312,37 +323,38 @@ let Main = function () {
   }
 
   this.getUsersLocation = async (getPrecise = false) => {
-    if(!getPrecise) {
+    if (!getPrecise) {
       // Use IP-based geolocation for a rough location (faster and doesn't require permission)
       try {
         const response = await fetch(`https://geolocation-db.com/json/${geolocation_api_key}`);
         const data = await response.json();
-        this.viewStatus.lam0 = data.longitude * 0.0174533; // degrees to radians
-        this.viewStatus.phi0 = data.latitude * 0.0174533; // degrees to radians
-        // console.log(`IP-based location: ${data.latitude}, ${data.longitude}`);
+        return { lambda: data.longitude * 0.0174533, phi: data.latitude * 0.0174533 };
       } catch (error) {
         console.error('Error fetching IP-based geolocation:', error);
+        return null;
       }
     } else if (navigator.geolocation) {
       // Use precise geolocation if permission is granted
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          this.viewStatus.lam0 = position.coords.longitude * 0.0174533; // degrees to radians
-          this.viewStatus.phi0 = position.coords.latitude * 0.0174533; // degrees to radians
-          // console.log(`Precise location: ${position.coords.latitude}, ${position.coords.longitude}`);
-        },
-        (error) => {
-          console.warn(`Geolocation error (${error.code}): ${error.message}`);
-        }
-      );
+      const { promise, resolve, reject } = Promise.withResolvers();
+      let lam_phi =
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            resolve({ lambda: position.coords.longitude * 0.0174533, phi: position.coords.latitude * 0.0174533 });
+          },
+          (error) => {
+            console.warn(`Geolocation error (${error.code}): ${error.message}`);
+            reject(error);
+          }
+        );
+      return promise;
     } else {
       console.warn("Geolocation is not supported by this browser.");
+      return null;
     }
   };
-//   this.requestId = requestAnimationFrame(this.animation);
 
-    // Assign handler methods to this instance
-    Object.assign(this, Handlers);
+  // Assign handler methods to this instance
+  Object.assign(this, Handlers);
 };
 
 new Main();

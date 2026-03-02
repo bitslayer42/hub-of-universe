@@ -8,7 +8,8 @@ html {
     align-items: center;
     background-color: black;
     overscroll-behavior: none;
-    overflow: hidden; /* prevents scrolling */
+    overflow: hidden;
+    /* prevents scrolling */
 }
 
 *,
@@ -73,12 +74,16 @@ html {
     padding: 5px;
     right: 5px;
 }
+
 .controls {
     position: absolute;
     font: 1em "Lato", sans-serif;
     color: white;
-    padding: 5px;
     bottom: 5px;
+}
+
+.controls p {
+    padding: 2px;
 }
 
 .attribution {
@@ -103,19 +108,65 @@ html {
     touch-action: none;
 }
 
+/* From Uiverse.io by e-coders */
+button {
+    appearance: none;
+    background-color: transparent;
+    border: 0.125em solid #1A1A1A;
+    border-radius: 0.9375em;
+    box-sizing: border-box;
+    color: white;
+    cursor: pointer;
+    display: inline-block;
+    font: 1em "Lato", sans-serif;
+    line-height: normal;
+    margin: 0;
+    min-height: 3.75em;
+    min-width: 0;
+    outline: none;
+    padding: 0.8em 1em;
+    text-align: center;
+    text-decoration: none;
+    transition: all 300ms cubic-bezier(.23, 1, 0.32, 1);
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: manipulation;
+    will-change: transform;
+}
+
+button:disabled {
+    pointer-events: none;
+}
+
+button:hover {
+    color: #fff;
+    background-color: #1A1A1A;
+    box-shadow: rgba(0, 0, 0, 0.25) 0 8px 15px;
+    transform: translateY(-2px);
+}
+
+button:active {
+    box-shadow: none;
+    transform: translateY(0);
+}
+
 @media (max-aspect-ratio: 1/1) {
     .flex-inner {
         writing-mode: horizontal-tb;
     }
-    .controls{
+
+    .controls {
         bottom: -25px;
     }
-    .attribution{
+
+    .attribution {
         bottom: -55px;
     }
+
     .title-text {
         top: -60px;
     }
+
     .messages {
         top: -30px;
     }
