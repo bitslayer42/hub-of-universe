@@ -87,14 +87,14 @@ ProjMath.normalizeLambda = function(lam) {
 };
 
 
-ProjMath.neighborPoint = function(pt1, pt2) {
-  if ( ProjMath.EPSILON <= Math.abs(pt1.phi - pt2.phi) ) {
-    return false;
-  }
-  let lam1 = ProjMath.normalizeLambda(pt1.lambda);
-  let lam2 = ProjMath.normalizeLambda(pt2.lambda);
-  return Math.abs(lam1 - lam2) < ProjMath.EPSILON;
-};
+// ProjMath.neighborPoint = function(pt1, pt2) {
+//   if ( ProjMath.EPSILON <= Math.abs(pt1.phi - pt2.phi) ) {
+//     return false;
+//   }
+//   let lam1 = ProjMath.normalizeLambda(pt1.lambda);
+//   let lam2 = ProjMath.normalizeLambda(pt2.lambda);
+//   return Math.abs(lam1 - lam2) < ProjMath.EPSILON;
+// };
 
 
 ProjMath.sphericalDistance = function(pt1, pt2) {

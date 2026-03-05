@@ -21,13 +21,6 @@ export const Handlers = {
     this.mapView.render(true, this.displayCities);
   },
 
-  handleMyLocationClick: async function () {
-    let lam_phi = await this.getUsersLocation(true);
-    if (lam_phi) { 
-      this.gotoLocation(lam_phi);
-    }
-  },
-
   handleKeydown(event) {
     switch (event.key) {
       case '=':
@@ -280,6 +273,19 @@ export const Handlers = {
   },
 
   ///////////////////////////////////////////////////////////////
+  handleMyLocationClick: async function (event) {
+    let lam_phi = await this.getUsersLocation(true);
+    if (lam_phi) {
+      event.preventDefault();
+      let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.viewStatus.zoomScale };
+      this.gotoLocation(lam_phi_zoom);
+      setTimeout(() => {
+      lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.zoomMax };
+      this.gotoLocation(lam_phi_zoom);
+      }, 1000); // zoom in more after a delay to ensure tiles are loaded
+    }
+  },
+
   handleDoubleClick(event) {
     clearTimeout(this.messageTimeoutID); // clear any existing message timeout
     this.messagesBox.innerHTML = ""; // clear messages on double click
@@ -289,16 +295,14 @@ export const Handlers = {
       // console.log(`Double tap at canvas coordinates: (${canv_xy[0]}, ${canv_xy[1]})`);
       event.preventDefault();
       let lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
-      this.gotoLocation(lam_phi);
+      let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.viewStatus.zoomScale };
+      this.gotoLocation(lam_phi_zoom);
     }
   },
 
-  gotoLocation(lam_phi) {
-    this.viewStatus.lam0 = lam_phi.lambda;
-    if (this.viewStatus.lam0 < -Math.PI) this.viewStatus.lam0 += (Math.PI * 2);
-    if (this.viewStatus.lam0 > Math.PI) this.viewStatus.lam0 -= (Math.PI * 2);
-    this.viewStatus.phi0 = lam_phi.phi;
-    this.viewStatus.targetLambdaPhi = lam_phi; // set target lambda, phi for interpolater
+  gotoLocation(lam_phi_zoom) {
+    this.viewStatus.targetLambdaPhiZoom = lam_phi_zoom; // set target lambda, phi for interpolater
+    cancelAnimationFrame(this.requestId);
     this.requestId = requestAnimationFrame(this.animation);
   },
 

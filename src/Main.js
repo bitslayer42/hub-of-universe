@@ -23,7 +23,7 @@ let Main = function () {
     lastTapTime: 0,
     lastTapPos: null,
     zoomScale: 3e+2, // zoomMin >= zoomScale >= zoomMax
-    targetLambdaPhi: null,
+    targetLambdaPhiZoom: null,
     interpolater: null,
     currTileLevel: null,
   };
@@ -57,7 +57,7 @@ let Main = function () {
 
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
-  this.animationFramesInit = 100; // number of frames to animate before pausing
+  this.animationFramesInit = 80; // number of frames to animate before pausing
   this.animationFrames = this.animationFramesInit;
   this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere <br>to go there fast!" }, 180000);
 
@@ -92,22 +92,23 @@ let Main = function () {
     let currPos;
     if (this.viewStatus.interpolater != null) { // Interpolater is running
       currPos = this.viewStatus.interpolater.getPos(currTime);
-      this.setProjCenter(currPos.lp.lambda, currPos.lp.phi);
+      this.setProjCenter(currPos.lambda, currPos.phi);
+      this.viewStatus.zoomScale = currPos.zoom;
+      this.rasterProj.setScale(this.viewStatus.zoomScale);
       if (this.viewStatus.interpolater.isFinished()) { // Interpolater finished
         this.viewStatus.interpolater = null;
         getNewTiles = true;
       };
-    } else if (this.viewStatus.targetLambdaPhi != null) { // new lambda phi requested, start up interpolater
+    } else if (this.viewStatus.targetLambdaPhiZoom != null) { // new lambda phi requested, start up interpolater
       let currLambdaPhi = this.mapView.getProjCenter();
-      let targLambdaPhi = this.viewStatus.targetLambdaPhi;
+      let currLambdaPhiZoom = { lambda: currLambdaPhi.lambda, phi: currLambdaPhi.phi, zoom: this.viewStatus.zoomScale };
+      let targLambdaPhiZoom = this.viewStatus.targetLambdaPhiZoom;
       this.viewStatus.interpolater = Interpolater.create(
-        currLambdaPhi,
-        targLambdaPhi,
-        [0, 0],
-        [0, 0],
+        currLambdaPhiZoom,
+        targLambdaPhiZoom,
         this.interpolateTimeSpan
       );
-      this.viewStatus.targetLambdaPhi = null;
+      this.viewStatus.targetLambdaPhiZoom = null;
     }
     // zoom in/out
     if (this.prevScale != this.viewStatus.zoomScale) {
@@ -118,14 +119,16 @@ let Main = function () {
     }
     this.mapView.render(getNewTiles, this.displayCities);
     this.animationFrames--;
-    // console.log("Animation frames left: " + this.animationFrames);
+    console.log("Animation frames left: " + this.animationFrames);
     if (this.animationFrames > 0) {
       cancelAnimationFrame(this.requestId);
       this.requestId = requestAnimationFrame(this.animation);
     } else {
-      // console.log("Animation finished.");
+      console.log("Animation finished.");
       this.animationFrames = this.animationFramesInit; // reset for next time
-      this.mapView.render(true, this.displayCities);
+      setTimeout(() => {
+        this.mapView.render(true, this.displayCities);
+      }, 1000); // render one more time after a delay to ensure tiles are loaded
       this.setQueryParams();
     }
   };
