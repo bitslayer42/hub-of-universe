@@ -74,6 +74,7 @@ html {
     color: white;
     padding: 5px;
     right: 5px;
+    z-index: 1;
 }
 
 .controls {
