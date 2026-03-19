@@ -12,7 +12,7 @@ export const Handlers = {
   handleLayerChange: async function (event) {
     this.selectedLayer = event.target.value;
     await this.setLayer();
-    this.requestId = requestAnimationFrame(this.animation);
+    this.requestIds.push(requestAnimationFrame(this.animation));
     this.mapView.render(true, this.displayCities);
   },
 
@@ -67,8 +67,8 @@ export const Handlers = {
         break;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    cancelAnimationFrame(this.requestId);
-    this.requestId = requestAnimationFrame(this.animation);
+    this.clearRequestIds();
+    this.requestIds.push(requestAnimationFrame(this.animation));
   },
 
   handleWheel(event) {
@@ -79,8 +79,8 @@ export const Handlers = {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    cancelAnimationFrame(this.requestId);
-    this.requestId = requestAnimationFrame(this.animation);
+    this.clearRequestIds();
+    this.requestIds.push(requestAnimationFrame(this.animation));
   },
 
   getPanRate(zoomScale) {
@@ -108,7 +108,8 @@ export const Handlers = {
     if (canv_xy) {
       this.viewStatus.drag = true;
       this.viewStatus.dragPrevPos = canv_xy;
-      this.requestId = requestAnimationFrame(this.animation);
+      this.requestIds.push(requestAnimationFrame(this.animation));
+      this.animationFrames = -1; // keep animating until mouse up to allow for smooth dragging, reset in animation loop when done
     }
   },
 
@@ -135,6 +136,7 @@ export const Handlers = {
     this.viewStatus.drag = false;
     this.viewStatus.dragPrevPos = null;
     this.mapView.render(true, this.displayCities);
+    this.animationFrames = this.animationFramesInit; // reset
   },
 
   ///////////////////////////////////////////////////////////////
@@ -159,7 +161,7 @@ export const Handlers = {
       if (canv_xy) {
         this.viewStatus.drag = true;
         this.viewStatus.dragPrevPos = canv_xy;
-        this.requestId = requestAnimationFrame(this.animation);
+        this.requestIds.push(requestAnimationFrame(this.animation));
       }
     }
   },
@@ -178,8 +180,8 @@ export const Handlers = {
       }
       this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
       this.viewStatus.pinchPrevDistance = currentDistance;
-      cancelAnimationFrame(this.requestId);
-      this.requestId = requestAnimationFrame(this.animation);
+      this.clearRequestIds();
+      this.requestIds.push(requestAnimationFrame(this.animation));
     } else if (event.touches.length === 1 && this.viewStatus.drag) {
       // Single touch drag
       let touch = event.touches[0];
@@ -274,15 +276,11 @@ export const Handlers = {
 
   ///////////////////////////////////////////////////////////////
   handleMyLocationClick: async function (event) {
+    event.preventDefault();
     let lam_phi = await this.getUsersLocation(true);
     if (lam_phi) {
-      event.preventDefault();
-      let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.viewStatus.zoomScale };
+      let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.zoomMax };
       this.gotoLocation(lam_phi_zoom);
-      setTimeout(() => {
-      lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.zoomMax };
-      this.gotoLocation(lam_phi_zoom);
-      }, 1000); // zoom in more after a delay to ensure tiles are loaded
     }
   },
 
@@ -302,18 +300,18 @@ export const Handlers = {
 
   gotoLocation(lam_phi_zoom) {
     this.viewStatus.targetLambdaPhiZoom = lam_phi_zoom; // set target lambda, phi for interpolater
-    cancelAnimationFrame(this.requestId);
-    this.requestId = requestAnimationFrame(this.animation);
+    this.clearRequestIds();
+    this.requestIds.push(requestAnimationFrame(this.animation));
   },
 
   handleContextLost(event) {
     event.preventDefault();
-    cancelAnimationFrame(this.requestId);
+    this.clearRequestIds();
     this.mapView.resetImages();
   },
 
   handleContextRestored(event) {
     this.init(this.rasterProj);
-    this.requestId = requestAnimationFrame(this.animation);
+    this.requestIds.push(requestAnimationFrame(this.animation));
   }
 };

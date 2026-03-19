@@ -12,7 +12,7 @@ let Main = function () {
   this.canvas = document.querySelector('#webglCanvas');
   this.messagesBox = document.querySelector('.messages');
   this.mapView = null;
-  this.requestId = null;
+  this.requestIds = [];
   this.prevTime = null;
   this.prevScale = null;
   this.viewStatus = {
@@ -32,6 +32,7 @@ let Main = function () {
   this.showCitiesCheckBox = document.querySelector('input#showCities');
   this.displayCities = this.showCitiesCheckBox.checked;
   this.mylocationButton = document.querySelector('button#myLocation');
+  this.currYear = new Date().getFullYear();
 
   this.googleSessions = [];
 
@@ -57,7 +58,7 @@ let Main = function () {
 
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
-  this.animationFramesInit = 80; // number of frames to animate before pausing
+  this.animationFramesInit = 120; // number of frames to animate before pausing
   this.animationFrames = this.animationFramesInit;
   this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere <br>to go there fast!" }, 180000);
 
@@ -74,7 +75,7 @@ let Main = function () {
     this.rasterProj = new RasterProj();
     this.rasterProj.setScale(this.viewStatus.zoomScale);
     await this.startup(this.rasterProj); // sets up this.canvas, webgl, and calls init
-    this.animation(); // starts animation
+    this.requestIds.push(requestAnimationFrame(this.animation)); // starts animation
   });
 
   window.addEventListener('resize', async () => {
@@ -120,17 +121,20 @@ let Main = function () {
     this.mapView.render(getNewTiles, this.displayCities);
     this.animationFrames--;
     console.log("Animation frames left: " + this.animationFrames);
-    if (this.animationFrames > 0) {
-      cancelAnimationFrame(this.requestId);
-      this.requestId = requestAnimationFrame(this.animation);
+    if (this.animationFrames !== 0) {
+      // this.clearRequestIds();
+      this.requestIds.push(requestAnimationFrame(this.animation));
     } else {
       console.log("Animation finished.");
+      console.log("reqs", this.requestIds.length)
+      this.clearRequestIds();
       this.animationFrames = this.animationFramesInit; // reset for next time
-      setTimeout(() => {
-        this.mapView.render(true, this.displayCities);
-      }, 1000); // render one more time after a delay to ensure tiles are loaded
-      this.setQueryParams();
+      // setTimeout(() => {
+      this.mapView.render(true, this.displayCities);
+      // }, 1000); // render one more time after a delay to ensure tiles are loaded
+      // this.setQueryParams();
     }
+    this.setQueryParams();
   };
 
   this.startup = async (rasterProj) => {
@@ -191,8 +195,8 @@ let Main = function () {
   this.resizeCanvas = async (canvas) => {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    cancelAnimationFrame(this.requestId);
-    this.requestId = requestAnimationFrame(this.animation);
+    this.clearRequestIds();
+    this.requestIds.push(requestAnimationFrame(this.animation));
     // console.log("Canvas resized to: " + width + " x " + height);
   };
 
@@ -301,7 +305,7 @@ let Main = function () {
         return `https://api.mapbox.com/v4/mapbox.satellite/${z}/${x}/${y}.png?access_token=${mapbox_access_token}`;
       }
     } else if (this.selectedLayer.slice(0, 6) === "google") { // google_satellite, google_roadmap
-      attributionBox.innerHTML = `Map data @2025 Google`;
+      attributionBox.innerHTML = `Map data @${this.currYear} Google`;
       if (this.selectedLayer === "google_satellite") {
         this.mapView.setCityFontColor("white");
         sessionKey = this.googleSessions[0];
@@ -355,6 +359,11 @@ let Main = function () {
       return null;
     }
   };
+
+  this.clearRequestIds = () => {
+    this.requestIds.map(id => cancelAnimationFrame(id));
+    this.requestIds.length = 0; // clear array
+  }
 
   // Assign handler methods to this instance
   Object.assign(this, Handlers);

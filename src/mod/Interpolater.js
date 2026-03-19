@@ -61,7 +61,7 @@ Interpolater.prototype.getPos = function (currTime) {
   let currLPZ = {
     lambda: currLP.lambda,
     phi: currLP.phi,
-    zoom: MapMathUtils.lerp(this.zoomStart, this.zoomEnd, tm),
+    zoom: this.zoomEnd, // MapMathUtils.lerp(this.zoomStart, this.zoomEnd, tm),
   };
   return currLPZ;
 };
