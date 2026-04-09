@@ -119,7 +119,7 @@ let Main = function () {
     this.mapView.render(getNewTiles, this.displayCities);
     this.animationFrames--;
     // console.log("Animation frames left: " + this.animationFrames);
-    if (this.animationFrames > 0) {
+    if (!this.animationFrames == 0) {
       cancelAnimationFrame(this.requestId);
       this.requestId = requestAnimationFrame(this.animation);
     } else {

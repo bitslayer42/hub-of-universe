@@ -116,6 +116,7 @@ export const Handlers = {
       this.viewStatus.drag = true;
       this.viewStatus.dragPrevPos = canv_xy;
       this.requestId = requestAnimationFrame(this.animation);
+      this.animationFrames = -1; // keep animating until mouse up to allow for smooth dragging, reset in animation loop when done
     }
   },
 
