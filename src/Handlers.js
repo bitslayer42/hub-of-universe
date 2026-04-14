@@ -9,14 +9,14 @@ export const Handlers = {
     return [left, top];
   },
 
-  handleLayerChange: async function (event) {
+  handleLayerChange(event) {
     this.selectedLayer = event.target.value;
-    await this.setLayer();
+    this.setLayer();
     this.requestIds.push(requestAnimationFrame(this.animation));
     this.mapView.render(true, this.displayCities);
   },
 
-  handleShowCitiesChange: async function (event) {
+  handleShowCitiesChange(event) {
     this.displayCities = event.target.checked;
     this.mapView.render(true, this.displayCities);
   },
@@ -119,6 +119,7 @@ export const Handlers = {
       if (null != canv_xy) {
         if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
+          this.animationFrames = -1; // keep animating until mouse up to allow for smooth dragging, reset in animation loop when done
           let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaPanRate;
           let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaPanRate;
@@ -282,6 +283,14 @@ export const Handlers = {
       let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.zoomMax };
       this.gotoLocation(lam_phi_zoom);
     }
+  },
+
+  handleTitleClick: function (event) {
+    event.preventDefault();
+    let randomLambda = (Math.random() * 2 - 1) * Math.PI; // random lambda between -π and π
+    let randomPhi = (Math.random() * 2 - 1) * (Math.PI / 2); // random phi between -π/2 and π/2 
+    let lam_phi_zoom = { lambda: randomLambda, phi: randomPhi, zoom: 300 };
+    this.gotoLocation(lam_phi_zoom);
   },
 
   handleDoubleClick(event) {

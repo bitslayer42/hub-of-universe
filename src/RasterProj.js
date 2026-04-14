@@ -3,7 +3,7 @@ import { Projection } from './Projection.js';
 
 /* ------------------------------------------------------------ */
 
-const RasterProj = function () {
+const RasterProj = function (ringRadius) {
   this.shader_ = null;
   //
   this.backColor_ = { r: 0.0, g: 0.0, b: 0.0, a: 1.0 };
@@ -14,7 +14,7 @@ const RasterProj = function () {
   //
   this.numberOfPoints = 64;
   this.zoomScale = 0.01; // 0 > zoomScale >= 40
-  this.ringRadius = null; // radius of flat center disk in radians
+  this.ringRadius = ringRadius; // radius of flat center disk in radians
   this.flatRatio = null;    // ratio of projectedFlatRadius / flatRadius
 
 };
@@ -59,13 +59,14 @@ RasterProj.prototype.prepareRender = function (texCoords, viewRect) {
 };
 
 // c- Renders textures at locations specified in textureInfos
-RasterProj.prototype.renderTextures = function (textureInfos) {
+RasterProj.prototype.renderTextures = function (textureInfos, currLorem) {
+  console.log(currLorem, " --- RasterProj.renderTextures ---", textureInfos.length);
   for (let i = 0; i < textureInfos.length; ++i) {
     this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
 
     let texture = textureInfos[i][0];
     let region = textureInfos[i][1];
-    this.shader_.renderTexture(texture, region);
+    this.shader_.renderTexture(texture, region, currLorem);
   }
 };
 
@@ -81,19 +82,18 @@ RasterProj.prototype.setScale = function (zoomScale) {
 }
 
 // The center of the map is unprojected and is just displayed flat
-RasterProj.prototype.setFlatRatio = function (ringRadius) {
-  this.ringRadius = ringRadius;
+RasterProj.prototype.setFlatRatio = function () {
   let lambda = this.projection.lam0;
-  let phi = this.projection.phi0 + ringRadius; // a lambda, phi on the north edge of the flat disk
+  let phi = this.projection.phi0 + this.ringRadius; // a lambda, phi on the north edge of the flat disk
   let {x,y} = this.projection.forward(lambda, phi); // projected x,y of that point
-  this.flatRatio = y / ringRadius; // ratio of projectedFlatRadius / flatRadius
+  this.flatRatio = y / this.ringRadius; // ratio of projectedFlatRadius / flatRadius
   // console.log("setFlatRatio: ", { 
   //   lambda, phi, 
   //   lam0: this.projection.lam0, phi0: this.projection.phi0, 
   //   x, y, 
   //   zoom: this.zoomScale, 
-  //   ratio: y / ringRadius });
-}
+  //   ratio: y / this.ringRadius });
+} 
 
 /*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*//*glsl*/
 RasterProj.VERTEX_SHADER_STR = /*.glsl*/`#version 300 es

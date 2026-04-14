@@ -2,6 +2,7 @@ import { Interpolater } from "./mod/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterProj } from './RasterProj.js';
 import { Handlers } from './Handlers.js';
+import { lorems } from './lorem.js';
 
 let Main = function () {
   let mapbox_access_token = import.meta.env.VITE_MAPBOX_KEY;
@@ -32,6 +33,7 @@ let Main = function () {
   this.showCitiesCheckBox = document.querySelector('input#showCities');
   this.displayCities = this.showCitiesCheckBox.checked;
   this.mylocationButton = document.querySelector('button#myLocation');
+  this.titleText = document.querySelector('.title-text');
   this.currYear = new Date().getFullYear();
 
   this.googleSessions = [];
@@ -58,7 +60,7 @@ let Main = function () {
 
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
-  this.animationFramesInit = 120; // number of frames to animate before pausing
+  this.animationFramesInit = 100; // number of frames to animate before pausing
   this.animationFrames = this.animationFramesInit;
   this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere <br>to go there fast!" }, 180000);
 
@@ -72,7 +74,7 @@ let Main = function () {
       this.viewStatus.phi0 = lam_phi.phi;
     }
 
-    this.rasterProj = new RasterProj();
+    this.rasterProj = new RasterProj(this.ringRadius);
     this.rasterProj.setScale(this.viewStatus.zoomScale);
     await this.startup(this.rasterProj); // sets up this.canvas, webgl, and calls init
     this.requestIds.push(requestAnimationFrame(this.animation)); // starts animation
@@ -85,6 +87,8 @@ let Main = function () {
   });
 
   this.animation = () => {
+    let currLorem = lorems.next().value;
+    console.log(currLorem, " animation");
     if (!this.mapView) return;
     let getNewTiles = false;
     let currTime = new Date().getTime();
@@ -99,6 +103,7 @@ let Main = function () {
       if (this.viewStatus.interpolater.isFinished()) { // Interpolater finished
         this.viewStatus.interpolater = null;
         getNewTiles = true;
+        // this.clearRequestIds();
       };
     } else if (this.viewStatus.targetLambdaPhiZoom != null) { // new lambda phi requested, start up interpolater
       let currLambdaPhi = this.mapView.getProjCenter();
@@ -112,29 +117,24 @@ let Main = function () {
       this.viewStatus.targetLambdaPhiZoom = null;
     }
     // zoom in/out
-    if (this.prevScale != this.viewStatus.zoomScale) {
+    if (this.prevScale != this.viewStatus.zoomScale) { // zooming, or first time thru
       this.rasterProj.setScale(this.viewStatus.zoomScale);
       this.rasterProj.setFlatRatio(this.ringRadius);
       this.prevScale = this.viewStatus.zoomScale;
       getNewTiles = true;
     }
-    this.mapView.render(getNewTiles, this.displayCities);
+    this.mapView.render(getNewTiles, this.displayCities, currLorem);
     this.animationFrames--;
-    console.log("Animation frames left: " + this.animationFrames);
+    // console.log("Animation frames left: " + this.animationFrames);
     if (this.animationFrames !== 0) {
       // this.clearRequestIds();
       this.requestIds.push(requestAnimationFrame(this.animation));
     } else {
-      console.log("Animation finished.");
-      console.log("reqs", this.requestIds.length)
-      this.clearRequestIds();
+      // console.log("Animation finished.");
+      // this.clearRequestIds();
       this.animationFrames = this.animationFramesInit; // reset for next time
-      // setTimeout(() => {
-      this.mapView.render(true, this.displayCities);
-      // }, 1000); // render one more time after a delay to ensure tiles are loaded
-      // this.setQueryParams();
+      this.setQueryParams();
     }
-    this.setQueryParams();
   };
 
   this.startup = async (rasterProj) => {
@@ -148,6 +148,7 @@ let Main = function () {
     this.layerSelectBox.addEventListener('change', this.handleLayerChange.bind(this), false);
     this.showCitiesCheckBox.addEventListener('change', this.handleShowCitiesChange.bind(this), false);
     this.mylocationButton.addEventListener('click', this.handleMyLocationClick.bind(this), false);
+    this.titleText.addEventListener('click', this.handleTitleClick.bind(this), false);
 
     // Mouse and touch event listeners
     this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this), false);
@@ -360,7 +361,8 @@ let Main = function () {
     }
   };
 
-  this.clearRequestIds = () => {
+  this.clearRequestIds = () => { 
+    console.log("Clearing request IDs: " + this.requestIds.length);
     this.requestIds.map(id => cancelAnimationFrame(id));
     this.requestIds.length = 0; // clear array
   }
