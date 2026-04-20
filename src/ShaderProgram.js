@@ -122,7 +122,7 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
   this.gl_.uniform1f(this.locRingRadius_, ringRadius);
   this.gl_.uniform1f(this.locFlatRatio_, flatRatio);
 
-  // console.log("prepareRender: ", {ringRadius, flatRatio, lam0, phi0, zoomScale});
+  // //console.log("prepareRender: ", {ringRadius, flatRatio, lam0, phi0, zoomScale});
 
   if ( this.locTranslateY_ != null ) {
     this.gl_.uniform1f(this.locTranslateY_, 0.0);   //  NOTICE uTranslateY, tmerc独自 Original
@@ -157,7 +157,7 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
 // };
 
 ShaderProgram.prototype.renderTexture = function(texture, region, currLorem) {
-  console.log(currLorem, " --- ShaderProgram.renderTexture ---");
+  // //console.log(currLorem, " --- ShaderProgram.renderTexture ---");
   let lam1 = region[0];
   let phi1 = region[1];
   let lam2 = region[2];

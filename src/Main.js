@@ -32,7 +32,10 @@ let Main = function () {
   this.selectedLayer = this.layerSelectBox.value;
   this.showCitiesCheckBox = document.querySelector('input#showCities');
   this.displayCities = this.showCitiesCheckBox.checked;
+  this.fetchNewAssets = true; // whether to fetch new map tiles and city data
   this.mylocationButton = document.querySelector('button#myLocation');
+  this.zoominButton = document.querySelector('button#zoomin');
+  this.zoomoutButton = document.querySelector('button#zoomout');
   this.titleText = document.querySelector('.title-text');
   this.currYear = new Date().getFullYear();
 
@@ -54,14 +57,13 @@ let Main = function () {
   [this.viewStatus.lam0, this.viewStatus.phi0] = locations[locat];
 
   this.zoomMin = 0.1;
+  this.zoomStart = 3e+2;
   this.zoomMax = 3e+6;
   this.maxTileLevel = 22; // tile levels 0 to maxTileLevel
   this.ringRadius = 0.000001; // radius of flat center disk in radians // 0.00001
 
   this.rasterProj = null;
   this.debug = false; // "local", "red", false
-  this.animationFramesInit = 100; // number of frames to animate before pausing
-  this.animationFrames = this.animationFramesInit;
   this.messageTimeoutID = setTimeout(() => { this.messagesBox.innerHTML = "Double click anywhere <br>to go there fast!" }, 180000);
 
   document.addEventListener('DOMContentLoaded', async () => {
@@ -77,7 +79,7 @@ let Main = function () {
     this.rasterProj = new RasterProj(this.ringRadius);
     this.rasterProj.setScale(this.viewStatus.zoomScale);
     await this.startup(this.rasterProj); // sets up this.canvas, webgl, and calls init
-    this.requestIds.push(requestAnimationFrame(this.animation)); // starts animation
+    this.requestIds.push(requestAnimationFrame(this.render));
   });
 
   window.addEventListener('resize', async () => {
@@ -86,26 +88,31 @@ let Main = function () {
     this.rasterProj.clear(this.canvas);
   });
 
-  this.animation = () => {
+  this.render = async () => {
     let currLorem = lorems.next().value;
-    console.log(currLorem, " animation");
+    //console.log(currLorem, " render(animation)");
     if (!this.mapView) return;
-    let getNewTiles = false;
     let currTime = new Date().getTime();
     this.setTileLevel();
 
     let currPos;
-    if (this.viewStatus.interpolater != null) { // Interpolater is running
+    if (this.viewStatus.interpolater != null) {
+      // Interpolater is running
       currPos = this.viewStatus.interpolater.getPos(currTime);
+      //console.log(currPos);
       this.setProjCenter(currPos.lambda, currPos.phi);
       this.viewStatus.zoomScale = currPos.zoom;
       this.rasterProj.setScale(this.viewStatus.zoomScale);
-      if (this.viewStatus.interpolater.isFinished()) { // Interpolater finished
+      if (this.viewStatus.interpolater.isFinished()) {
+        // Interpolater finished
         this.viewStatus.interpolater = null;
-        getNewTiles = true;
-        // this.clearRequestIds();
+        this.fetchNewAssets = true;
+        this.setQueryParams();
       };
-    } else if (this.viewStatus.targetLambdaPhiZoom != null) { // new lambda phi requested, start up interpolater
+      this.clearRequestIds();
+      this.requestIds.push(requestAnimationFrame(this.render));
+    } else if (this.viewStatus.targetLambdaPhiZoom != null) {
+      // Start Interpolator, new lambda phi requested
       let currLambdaPhi = this.mapView.getProjCenter();
       let currLambdaPhiZoom = { lambda: currLambdaPhi.lambda, phi: currLambdaPhi.phi, zoom: this.viewStatus.zoomScale };
       let targLambdaPhiZoom = this.viewStatus.targetLambdaPhiZoom;
@@ -115,26 +122,17 @@ let Main = function () {
         this.interpolateTimeSpan
       );
       this.viewStatus.targetLambdaPhiZoom = null;
+      this.fetchNewAssets = false;
+      this.clearRequestIds();
+      this.requestIds.push(requestAnimationFrame(this.render));
     }
     // zoom in/out
     if (this.prevScale != this.viewStatus.zoomScale) { // zooming, or first time thru
       this.rasterProj.setScale(this.viewStatus.zoomScale);
       this.rasterProj.setFlatRatio(this.ringRadius);
       this.prevScale = this.viewStatus.zoomScale;
-      getNewTiles = true;
     }
-    this.mapView.render(getNewTiles, this.displayCities, currLorem);
-    this.animationFrames--;
-    // console.log("Animation frames left: " + this.animationFrames);
-    if (this.animationFrames !== 0) {
-      // this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.animation));
-    } else {
-      // console.log("Animation finished.");
-      // this.clearRequestIds();
-      this.animationFrames = this.animationFramesInit; // reset for next time
-      this.setQueryParams();
-    }
+    await this.mapView.render(this.fetchNewAssets, this.displayCities, currLorem);
   };
 
   this.startup = async (rasterProj) => {
@@ -148,12 +146,14 @@ let Main = function () {
     this.layerSelectBox.addEventListener('change', this.handleLayerChange.bind(this), false);
     this.showCitiesCheckBox.addEventListener('change', this.handleShowCitiesChange.bind(this), false);
     this.mylocationButton.addEventListener('click', this.handleMyLocationClick.bind(this), false);
+    this.zoominButton.addEventListener('click', this.handleZoomInClick.bind(this), false);
+    this.zoomoutButton.addEventListener('click', this.handleZoomOutClick.bind(this), false);
     this.titleText.addEventListener('click', this.handleTitleClick.bind(this), false);
 
     // Mouse and touch event listeners
-    this.canvas.addEventListener("mousedown", this.handleMouseDown.bind(this), false);
-    this.canvas.addEventListener("mousemove", this.handleMouseMove.bind(this), false);
-    this.canvas.addEventListener("mouseup", this.handleMouseUp.bind(this), false);
+    document.addEventListener("mousedown", this.handleMouseDown.bind(this), false);
+    document.addEventListener("mousemove", this.handleMouseMove.bind(this), false);
+    document.addEventListener("mouseup", this.handleMouseUp.bind(this), false);
     this.canvas.addEventListener("dblclick", this.handleDoubleClick.bind(this), false);
 
     this.canvas.addEventListener("touchstart", this.handleTouchStart.bind(this), false);
@@ -178,7 +178,7 @@ let Main = function () {
       canvasSize: canvasSize,
     };
     let cache_opts = {
-      num: 100,
+      num: 200,
       crossOrigin: false,
       debug: this.debug,
     };
@@ -190,15 +190,15 @@ let Main = function () {
     await this.setLayer();
 
     this.setTileLevel();
-    this.mapView.requestImagesIfNecessary();
+    // await this.mapView.requestImagesIfNecessary();
   };
 
   this.resizeCanvas = async (canvas) => {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
     this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.animation));
-    // console.log("Canvas resized to: " + width + " x " + height);
+    this.requestIds.push(requestAnimationFrame(this.render));
+    // //console.log("Canvas resized to: " + width + " x " + height);
   };
 
   this.setProjCenter = (lam0, phi0) => {
@@ -214,7 +214,7 @@ let Main = function () {
   this.setTileLevel = () => {
     this.viewStatus.currTileLevel = Math.round(Math.log10(this.viewStatus.zoomScale) * 3.0);// Math.floor(this.maxTileLevel * this.viewStatus.zoomScale / this.zoomMax);
     this.viewStatus.currTileLevel = Math.max(Math.min(this.viewStatus.currTileLevel, this.maxTileLevel), 0);
-    // console.log("TileLvl: " + this.viewStatus.currTileLevel," + ZoomScl: " + this.viewStatus.zoomScale);
+    // //console.log("TileLvl: " + this.viewStatus.currTileLevel," + ZoomScl: " + this.viewStatus.zoomScale);
     this.mapView.setTileLevel(this.viewStatus.currTileLevel);
   }
 
@@ -322,7 +322,7 @@ let Main = function () {
   };
 
   this.setQueryParams = () => {
-    // console.log(`Setting query params.${this.viewStatus.lam0}, ${this.viewStatus.phi0}, ${this.viewStatus.zoomScale}`);
+    // //console.log(`Setting query params.${this.viewStatus.lam0}, ${this.viewStatus.phi0}, ${this.viewStatus.zoomScale}`);
     let params = new URLSearchParams(window.location.search);
     params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
     params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(4)); // radians to degrees
@@ -361,8 +361,8 @@ let Main = function () {
     }
   };
 
-  this.clearRequestIds = () => { 
-    console.log("Clearing request IDs: " + this.requestIds.length);
+  this.clearRequestIds = () => {
+    //console.log("Clearing request IDs: " + this.requestIds.length);
     this.requestIds.map(id => cancelAnimationFrame(id));
     this.requestIds.length = 0; // clear array
   }

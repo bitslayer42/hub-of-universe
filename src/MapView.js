@@ -31,9 +31,9 @@ let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
 
   // this.cityList = []; // list of cities in current view
   // this.cityDiv = document.getElementById('citydiv');
-  this.cityCache = new LRUCache(1000);
+  // this.cityCache = new LRUCache(1000);
   // this.cityFontColor = "black";
-  this.cities = new Cities(this);
+  this.cities = new Cities(this, LRUCache);
 };
 
 MapView.prototype.clearTileInfoCache_ = function () {
@@ -85,66 +85,45 @@ MapView.prototype.resetImages = function () {
 };
 
 // Called from init
-MapView.prototype.requestImagesIfNecessary = function () {
+MapView.prototype.requestImagesIfNecessary = async function () {
   if (this.getURL == null) return -1;
-  this.getTileInfos_();
-  let count = this.requestImages_(this.tileInfos);
+  this.getTileInfos_("init");
+  let count = await this.requestImages_("init");
   return count;
 };
 
 // Called from animation
-MapView.prototype.render = async function (getNewTiles, showCities, currLorem) {
-      console.log(currLorem, " --- MapView.render ---");
+MapView.prototype.render = async function (fetchNewAssets, showCities, currLorem) {
+      //console.log(currLorem, " --- MapView.render ---");
   if (this.getURL == null) return;
-  if (getNewTiles) {
+  if (fetchNewAssets) {
     this.getTileInfos_(currLorem);
-    await this.requestImages_(this.tileInfos);
+    await this.requestImages_(currLorem);
   }
-  this.render_(currLorem);
+  await this.render_(currLorem);
   if (showCities) {
 
-    await this.cities.showCities_(getNewTiles, this);
+    await this.cities.showCities(this, fetchNewAssets, currLorem);
   } else {
     this.cities.clearCities();
   }
 };
 
-//  TODO この実装の詳細は別の場所にあるべきか Should this implementation's detail be in a different location?
-MapView.prototype.createTexture = function (img) {
-  let tex = this.gl.createTexture();
-  this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
-  this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
-  this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-  this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-
-  this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-  this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-
-  this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
-  this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, img);
-
-  this.gl.bindTexture(this.gl.TEXTURE_2D, null);
-  return tex;
-};
-
-
-
 MapView.prototype.getTileInfos_ = function (currLorem) {
-      console.log(currLorem, " --- MapView.getTileInfos_ ---");
-  let tileArray = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL, currLorem);
-  this.tileInfos = tileArray;
+      //console.log(currLorem, " --- MapView.getTileInfos_ ---");
+  this.tileInfos = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL, currLorem);
+  // this.tileInfos = tileArray;
 };
 
-
-MapView.prototype.requestImages_ = async function () {
+MapView.prototype.requestImages_ = async function (currLorem) {
+        //console.log(currLorem, " --- MapView.requestImages_ ---");
   for (let i = 0; i < this.tileInfos.length; ++i) {
-    await this.imageCache.loadImageIfAbsent(this.tileInfos[i].url, this.tileInfos[i].rect);
+    await this.imageCache.loadImageIfAbsent(this.tileInfos[i].url, this.tileInfos[i].rect, currLorem);
   }
 };
 
-
-MapView.prototype.render_ = function (currLorem) {
-  console.log(currLorem, " --- MapView.render_ ---");
+MapView.prototype.render_ = async function (currLorem) {
+  // //console.log(currLorem, " --- MapView.render_ ---");
   this.rasterProj.clear(this.canvasSize);
   let targetTextures = [];
   for (let i = 0; i < this.tileInfos.length; ++i) {
@@ -167,6 +146,23 @@ MapView.prototype.render_ = function (currLorem) {
   }
 };
 
+//  TODO この実装の詳細は別の場所にあるべきか Should this implementation's detail be in a different location?
+MapView.prototype.createTexture = function (img) {
+  let tex = this.gl.createTexture();
+  this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
+  this.gl.pixelStorei(this.gl.UNPACK_FLIP_Y_WEBGL, true);
+  this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+  this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+
+  this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+  this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+
+  this.gl.bindTexture(this.gl.TEXTURE_2D, tex);
+  this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, img);
+
+  this.gl.bindTexture(this.gl.TEXTURE_2D, null);
+  return tex;
+};
 
 /* -------------------------------------------------------------------------- */
 export { MapView };

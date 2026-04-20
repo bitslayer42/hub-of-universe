@@ -144,4 +144,4 @@ function* foo() {
 const lorems = foo(0);
 
 export { lorems };
-// console.log(lorem.next().value);
+// //console.log(lorem.next().value);

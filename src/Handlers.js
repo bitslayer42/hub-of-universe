@@ -12,24 +12,24 @@ export const Handlers = {
   handleLayerChange(event) {
     this.selectedLayer = event.target.value;
     this.setLayer();
-    this.requestIds.push(requestAnimationFrame(this.animation));
-    this.mapView.render(true, this.displayCities);
+    this.requestIds.push(requestAnimationFrame(this.render));
+    this.mapView.render(true, this.displayCities, "handleLayerChange");
   },
 
   handleShowCitiesChange(event) {
     this.displayCities = event.target.checked;
-    this.mapView.render(true, this.displayCities);
+    this.mapView.render(true, this.displayCities, "handleShowCitiesChange");
   },
 
   handleKeydown(event) {
     switch (event.key) {
       case '=':
       case '+':
-        this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.1;
+        this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.3;
         break;
       case '-':
       case '_':
-        this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
+        this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.3;
         break;
       case "ArrowUp":
         {
@@ -68,7 +68,7 @@ export const Handlers = {
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.animation));
+    this.requestIds.push(requestAnimationFrame(this.render));
   },
 
   handleWheel(event) {
@@ -79,8 +79,8 @@ export const Handlers = {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.animation));
+    // this.clearRequestIds();
+    this.requestIds.push(requestAnimationFrame(this.render));
   },
 
   getPanRate(zoomScale) {
@@ -108,8 +108,7 @@ export const Handlers = {
     if (canv_xy) {
       this.viewStatus.drag = true;
       this.viewStatus.dragPrevPos = canv_xy;
-      this.requestIds.push(requestAnimationFrame(this.animation));
-      this.animationFrames = -1; // keep animating until mouse up to allow for smooth dragging, reset in animation loop when done
+      this.fetchNewAssets = false;
     }
   },
 
@@ -119,7 +118,6 @@ export const Handlers = {
       if (null != canv_xy) {
         if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
-          this.animationFrames = -1; // keep animating until mouse up to allow for smooth dragging, reset in animation loop when done
           let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaPanRate;
           let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaPanRate;
@@ -130,14 +128,16 @@ export const Handlers = {
         }
         this.viewStatus.dragPrevPos = canv_xy;
       }
+      this.requestIds.push(requestAnimationFrame(this.render));
     }
   },
 
   handleMouseUp(event) {
     this.viewStatus.drag = false;
     this.viewStatus.dragPrevPos = null;
-    this.mapView.render(true, this.displayCities);
-    this.animationFrames = this.animationFramesInit; // reset
+    this.fetchNewAssets = true;
+    this.requestIds.push(requestAnimationFrame(this.render));
+    // this.mapView.render(true, this.displayCities, "handleMouseUp");
   },
 
   ///////////////////////////////////////////////////////////////
@@ -162,7 +162,7 @@ export const Handlers = {
       if (canv_xy) {
         this.viewStatus.drag = true;
         this.viewStatus.dragPrevPos = canv_xy;
-        this.requestIds.push(requestAnimationFrame(this.animation));
+        this.requestIds.push(requestAnimationFrame(this.render));
       }
     }
   },
@@ -182,7 +182,7 @@ export const Handlers = {
       this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
       this.viewStatus.pinchPrevDistance = currentDistance;
       this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.animation));
+      this.requestIds.push(requestAnimationFrame(this.render));
     } else if (event.touches.length === 1 && this.viewStatus.drag) {
       // Single touch drag
       let touch = event.touches[0];
@@ -200,7 +200,7 @@ export const Handlers = {
         }
         this.viewStatus.dragPrevPos = canv_xy;
       }
-      // console.log("butmy",this.viewStatus.lam0 , newLam0);
+      // //console.log("butmy",this.viewStatus.lam0 , newLam0);
       // this.viewStatus.lam0 = newLam0;
       // this.viewStatus.phi0 = newPhi0;
     }
@@ -271,25 +271,40 @@ export const Handlers = {
     if (event.touches.length === 0) {
       this.viewStatus.drag = false;
       this.viewStatus.dragPrevPos = null;
-      this.mapView.render(true, this.displayCities);
+      // this.mapView.render(true, this.displayCities, "handleTouchEnd");
     }
   },
 
   ///////////////////////////////////////////////////////////////
+  handleZoomInClick(event) {
+    event.preventDefault();
+    this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.3;
+    this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
+    this.clearRequestIds();
+    this.requestIds.push(requestAnimationFrame(this.render));
+  },
+
+  handleZoomOutClick(event) {
+    event.preventDefault();
+    this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.3;
+    this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
+    this.clearRequestIds();
+    this.requestIds.push(requestAnimationFrame(this.render));
+  },
+
   handleMyLocationClick: async function (event) {
     event.preventDefault();
     let lam_phi = await this.getUsersLocation(true);
-    if (lam_phi) {
-      let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.zoomMax };
-      this.gotoLocation(lam_phi_zoom);
-    }
+    let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.zoomMax };
+    this.gotoLocation(lam_phi_zoom);
   },
 
-  handleTitleClick: function (event) {
+  handleTitleClick: async function (event) {
     event.preventDefault();
-    let randomLambda = (Math.random() * 2 - 1) * Math.PI; // random lambda between -π and π
-    let randomPhi = (Math.random() * 2 - 1) * (Math.PI / 2); // random phi between -π/2 and π/2 
-    let lam_phi_zoom = { lambda: randomLambda, phi: randomPhi, zoom: 300 };
+    let random_latlon = this.mapView.cities.cityList[Math.floor(Math.random() * this.mapView.cities.cityList.length)];
+    // //console.log("Random city selected:", random_latlon);
+    let lam_phi = { lambda: random_latlon.longitude * Math.PI / 180, phi: random_latlon.latitude * Math.PI / 180 };
+    let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.zoomMax };
     this.gotoLocation(lam_phi_zoom);
   },
 
@@ -299,7 +314,7 @@ export const Handlers = {
 
     let canv_xy = this.checkAndGetGesturePos(event.clientX, event.clientY);
     if (canv_xy) {
-      // console.log(`Double tap at canvas coordinates: (${canv_xy[0]}, ${canv_xy[1]})`);
+      // //console.log(`Double tap at canvas coordinates: (${canv_xy[0]}, ${canv_xy[1]})`);
       event.preventDefault();
       let lam_phi = this.mapView.getLambdaPhiPointFromWindow(canv_xy[0], canv_xy[1]);
       let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.viewStatus.zoomScale };
@@ -309,8 +324,8 @@ export const Handlers = {
 
   gotoLocation(lam_phi_zoom) {
     this.viewStatus.targetLambdaPhiZoom = lam_phi_zoom; // set target lambda, phi for interpolater
-    this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.animation));
+    // this.clearRequestIds();
+    this.requestIds.push(requestAnimationFrame(this.render));
   },
 
   handleContextLost(event) {
@@ -321,6 +336,6 @@ export const Handlers = {
 
   handleContextRestored(event) {
     this.init(this.rasterProj);
-    this.requestIds.push(requestAnimationFrame(this.animation));
+    this.requestIds.push(requestAnimationFrame(this.render));
   }
 };

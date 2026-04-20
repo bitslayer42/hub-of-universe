@@ -20,11 +20,7 @@ class LRUCache {
     } else {
       this.cache.set(key, value);
     }
-    // console.log("cache size", this.cache.size, key);
-  }
-
-  has(key) {
-    return this.cache.has(key);
+    // //console.log("cache size", this.cache.size, key);
   }
 }
 
@@ -54,7 +50,8 @@ let ImageCache = function (cache_opts) {
 };
 
 
-ImageCache.prototype.loadImage_ = async function (url, info) {
+ImageCache.prototype.loadImage_ = async function (url, info, currLorem) {
+  // //console.log(currLorem, " --- ImageCache.loadImage_ ---");
   const { promise, resolve, reject } = Promise.withResolvers();
   this.loading[url] = true;
   let image = new Image();
@@ -84,9 +81,10 @@ ImageCache.prototype.loadImage_ = async function (url, info) {
       const blob = await canvas.convertToBlob({ type: 'image/png' });
       redImage = new Image();
       redImage.src = URL.createObjectURL(blob);
-      // console.log("DEBUG: Image loaded with red border", url);
+      // //console.log("DEBUG: Image loaded with red border", url);
       resolve(redImage);
     }
+    resolve();
   }
   if (debug == "red") {
     promise.then((redImage) => {
@@ -104,13 +102,14 @@ ImageCache.prototype.loadImage_ = async function (url, info) {
   } else {
     image.src = url;
   }
+  return promise;
 };
 
 
-ImageCache.prototype.loadImageIfAbsent = async function (url, info) {
+ImageCache.prototype.loadImageIfAbsent = async function (url, info, currLorem) {
   if (this.textures.get(url)) return false;
-  if (url in this.loading) return false;
-  await this.loadImage_(url, info);
+  // if (url in this.loading) return false;
+  await this.loadImage_(url, info, currLorem);
   return true;  //  ロード開始 Start loading
 };
 

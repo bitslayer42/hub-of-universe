@@ -60,7 +60,7 @@ RasterProj.prototype.prepareRender = function (texCoords, viewRect) {
 
 // c- Renders textures at locations specified in textureInfos
 RasterProj.prototype.renderTextures = function (textureInfos, currLorem) {
-  console.log(currLorem, " --- RasterProj.renderTextures ---", textureInfos.length);
+  //console.log(currLorem, " --- RasterProj.renderTextures ---", textureInfos.length);
   for (let i = 0; i < textureInfos.length; ++i) {
     this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
 
@@ -87,7 +87,7 @@ RasterProj.prototype.setFlatRatio = function () {
   let phi = this.projection.phi0 + this.ringRadius; // a lambda, phi on the north edge of the flat disk
   let {x,y} = this.projection.forward(lambda, phi); // projected x,y of that point
   this.flatRatio = y / this.ringRadius; // ratio of projectedFlatRadius / flatRadius
-  // console.log("setFlatRatio: ", { 
+  // //console.log("setFlatRatio: ", { 
   //   lambda, phi, 
   //   lam0: this.projection.lam0, phi0: this.projection.phi0, 
   //   x, y, 

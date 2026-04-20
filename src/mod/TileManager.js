@@ -149,8 +149,8 @@ TileManager.prototype.pushLevelOneTiles = function (tileInfos) {
 }
 
 TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl, currLorem) {
-      console.log(currLorem, " --- TileManager.getTileInfos ---");
-  // console.log("getTileInfos", lam0, phi0, currTileLevel);
+      //console.log(currLorem, " --- TileManager.getTileInfos ---");
+  // //console.log("getTileInfos", lam0, phi0, currTileLevel);
   let tileInfos = [];
   let prevTile = null;
   this.getCenterTileInfo(lam0, phi0, currTileLevel);
@@ -175,7 +175,7 @@ TileManager.prototype.getTileInfos = function (lam0, phi0, currTileLevel, getUrl
   for (const tile of tileInfos) {
     tile.rect = this.getRectFromXYZ(tile);
     tile.url = getUrl(tile.xyz.z, tile.xyz.x, tile.xyz.y);
-    // console.log(tile.url); //.slice(0, 50) + "...");
+    // //console.log(tile.url); //.slice(0, 50) + "...");
   }
   return tileInfos.reverse();
 

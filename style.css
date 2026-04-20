@@ -84,10 +84,11 @@ html {
     color: white;
     left: 5px;
     bottom: 5px;
+    z-index: 1;
 }
 
 .controls p {
-    padding: 2px;
+    padding: 0px;
 }
 
 .attribution {
@@ -115,7 +116,7 @@ button {
     appearance: none;
     background-color: transparent;
     border: 0.125em solid #575757;
-    border-radius: 0.9375em;
+    border-radius: 0.5em;
     box-sizing: border-box;
     color: white;
     cursor: pointer;
@@ -124,7 +125,7 @@ button {
     line-height: normal;
     margin: 0;
     min-height: 2.5em;
-    min-width: 0;
+    min-width: 3em;
     outline: none;
     padding: 0 1em;
     text-align: center;
