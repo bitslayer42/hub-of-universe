@@ -6,8 +6,7 @@ let Cities = function (mapView, LRUCache) {
   this.cityCache = new LRUCache(1000);
 };
 
-Cities.prototype.showCities = async function (mapView, fetchNewAssets, currLorem) {
-  //console.log(currLorem, " --- Cities.showCities_ ---");
+Cities.prototype.showCities = async function (mapView, fetchNewAssets) {
   let lat0 = (mapView.phi0 * 180 / Math.PI).toFixed(2); // convert to degrees
   let lon0 = (mapView.lam0 * 180 / Math.PI).toFixed(2); // convert to degrees
   let mapkey = lat0 + "," + lon0 + "," + mapView.currTileLevel;

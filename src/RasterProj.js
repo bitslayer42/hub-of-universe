@@ -59,14 +59,13 @@ RasterProj.prototype.prepareRender = function (texCoords, viewRect) {
 };
 
 // c- Renders textures at locations specified in textureInfos
-RasterProj.prototype.renderTextures = function (textureInfos, currLorem) {
-  //console.log(currLorem, " --- RasterProj.renderTextures ---", textureInfos.length);
+RasterProj.prototype.renderTextures = function (textureInfos) {
   for (let i = 0; i < textureInfos.length; ++i) {
     this.shader_.setRenderType(ShaderProgram.RENDER_TYPE_TEXTURE);
 
     let texture = textureInfos[i][0];
     let region = textureInfos[i][1];
-    this.shader_.renderTexture(texture, region, currLorem);
+    this.shader_.renderTexture(texture, region);
   }
 };
 

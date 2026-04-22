@@ -50,8 +50,7 @@ let ImageCache = function (cache_opts) {
 };
 
 
-ImageCache.prototype.loadImage_ = async function (url, info, currLorem) {
-  // //console.log(currLorem, " --- ImageCache.loadImage_ ---");
+ImageCache.prototype.loadImage_ = async function (url, info) {
   const { promise, resolve, reject } = Promise.withResolvers();
   this.loading[url] = true;
   let image = new Image();
@@ -106,10 +105,10 @@ ImageCache.prototype.loadImage_ = async function (url, info, currLorem) {
 };
 
 
-ImageCache.prototype.loadImageIfAbsent = async function (url, info, currLorem) {
+ImageCache.prototype.loadImageIfAbsent = async function (url, info) {
   if (this.textures.get(url)) return false;
   // if (url in this.loading) return false;
-  await this.loadImage_(url, info, currLorem);
+  await this.loadImage_(url, info);
   return true;  //  ロード開始 Start loading
 };
 

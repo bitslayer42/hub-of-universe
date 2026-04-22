@@ -2,7 +2,6 @@ import { Interpolater } from "./mod/Interpolater.js";
 import { MapView } from "./MapView.js";
 import { RasterProj } from './RasterProj.js';
 import { Handlers } from './Handlers.js';
-import { lorems } from './lorem.js';
 
 let Main = function () {
   let mapbox_access_token = import.meta.env.VITE_MAPBOX_KEY;
@@ -89,8 +88,6 @@ let Main = function () {
   });
 
   this.render = async () => {
-    let currLorem = lorems.next().value;
-    //console.log(currLorem, " render(animation)");
     if (!this.mapView) return;
     let currTime = new Date().getTime();
     this.setTileLevel();
@@ -132,7 +129,7 @@ let Main = function () {
       this.rasterProj.setFlatRatio(this.ringRadius);
       this.prevScale = this.viewStatus.zoomScale;
     }
-    await this.mapView.render(this.fetchNewAssets, this.displayCities, currLorem);
+    await this.mapView.render(this.fetchNewAssets, this.displayCities);
   };
 
   this.startup = async (rasterProj) => {

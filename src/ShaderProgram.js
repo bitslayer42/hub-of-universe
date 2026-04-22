@@ -156,8 +156,7 @@ ShaderProgram.prototype.prepareRender = function(viewRect, texCoords, lam0, phi0
 //   this.gl_.drawArrays(this.gl_.TRIANGLE_STRIP, 0, 4);
 // };
 
-ShaderProgram.prototype.renderTexture = function(texture, region, currLorem) {
-  // //console.log(currLorem, " --- ShaderProgram.renderTexture ---");
+ShaderProgram.prototype.renderTexture = function(texture, region) {
   let lam1 = region[0];
   let phi1 = region[1];
   let lam2 = region[2];

@@ -93,37 +93,33 @@ MapView.prototype.requestImagesIfNecessary = async function () {
 };
 
 // Called from animation
-MapView.prototype.render = async function (fetchNewAssets, showCities, currLorem) {
-      //console.log(currLorem, " --- MapView.render ---");
+MapView.prototype.render = async function (fetchNewAssets, showCities) {
   if (this.getURL == null) return;
   if (fetchNewAssets) {
-    this.getTileInfos_(currLorem);
-    await this.requestImages_(currLorem);
+    this.getTileInfos_();
+    await this.requestImages_();
   }
-  await this.render_(currLorem);
+  await this.render_();
   if (showCities) {
 
-    await this.cities.showCities(this, fetchNewAssets, currLorem);
+    await this.cities.showCities(this, fetchNewAssets);
   } else {
     this.cities.clearCities();
   }
 };
 
-MapView.prototype.getTileInfos_ = function (currLorem) {
-      //console.log(currLorem, " --- MapView.getTileInfos_ ---");
-  this.tileInfos = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL, currLorem);
+MapView.prototype.getTileInfos_ = function () {
+  this.tileInfos = this.tileManager.getTileInfos(this.lam0, this.phi0, this.currTileLevel, this.getURL);
   // this.tileInfos = tileArray;
 };
 
-MapView.prototype.requestImages_ = async function (currLorem) {
-        //console.log(currLorem, " --- MapView.requestImages_ ---");
+MapView.prototype.requestImages_ = async function () {
   for (let i = 0; i < this.tileInfos.length; ++i) {
-    await this.imageCache.loadImageIfAbsent(this.tileInfos[i].url, this.tileInfos[i].rect, currLorem);
+    await this.imageCache.loadImageIfAbsent(this.tileInfos[i].url, this.tileInfos[i].rect);
   }
 };
 
-MapView.prototype.render_ = async function (currLorem) {
-  // //console.log(currLorem, " --- MapView.render_ ---");
+MapView.prototype.render_ = async function () {
   this.rasterProj.clear(this.canvasSize);
   let targetTextures = [];
   for (let i = 0; i < this.tileInfos.length; ++i) {
@@ -142,7 +138,7 @@ MapView.prototype.render_ = async function (currLorem) {
   ]);
   this.rasterProj.prepareRender(texCoords, [-Math.PI, -Math.PI, Math.PI, Math.PI]);
   if (0 < targetTextures.length) {
-    this.rasterProj.renderTextures(targetTextures, currLorem);
+    this.rasterProj.renderTextures(targetTextures);
   }
 };
 
