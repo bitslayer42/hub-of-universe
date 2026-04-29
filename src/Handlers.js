@@ -25,11 +25,11 @@ export const Handlers = {
     switch (event.key) {
       case '=':
       case '+':
-        this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.3;
+        this.viewStatus.zoomScale = this.viewStatus.zoomScale * 2.0;
         break;
       case '-':
       case '_':
-        this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.3;
+        this.viewStatus.zoomScale = this.viewStatus.zoomScale / 2.0;
         break;
       case "ArrowUp":
         {
@@ -278,7 +278,7 @@ export const Handlers = {
   ///////////////////////////////////////////////////////////////
   handleZoomInClick(event) {
     event.preventDefault();
-    this.viewStatus.zoomScale = this.viewStatus.zoomScale * 1.3;
+    this.viewStatus.zoomScale = this.viewStatus.zoomScale * 2.0;
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
     this.requestIds.push(requestAnimationFrame(this.render));
@@ -286,7 +286,7 @@ export const Handlers = {
 
   handleZoomOutClick(event) {
     event.preventDefault();
-    this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.3;
+    this.viewStatus.zoomScale = this.viewStatus.zoomScale / 2.0;
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
     this.requestIds.push(requestAnimationFrame(this.render));
