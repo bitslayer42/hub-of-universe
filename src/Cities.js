@@ -6,7 +6,7 @@ let Cities = function (mapView, LRUCache) {
   this.cityCache = new LRUCache(1000);
 };
 
-Cities.prototype.showCities = async function (mapView, fetchNewAssets) {
+Cities.prototype.showCitiesSync = async function (mapView, fetchNewAssets) {
   let lat0 = (mapView.phi0 * 180 / Math.PI).toFixed(2); // convert to degrees
   let lon0 = (mapView.lam0 * 180 / Math.PI).toFixed(2); // convert to degrees
   let mapkey = lat0 + "," + lon0 + "," + mapView.currTileLevel;
@@ -19,11 +19,24 @@ Cities.prototype.showCities = async function (mapView, fetchNewAssets) {
   this.placeCities_();
 };
 
+Cities.prototype.showCities = function (mapView, fetchNewAssets) {
+  let lat0 = (mapView.phi0 * 180 / Math.PI).toFixed(2); // convert to degrees
+  let lon0 = (mapView.lam0 * 180 / Math.PI).toFixed(2); // convert to degrees
+  let mapkey = lat0 + "," + lon0 + "," + mapView.currTileLevel;
+  if (fetchNewAssets) {
+    if (!this.cityCache.get(mapkey)) {
+      this.fetchCities_(mapkey, lat0, lon0, mapView.currTileLevel);
+    }
+  }
+  // this.cityCache.get(mapkey, lat0, lon0, mapView.currTileLevel);
+  this.placeCities_();
+};
+
 Cities.prototype.clearCities = function () {
   this.cityDiv.innerHTML = '';
 };
 
-Cities.prototype.fetchCities_ = async function (mapkey, lat0, lon0, tileLevel) {
+Cities.prototype.fetchCities_ = function (mapkey, lat0, lon0, tileLevel) {
   const { promise, resolve, reject } = Promise.withResolvers();
   let api_key = import.meta.env.VITE_HUB_API_KEY;
   const params = new URLSearchParams();

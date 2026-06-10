@@ -41,7 +41,7 @@ let Main = function () {
   this.googleSessions = [];
 
   var locations = [ // lat, log * 0.0174533
-    [-1.29174307860817, 0.7104078658215001], // Fraunces Tavern NYC -74.0113949 40.703355
+    [-1.29174307860817, 0.7104078658215001], // Fraunces Tavern NYC -74.0113949 40.703355 
     [-1.34406026074966, 0.6787546684457174], // DC capitol -77.009003 38.889931
     [-1.24019010226, 0.73929973401], // Beantown  -71.0576282 42.3587364
     [-1.40412724747, 0.43790456061],   // Key Largo -80.4505307 25.0900724
@@ -67,7 +67,7 @@ let Main = function () {
 
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
-    await this.resizeCanvas(this.canvas);
+    // await this.resizeCanvas(this.canvas);
 
     let lam_phi = await this.getUsersLocation(false);
     if (lam_phi) {
@@ -84,10 +84,18 @@ let Main = function () {
   window.addEventListener('resize', async () => {
     await this.resizeCanvas(this.canvas);
     this.mapView.resizeCanvas(this.canvas);
-    this.rasterProj.clear(this.canvas);
+    // this.rasterProj.clear(this.canvas);
   });
 
-  this.render = async () => {
+  this.resizeCanvas = async (canvas) => {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+        this.mapView.renderSync(this.fetchNewAssets, this.displayCities);
+    // this.clearRequestIds();
+    // this.requestIds.push(requestAnimationFrame(this.render)); 
+  };
+
+  this.render = () => {
     if (!this.mapView) return;
     let currTime = new Date().getTime();
     this.setTileLevel();
@@ -105,6 +113,7 @@ let Main = function () {
         this.viewStatus.interpolater = null;
         this.fetchNewAssets = true;
         this.setQueryParams();
+        this.mapView.render(true, this.displayCities);
       };
       this.clearRequestIds();
       this.requestIds.push(requestAnimationFrame(this.render));
@@ -129,7 +138,10 @@ let Main = function () {
       this.rasterProj.setFlatRatio(this.ringRadius);
       this.prevScale = this.viewStatus.zoomScale;
     }
-    await this.mapView.render(this.fetchNewAssets, this.displayCities);
+    this.mapView.render(this.fetchNewAssets, this.displayCities);
+    setTimeout(() => {
+      this.mapView.renderSync(this.fetchNewAssets, this.displayCities);
+    }, 100); // schedule another render in case some assets load after the first render
   };
 
   this.startup = async (rasterProj) => {
@@ -175,11 +187,11 @@ let Main = function () {
       canvasSize: canvasSize,
     };
     let cache_opts = {
-      num: 200,
+      num: 100,
       crossOrigin: false,
       debug: this.debug,
     };
-
+    this.getQueryParams();
     rasterProj.init(this.gl);
     this.mapView = new MapView(this.gl, rasterProj, canvasSize, tile_opts, cache_opts);
     this.mapView.setProjCenter(this.viewStatus.lam0, this.viewStatus.phi0);
@@ -187,15 +199,7 @@ let Main = function () {
     await this.setLayer();
 
     this.setTileLevel();
-    // await this.mapView.requestImagesIfNecessary();
-  };
-
-  this.resizeCanvas = async (canvas) => {
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-    this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.render));
-    // //console.log("Canvas resized to: " + width + " x " + height);
+    // await this.mapView.renderSync(this.fetchNewAssets, this.displayCities); 
   };
 
   this.setProjCenter = (lam0, phi0) => {

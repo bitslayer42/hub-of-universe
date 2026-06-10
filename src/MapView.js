@@ -29,10 +29,6 @@ let MapView = function (gl, imgProj, canvasSize, tile_opts, cache_opts) {
   this.lat0 = 0;
   this.lon0 = 0;
 
-  // this.cityList = []; // list of cities in current view
-  // this.cityDiv = document.getElementById('citydiv');
-  // this.cityCache = new LRUCache(1000);
-  // this.cityFontColor = "black";
   this.cities = new Cities(this, LRUCache);
 };
 
@@ -85,24 +81,30 @@ MapView.prototype.resetImages = function () {
 };
 
 // Called from init
-MapView.prototype.requestImagesIfNecessary = async function () {
-  if (this.getURL == null) return -1;
-  this.getTileInfos_("init");
-  let count = await this.requestImages_("init");
-  return count;
-};
-
-// Called from animation
-MapView.prototype.render = async function (fetchNewAssets, showCities) {
+MapView.prototype.renderSync = async function (fetchNewAssets, showCities) {
   if (this.getURL == null) return;
   if (fetchNewAssets) {
     this.getTileInfos_();
-    await this.requestImages_();
+    await this.requestImagesSync_();
   }
-  await this.render_();
+  this.render_();
   if (showCities) {
+    this.cities.showCities(this, fetchNewAssets);
+  } else {
+    this.cities.clearCities();
+  }
+};
 
-    await this.cities.showCities(this, fetchNewAssets);
+// Called from animation
+MapView.prototype.render = function (fetchNewAssets, showCities) {
+  if (this.getURL == null) return;
+  if (fetchNewAssets) {
+    this.getTileInfos_();
+    this.requestImages_();
+  }
+  this.render_();
+  if (showCities) {
+    this.cities.showCities(this, fetchNewAssets);
   } else {
     this.cities.clearCities();
   }
@@ -113,13 +115,19 @@ MapView.prototype.getTileInfos_ = function () {
   // this.tileInfos = tileArray;
 };
 
-MapView.prototype.requestImages_ = async function () {
+MapView.prototype.requestImages_ = function () {
+  for (let i = 0; i < this.tileInfos.length; ++i) {
+    this.imageCache.loadImageIfAbsent(this.tileInfos[i].url, this.tileInfos[i].rect);
+  }
+};
+
+MapView.prototype.requestImagesSync_ = async function () {
   for (let i = 0; i < this.tileInfos.length; ++i) {
     await this.imageCache.loadImageIfAbsent(this.tileInfos[i].url, this.tileInfos[i].rect);
   }
 };
 
-MapView.prototype.render_ = async function () {
+MapView.prototype.render_ = function () {
   this.rasterProj.clear(this.canvasSize);
   let targetTextures = [];
   for (let i = 0; i < this.tileInfos.length; ++i) {

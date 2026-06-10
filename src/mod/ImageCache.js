@@ -85,6 +85,7 @@ ImageCache.prototype.loadImage_ = async function (url, info) {
     }
     resolve();
   }
+  
   if (debug == "red") {
     promise.then((redImage) => {
       image.src = redImage.src; // Use the red bordered image

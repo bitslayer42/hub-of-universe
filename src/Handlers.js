@@ -13,12 +13,12 @@ export const Handlers = {
     this.selectedLayer = event.target.value;
     this.setLayer();
     this.requestIds.push(requestAnimationFrame(this.render));
-    this.mapView.render(true, this.displayCities, "handleLayerChange");
+    this.mapView.render(true, this.displayCities);
   },
 
   handleShowCitiesChange(event) {
     this.displayCities = event.target.checked;
-    this.mapView.render(true, this.displayCities, "handleShowCitiesChange");
+    this.mapView.render(true, this.displayCities);
   },
 
   handleKeydown(event) {
@@ -137,7 +137,8 @@ export const Handlers = {
     this.viewStatus.dragPrevPos = null;
     this.fetchNewAssets = true;
     this.requestIds.push(requestAnimationFrame(this.render));
-    // this.mapView.render(true, this.displayCities, "handleMouseUp");
+    this.setQueryParams();
+    this.mapView.render(true, this.displayCities);
   },
 
   ///////////////////////////////////////////////////////////////
@@ -301,7 +302,7 @@ export const Handlers = {
 
   handleTitleClick: async function (event) {
     event.preventDefault();
-    let random_latlon = this.mapView.cities.cityList[Math.floor(Math.random() * this.mapView.cities.cityList.length)];
+    let random_latlon = this.mapView.cities.cityList[Math.floor(Math.random() * this.mapView.cities.cityList.length * 2 / 3)];
     // //console.log("Random city selected:", random_latlon);
     let lam_phi = { lambda: random_latlon.longitude * Math.PI / 180, phi: random_latlon.latitude * Math.PI / 180 };
     let lam_phi_zoom = { lambda: lam_phi.lambda, phi: lam_phi.phi, zoom: this.zoomMax };
