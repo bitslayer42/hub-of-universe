@@ -31,17 +31,17 @@ let Main = function () {
   this.selectedLayer = this.layerSelectBox.value;
   this.showCitiesCheckBox = document.querySelector('input#showCities');
   this.displayCities = this.showCitiesCheckBox.checked;
-  this.fetchNewAssets = true; // whether to fetch new map tiles and city data
   this.mylocationButton = document.querySelector('button#myLocation');
   this.zoominButton = document.querySelector('button#zoomin');
   this.zoomoutButton = document.querySelector('button#zoomout');
   this.titleText = document.querySelector('.title-text');
   this.currYear = new Date().getFullYear();
+  this.mouseDragged = false;
 
   this.googleSessions = [];
 
   var locations = [ // lat, log * 0.0174533
-    [-1.29174307860817, 0.7104078658215001], // Fraunces Tavern NYC -74.0113949 40.703355 
+    [-1.29174307860817, 0.7104078658215001], // Fraunces Tavern NYC -74.0113949 40.703355
     [-1.34406026074966, 0.6787546684457174], // DC capitol -77.009003 38.889931
     [-1.24019010226, 0.73929973401], // Beantown  -71.0576282 42.3587364
     [-1.40412724747, 0.43790456061],   // Key Largo -80.4505307 25.0900724
@@ -78,7 +78,7 @@ let Main = function () {
     this.rasterProj = new RasterProj(this.ringRadius);
     this.rasterProj.setScale(this.viewStatus.zoomScale);
     await this.startup(this.rasterProj); // sets up this.canvas, webgl, and calls init
-    this.requestIds.push(requestAnimationFrame(this.render));
+    this.requestIds.push(requestAnimationFrame(this.renderOnce));
   });
 
   window.addEventListener('resize', async () => {
@@ -90,33 +90,31 @@ let Main = function () {
   this.resizeCanvas = async (canvas) => {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-        this.mapView.renderSync(this.fetchNewAssets, this.displayCities);
-    // this.clearRequestIds();
-    // this.requestIds.push(requestAnimationFrame(this.render)); 
+    this.mapView.renderSync(false, this.displayCities);
   };
 
-  this.render = () => {
-    if (!this.mapView) return;
-    let currTime = new Date().getTime();
+  this.animation = () => {
     this.setTileLevel();
 
-    let currPos;
     if (this.viewStatus.interpolater != null) {
+      let currTime = new Date().getTime();
       // Interpolater is running
-      currPos = this.viewStatus.interpolater.getPos(currTime);
-      //console.log(currPos);
+      let currPos = this.viewStatus.interpolater.getPos(currTime);
       this.setProjCenter(currPos.lambda, currPos.phi);
       this.viewStatus.zoomScale = currPos.zoom;
       this.rasterProj.setScale(this.viewStatus.zoomScale);
-      if (this.viewStatus.interpolater.isFinished()) {
-        // Interpolater finished
+      if (this.viewStatus.interpolater.isFinished()) { // Interpolater finished
         this.viewStatus.interpolater = null;
-        this.fetchNewAssets = true;
         this.setQueryParams();
         this.mapView.render(true, this.displayCities);
-      };
-      this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.render));
+        setTimeout(() => {
+          this.mapView.renderSync(false, this.displayCities);
+        }, 300); // schedule a sync render because assets can load after the first render
+      } else { // Interpolater still running, continue animation
+        this.clearRequestIds();
+        this.requestIds.push(requestAnimationFrame(this.animation));
+        this.mapView.render(false, this.displayCities);
+      }
     } else if (this.viewStatus.targetLambdaPhiZoom != null) {
       // Start Interpolator, new lambda phi requested
       let currLambdaPhi = this.mapView.getProjCenter();
@@ -128,20 +126,21 @@ let Main = function () {
         this.interpolateTimeSpan
       );
       this.viewStatus.targetLambdaPhiZoom = null;
-      this.fetchNewAssets = false;
       this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.render));
+      this.requestIds.push(requestAnimationFrame(this.animation));
+      this.mapView.render(false, this.displayCities);
     }
+
+  };
+
+  this.renderOnce = () => {
     // zoom in/out
     if (this.prevScale != this.viewStatus.zoomScale) { // zooming, or first time thru
       this.rasterProj.setScale(this.viewStatus.zoomScale);
       this.rasterProj.setFlatRatio(this.ringRadius);
       this.prevScale = this.viewStatus.zoomScale;
     }
-    this.mapView.render(this.fetchNewAssets, this.displayCities);
-    setTimeout(() => {
-      this.mapView.renderSync(this.fetchNewAssets, this.displayCities);
-    }, 100); // schedule another render in case some assets load after the first render
+    this.mapView.renderSync(true, this.displayCities);
   };
 
   this.startup = async (rasterProj) => {
@@ -199,7 +198,6 @@ let Main = function () {
     await this.setLayer();
 
     this.setTileLevel();
-    // await this.mapView.renderSync(this.fetchNewAssets, this.displayCities); 
   };
 
   this.setProjCenter = (lam0, phi0) => {

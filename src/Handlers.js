@@ -12,7 +12,7 @@ export const Handlers = {
   handleLayerChange(event) {
     this.selectedLayer = event.target.value;
     this.setLayer();
-    this.requestIds.push(requestAnimationFrame(this.render));
+    this.requestIds.push(requestAnimationFrame(this.renderOnce));
     this.mapView.render(true, this.displayCities);
   },
 
@@ -68,7 +68,7 @@ export const Handlers = {
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.render));
+    this.requestIds.push(requestAnimationFrame(this.renderOnce));
   },
 
   handleWheel(event) {
@@ -80,7 +80,7 @@ export const Handlers = {
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     // this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.render));
+    this.requestIds.push(requestAnimationFrame(this.renderOnce));
   },
 
   getPanRate(zoomScale) {
@@ -128,7 +128,7 @@ export const Handlers = {
         }
         this.viewStatus.dragPrevPos = canv_xy;
       }
-      this.requestIds.push(requestAnimationFrame(this.render));
+      this.mapView.render(false, this.displayCities);
     }
   },
 
@@ -136,9 +136,8 @@ export const Handlers = {
     this.viewStatus.drag = false;
     this.viewStatus.dragPrevPos = null;
     this.fetchNewAssets = true;
-    this.requestIds.push(requestAnimationFrame(this.render));
     this.setQueryParams();
-    this.mapView.render(true, this.displayCities);
+    this.mapView.renderSync(true, this.displayCities);
   },
 
   ///////////////////////////////////////////////////////////////
@@ -163,7 +162,7 @@ export const Handlers = {
       if (canv_xy) {
         this.viewStatus.drag = true;
         this.viewStatus.dragPrevPos = canv_xy;
-        this.requestIds.push(requestAnimationFrame(this.render));
+        this.fetchNewAssets = false;
       }
     }
   },
@@ -183,7 +182,7 @@ export const Handlers = {
       this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
       this.viewStatus.pinchPrevDistance = currentDistance;
       this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.render));
+      this.requestIds.push(requestAnimationFrame(this.renderOnce));
     } else if (event.touches.length === 1 && this.viewStatus.drag) {
       // Single touch drag
       let touch = event.touches[0];
@@ -198,82 +197,19 @@ export const Handlers = {
           let newLam0 = curr_lam_phi.lambda - deltaX;
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0);
           this.setProjCenter(newLam0, newPhi0);
+          this.mapView.render(false, this.displayCities);
         }
         this.viewStatus.dragPrevPos = canv_xy;
       }
-      // //console.log("butmy",this.viewStatus.lam0 , newLam0);
-      // this.viewStatus.lam0 = newLam0;
-      // this.viewStatus.phi0 = newPhi0;
     }
   },
 
-  /**
-   * Handles the end of a touch event on the map view.
-   * 
-   * Manages pinch gesture termination, detects double-tap gestures with distance validation,
-   * and handles drag gesture completion. Records tap timing and position to distinguish
-   * between single and double taps within a specified threshold.
-   * 
-   * @param {TouchEvent} event - The touch event object containing touch point information
-   * 
-   * @description
-   * - Resets pinch state when fewer than 2 touches remain
-   * - Detects double-tap on single finger with time (300ms) and distance (30px) constraints
-   * - Triggers handleDoubleClick callback if double-tap is detected
-   * - Records tap timing and position for subsequent double-tap validation
-   * - Auto-clears stale tap state after DOUBLE_TAP_MS + 50ms
-   * - Completes drag gesture and triggers re-render when all touches end
-   */
   handleTouchEnd(event) {
-    const DOUBLE_TAP_MS = 300;
-    const DOUBLE_TAP_DIST_PX = 30;
-
-    if (event.touches.length < 2) {
-      this.viewStatus.pinching = false;
-      this.viewStatus.pinchPrevDistance = null;
-    }
-
-    // Detect double-tap on single-finger end
-    if (event.changedTouches && event.changedTouches.length === 1) {
-      const touch = event.changedTouches[0];
-      const now = Date.now();
-      const last = this.viewStatus.lastTapTime || 0;
-      const lastPos = this.viewStatus.lastTapPos;
-
-      if (last > 0 && (now - last) <= DOUBLE_TAP_MS && lastPos) {
-        const dx = touch.clientX - lastPos[0];
-        const dy = touch.clientY - lastPos[1];
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist <= DOUBLE_TAP_DIST_PX) {
-          // It's a double-tap: prevent browser zoom and trigger map double-tap
-          event.preventDefault();
-          this.viewStatus.lastTapTime = 0;
-          this.viewStatus.lastTapPos = null;
-          this.handleDoubleClick({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => { } });
-        } else {
-          // Not close enough: treat as new tap
-          this.viewStatus.lastTapTime = now;
-          this.viewStatus.lastTapPos = [touch.clientX, touch.clientY];
-        }
-      } else {
-        // first tap: record
-        this.viewStatus.lastTapTime = now;
-        this.viewStatus.lastTapPos = [touch.clientX, touch.clientY];
-        // clear after threshold to avoid stale state
-        setTimeout(() => {
-          if (Date.now() - (this.viewStatus.lastTapTime || 0) > DOUBLE_TAP_MS) {
-            this.viewStatus.lastTapTime = 0;
-            this.viewStatus.lastTapPos = null;
-          }
-        }, DOUBLE_TAP_MS + 50);
-      }
-    }
-
-    if (event.touches.length === 0) {
-      this.viewStatus.drag = false;
-      this.viewStatus.dragPrevPos = null;
-      // this.mapView.render(true, this.displayCities, "handleTouchEnd");
-    }
+    this.viewStatus.drag = false;
+    this.viewStatus.dragPrevPos = null;
+    this.fetchNewAssets = true;
+    this.setQueryParams();
+    this.mapView.renderSync(true, this.displayCities);
   },
 
   ///////////////////////////////////////////////////////////////
@@ -282,7 +218,7 @@ export const Handlers = {
     this.viewStatus.zoomScale = this.viewStatus.zoomScale * 2.0;
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.render));
+    this.requestIds.push(requestAnimationFrame(this.animation));
   },
 
   handleZoomOutClick(event) {
@@ -290,7 +226,7 @@ export const Handlers = {
     this.viewStatus.zoomScale = this.viewStatus.zoomScale / 2.0;
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.render));
+    this.requestIds.push(requestAnimationFrame(this.animation));
   },
 
   handleMyLocationClick: async function (event) {
@@ -309,7 +245,7 @@ export const Handlers = {
     this.gotoLocation(lam_phi_zoom);
   },
 
-  handleDoubleClick(event) {
+  handleDoubleClick(event) { // NOTICE: single click is also called when double clicking
     clearTimeout(this.messageTimeoutID); // clear any existing message timeout
     this.messagesBox.innerHTML = ""; // clear messages on double click
 
@@ -326,7 +262,7 @@ export const Handlers = {
   gotoLocation(lam_phi_zoom) {
     this.viewStatus.targetLambdaPhiZoom = lam_phi_zoom; // set target lambda, phi for interpolater
     // this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.render));
+    this.requestIds.push(requestAnimationFrame(this.animation));
   },
 
   handleContextLost(event) {
@@ -337,6 +273,6 @@ export const Handlers = {
 
   handleContextRestored(event) {
     this.init(this.rasterProj);
-    this.requestIds.push(requestAnimationFrame(this.render));
+    this.requestIds.push(requestAnimationFrame(this.renderOnce));
   }
 };

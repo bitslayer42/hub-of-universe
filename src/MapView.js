@@ -89,7 +89,7 @@ MapView.prototype.renderSync = async function (fetchNewAssets, showCities) {
   }
   this.render_();
   if (showCities) {
-    this.cities.showCities(this, fetchNewAssets);
+    this.cities.showCitiesSync(this, fetchNewAssets);
   } else {
     this.cities.clearCities();
   }

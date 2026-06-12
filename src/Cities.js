@@ -58,9 +58,10 @@ Cities.prototype.fetchCities_ = function (mapkey, lat0, lon0, tileLevel) {
       resolve();
     })
     .catch(error => {
-      console.error("Error fetching cities:", error);
-      // this.cityList = [];
-      reject(error);
+      // console.error("Error fetching cities:", error);
+      this.cityList = [];
+      resolve();
+      // reject(error);
     });
   return promise;
 };
