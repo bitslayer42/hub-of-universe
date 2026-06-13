@@ -37,6 +37,7 @@ let Main = function () {
   this.titleText = document.querySelector('.title-text');
   this.currYear = new Date().getFullYear();
   this.mouseDragged = false;
+  this.wheelTimer = null;
 
   this.googleSessions = [];
 
@@ -78,7 +79,7 @@ let Main = function () {
     this.rasterProj = new RasterProj(this.ringRadius);
     this.rasterProj.setScale(this.viewStatus.zoomScale);
     await this.startup(this.rasterProj); // sets up this.canvas, webgl, and calls init
-    this.requestIds.push(requestAnimationFrame(this.renderOnce));
+    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
   });
 
   window.addEventListener('resize', async () => {
@@ -133,13 +134,24 @@ let Main = function () {
 
   };
 
-  this.renderOnce = () => {
+  this.prerender = () => {
+    this.setTileLevel();
     // zoom in/out
     if (this.prevScale != this.viewStatus.zoomScale) { // zooming, or first time thru
       this.rasterProj.setScale(this.viewStatus.zoomScale);
       this.rasterProj.setFlatRatio(this.ringRadius);
       this.prevScale = this.viewStatus.zoomScale;
     }
+    this.setQueryParams();
+  }
+
+  this.renderOnce = () => {
+    this.prerender();
+    this.mapView.render(false, this.displayCities);
+  };
+
+  this.renderOnceSync = () => {
+    this.prerender();
     this.mapView.renderSync(true, this.displayCities);
   };
 

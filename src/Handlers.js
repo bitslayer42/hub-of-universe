@@ -12,7 +12,7 @@ export const Handlers = {
   handleLayerChange(event) {
     this.selectedLayer = event.target.value;
     this.setLayer();
-    this.requestIds.push(requestAnimationFrame(this.renderOnce));
+    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
     this.mapView.render(true, this.displayCities);
   },
 
@@ -68,7 +68,7 @@ export const Handlers = {
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.renderOnce));
+    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
   },
 
   handleWheel(event) {
@@ -79,8 +79,13 @@ export const Handlers = {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    // this.clearRequestIds();
+    this.clearRequestIds();
     this.requestIds.push(requestAnimationFrame(this.renderOnce));
+    this.wheelTimer && clearTimeout(this.wheelTimer);
+    this.wheelTimer = setTimeout(() => {
+      this.clearRequestIds();
+      this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
+    }, 1000);
   },
 
   getPanRate(zoomScale) {
@@ -182,7 +187,7 @@ export const Handlers = {
       this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
       this.viewStatus.pinchPrevDistance = currentDistance;
       this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.renderOnce));
+      this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
     } else if (event.touches.length === 1 && this.viewStatus.drag) {
       // Single touch drag
       let touch = event.touches[0];
@@ -218,7 +223,7 @@ export const Handlers = {
     this.viewStatus.zoomScale = this.viewStatus.zoomScale * 2.0;
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.animation));
+    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
   },
 
   handleZoomOutClick(event) {
@@ -226,7 +231,7 @@ export const Handlers = {
     this.viewStatus.zoomScale = this.viewStatus.zoomScale / 2.0;
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
     this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.animation));
+    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
   },
 
   handleMyLocationClick: async function (event) {
@@ -273,6 +278,6 @@ export const Handlers = {
 
   handleContextRestored(event) {
     this.init(this.rasterProj);
-    this.requestIds.push(requestAnimationFrame(this.renderOnce));
+    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
   }
 };
