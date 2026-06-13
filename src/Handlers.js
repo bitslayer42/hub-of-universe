@@ -12,7 +12,7 @@ export const Handlers = {
   handleLayerChange(event) {
     this.selectedLayer = event.target.value;
     this.setLayer();
-    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
+    requestAnimationFrame(this.renderOnceSync);
     this.mapView.render(true, this.displayCities);
   },
 
@@ -67,8 +67,11 @@ export const Handlers = {
         break;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
+        requestAnimationFrame(this.renderOnce);
+    this.wheelTimer && clearTimeout(this.wheelTimer);
+    this.wheelTimer = setTimeout(() => {
+            requestAnimationFrame(this.renderOnceSync);
+    }, 200);
   },
 
   handleWheel(event) {
@@ -79,13 +82,11 @@ export const Handlers = {
       this.viewStatus.zoomScale = this.viewStatus.zoomScale / 1.1;
     }
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.renderOnce));
+        requestAnimationFrame(this.renderOnce);
     this.wheelTimer && clearTimeout(this.wheelTimer);
     this.wheelTimer = setTimeout(() => {
-      this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
-    }, 1000);
+            requestAnimationFrame(this.renderOnceSync);
+    }, 100);
   },
 
   getPanRate(zoomScale) {
@@ -186,8 +187,7 @@ export const Handlers = {
       }
       this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
       this.viewStatus.pinchPrevDistance = currentDistance;
-      this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
+            requestAnimationFrame(this.renderOnceSync);
     } else if (event.touches.length === 1 && this.viewStatus.drag) {
       // Single touch drag
       let touch = event.touches[0];
@@ -222,16 +222,14 @@ export const Handlers = {
     event.preventDefault();
     this.viewStatus.zoomScale = this.viewStatus.zoomScale * 2.0;
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
+        requestAnimationFrame(this.renderOnceSync);
   },
 
   handleZoomOutClick(event) {
     event.preventDefault();
     this.viewStatus.zoomScale = this.viewStatus.zoomScale / 2.0;
     this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
-    this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
+        requestAnimationFrame(this.renderOnceSync);
   },
 
   handleMyLocationClick: async function (event) {
@@ -266,18 +264,16 @@ export const Handlers = {
 
   gotoLocation(lam_phi_zoom) {
     this.viewStatus.targetLambdaPhiZoom = lam_phi_zoom; // set target lambda, phi for interpolater
-    // this.clearRequestIds();
-    this.requestIds.push(requestAnimationFrame(this.animation));
+        requestAnimationFrame(this.animation);
   },
 
   handleContextLost(event) {
     event.preventDefault();
-    this.clearRequestIds();
-    this.mapView.resetImages();
+        this.mapView.resetImages();
   },
 
   handleContextRestored(event) {
     this.init(this.rasterProj);
-    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
+    requestAnimationFrame(this.renderOnceSync);
   }
 };

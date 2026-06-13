@@ -12,7 +12,6 @@ let Main = function () {
   this.canvas = document.querySelector('#webglCanvas');
   this.messagesBox = document.querySelector('.messages');
   this.mapView = null;
-  this.requestIds = [];
   this.prevTime = null;
   this.prevScale = null;
   this.viewStatus = {
@@ -37,6 +36,7 @@ let Main = function () {
   this.titleText = document.querySelector('.title-text');
   this.currYear = new Date().getFullYear();
   this.mouseDragged = false;
+  this.wheelTimer = null;
 
   this.googleSessions = [];
 
@@ -67,7 +67,6 @@ let Main = function () {
 
   document.addEventListener('DOMContentLoaded', async () => {
     this.getQueryParams(); // check for url params
-    // await this.resizeCanvas(this.canvas);
 
     let lam_phi = await this.getUsersLocation(false);
     if (lam_phi) {
@@ -78,24 +77,18 @@ let Main = function () {
     this.rasterProj = new RasterProj(this.ringRadius);
     this.rasterProj.setScale(this.viewStatus.zoomScale);
     await this.startup(this.rasterProj); // sets up this.canvas, webgl, and calls init
-<<<<<<< HEAD
-    this.requestIds.push(requestAnimationFrame(this.renderOnceSync));
-=======
-    this.requestIds.push(requestAnimationFrame(this.renderOnce));
->>>>>>> 38a694836a32aa7ce8cb3f0780e158716c4bcee4
+    requestAnimationFrame(this.renderOnceSync);
   });
 
-  window.addEventListener('resize', async () => {
-    await this.resizeCanvas(this.canvas);
-    this.mapView.resizeCanvas(this.canvas);
-    // this.rasterProj.clear(this.canvas);
-  });
-
-  this.resizeCanvas = async (canvas) => {
+  window.addEventListener('resize', () => {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
+    this.mapView.resizeCanvas(this.canvas);
+    // this.rasterProj.clear(this.canvas);
     this.mapView.renderSync(false, this.displayCities);
-  };
+  });
+
+
 
   this.animation = () => {
     this.setTileLevel();
@@ -108,15 +101,14 @@ let Main = function () {
       this.viewStatus.zoomScale = currPos.zoom;
       this.rasterProj.setScale(this.viewStatus.zoomScale);
       if (this.viewStatus.interpolater.isFinished()) { // Interpolater finished
-        this.viewStatus.interpolater = null;
+                this.viewStatus.interpolater = null;
         this.setQueryParams();
         this.mapView.render(true, this.displayCities);
         setTimeout(() => {
-          this.mapView.renderSync(false, this.displayCities);
+          this.mapView.renderSync(true, this.displayCities);
         }, 300); // schedule a sync render because assets can load after the first render
       } else { // Interpolater still running, continue animation
-        this.clearRequestIds();
-        this.requestIds.push(requestAnimationFrame(this.animation));
+                requestAnimationFrame(this.animation);
         this.mapView.render(false, this.displayCities);
       }
     } else if (this.viewStatus.targetLambdaPhiZoom != null) {
@@ -130,26 +122,20 @@ let Main = function () {
         this.interpolateTimeSpan
       );
       this.viewStatus.targetLambdaPhiZoom = null;
-      this.clearRequestIds();
-      this.requestIds.push(requestAnimationFrame(this.animation));
+            requestAnimationFrame(this.animation);
       this.mapView.render(false, this.displayCities);
     }
 
   };
 
-<<<<<<< HEAD
   this.prerender = () => {
     this.setTileLevel();
-=======
-  this.renderOnce = () => {
->>>>>>> 38a694836a32aa7ce8cb3f0780e158716c4bcee4
     // zoom in/out
     if (this.prevScale != this.viewStatus.zoomScale) { // zooming, or first time thru
       this.rasterProj.setScale(this.viewStatus.zoomScale);
       this.rasterProj.setFlatRatio(this.ringRadius);
       this.prevScale = this.viewStatus.zoomScale;
     }
-<<<<<<< HEAD
     this.setQueryParams();
   }
 
@@ -160,8 +146,6 @@ let Main = function () {
 
   this.renderOnceSync = () => {
     this.prerender();
-=======
->>>>>>> 38a694836a32aa7ce8cb3f0780e158716c4bcee4
     this.mapView.renderSync(true, this.displayCities);
   };
 
@@ -381,12 +365,6 @@ let Main = function () {
       return null;
     }
   };
-
-  this.clearRequestIds = () => {
-    //console.log("Clearing request IDs: " + this.requestIds.length);
-    this.requestIds.map(id => cancelAnimationFrame(id));
-    this.requestIds.length = 0; // clear array
-  }
 
   // Assign handler methods to this instance
   Object.assign(this, Handlers);
