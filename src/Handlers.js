@@ -3,9 +3,6 @@ export const Handlers = {
     let canv_xy = this.canvas.getBoundingClientRect();
     let left = clientX - canv_xy.left;
     let top = clientY - canv_xy.top;
-    if (left < 0 || top < 0 || canv_xy.width < left || canv_xy.height < top) { //offscreen
-      return null;
-    }
     return [left, top];
   },
 
@@ -41,33 +38,29 @@ export const Handlers = {
         break;
       case "ArrowUp":
         {
-          let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
-          let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + (1 / deltaPanRate), Math.PI / 2.0), -Math.PI / 2.0);
+          let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + (1 / this.panRate), Math.PI / 2.0), -Math.PI / 2.0);
           this.setProjCenter(curr_lam_phi.lambda, newPhi0);
         }
         break;
       case "ArrowDown":
         {
-          let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
-          let newPhi0 = Math.max(Math.min(curr_lam_phi.phi - (1 / deltaPanRate), Math.PI / 2.0), -Math.PI / 2.0);
+          let newPhi0 = Math.max(Math.min(curr_lam_phi.phi - (1 / this.panRate), Math.PI / 2.0), -Math.PI / 2.0);
           this.setProjCenter(curr_lam_phi.lambda, newPhi0);
         }
         break;
       case "ArrowLeft":
         {
-          let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
-          let newLam0 = curr_lam_phi.lambda - (1 / deltaPanRate);
+          let newLam0 = curr_lam_phi.lambda - (1 / this.panRate);
           this.setProjCenter(newLam0, curr_lam_phi.phi);
         }
         break;
       case "ArrowRight":
         {
-          let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
           let curr_lam_phi = this.mapView.getProjCenter();
-          let newLam0 = curr_lam_phi.lambda + (1 / deltaPanRate);
+          let newLam0 = curr_lam_phi.lambda + (1 / this.panRate);
           this.setProjCenter(newLam0, curr_lam_phi.phi);
         }
         break;
@@ -97,22 +90,22 @@ export const Handlers = {
     }, 100);
   },
 
-  getPanRate(zoomScale) {
+  setPanRate(zoomScale) {
     // return higher numbers to move slower 
     if (zoomScale < 1) {
-      return 100;
+      this.panRate = 100;
     } else if (zoomScale < 10) {
-      return 300;
+      this.panRate = 300;
     } else if (zoomScale < 100) {
-      return 500;
+      this.panRate = 500;
     } else if (zoomScale < 1_000) {
-      return 1_000;
+      this.panRate = 1_000;
     } else if (zoomScale < 10_000) {
-      return 10_000;
+      this.panRate = 10_000;
     } else if (zoomScale < 100_000) {
-      return 50_000;
+      this.panRate = 50_000;
     } else {
-      return zoomScale * 3;
+      this.panRate = zoomScale * 3;
     }
   },
 
@@ -128,9 +121,8 @@ export const Handlers = {
       let canv_xy = this.checkAndGetGesturePos(event.clientX, event.clientY);
       if (this.viewStatus.dragPrevPos) {
         event.preventDefault();
-        let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
-        let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaPanRate;
-        let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaPanRate;
+        let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / this.panRate;
+        let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / this.panRate;
         let curr_lam_phi = this.mapView.getProjCenter();
         let newLam0 = curr_lam_phi.lambda - deltaX;
         let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0);
@@ -196,9 +188,8 @@ export const Handlers = {
       if (null != canv_xy) {
         if (this.viewStatus.dragPrevPos) {
           event.preventDefault();
-          let deltaPanRate = this.getPanRate(this.viewStatus.zoomScale);
-          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / deltaPanRate;
-          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / deltaPanRate;
+          let deltaX = (canv_xy[0] - this.viewStatus.dragPrevPos[0]) / this.panRate;
+          let deltaY = (canv_xy[1] - this.viewStatus.dragPrevPos[1]) / this.panRate;
           let curr_lam_phi = this.mapView.getProjCenter();
           let newLam0 = curr_lam_phi.lambda - deltaX;
           let newPhi0 = Math.max(Math.min(curr_lam_phi.phi + deltaY, Math.PI / 2.0), -Math.PI / 2.0);

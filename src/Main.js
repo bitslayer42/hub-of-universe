@@ -39,6 +39,7 @@ let Main = function () {
   this.currYear = new Date().getFullYear();
   this.mouseDragged = false;
   this.wheelTimer = null;
+  this.panRate = 0.005; // how fast to pan when dragging, smaller is slower
 
   this.googleSessions = [];
 
@@ -85,6 +86,7 @@ let Main = function () {
     }
 
     this.rasterProj = new RasterProj(this.ringRadius);
+    this.setPanRate(this.viewStatus.zoomScale);
     this.rasterProj.setScale(this.viewStatus.zoomScale);
     await this.startup(this.rasterProj); // sets up this.canvas, webgl, and calls init
     requestAnimationFrame(this.renderOnceSync);
