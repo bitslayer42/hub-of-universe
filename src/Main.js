@@ -28,6 +28,8 @@ let Main = function () {
   };
   this.layerSelectBox = document.querySelector('select#layer');
   this.selectedLayer = this.layerSelectBox.value;
+  this.gotoSelectBox = document.querySelector('select#goto');
+  this.selectedGoto = this.gotoSelectBox.value;
   this.showCitiesCheckBox = document.querySelector('input#showCities');
   this.displayCities = this.showCitiesCheckBox.checked;
   this.mylocationButton = document.querySelector('button#myLocation');
@@ -40,20 +42,28 @@ let Main = function () {
 
   this.googleSessions = [];
 
-  var locations = [ // lat, log * 0.0174533
-    [-1.29174307860817, 0.7104078658215001], // Fraunces Tavern NYC -74.0113949 40.703355
-    [-1.34406026074966, 0.6787546684457174], // DC capitol -77.009003 38.889931
-    [-1.24019010226, 0.73929973401], // Beantown  -71.0576282 42.3587364
-    [-1.40412724747, 0.43790456061],   // Key Largo -80.4505307 25.0900724
-    [-0.00142463433, 0.89850833693], // London  -0.0816255 51.4807135
-    [0.0, 0.0], // null island 
-    [-0.785017, 1.15794], //greenland white
-    [-2.066469, 0.591122], //venice beach la ca -118.4754411 33.9862641
-    [-1.4407952048317003, 0.6212504054863001], // hub of universe
+  this.gotoLocations = [ 
+    // [name, lambda, phi] // long, lat * 0.0174533
+    ["New York", -1.2916483296432497, 0.7105983955635071], // -74.00596618652344 40.714271545410156
+    ["Washington DC", -1.34406026074966, 0.6787546684457174], //  -77.009003 38.889931
+    ["Cairo", 0.5454098659116745, 0.5246920949378968], // 31.249670028686523, 30.06262969970703
+    ["São Paulo", -0.8139539907104493, -0.410981592402649], // -46.6361083984375, -23.547500610351562
+    ["Tokyo", 2.438081347027588, 0.622899531175232],   // 35.68949890136719, 139.69171142578125
+    ["Beijing", 2.0315158102371216, 0.6965175910552979], // 116.39723205566406, 39.907501220703125
+    ["Paris", 0.040994310061287884, 0.8526532000442506], // 2.34879994392395, 48.85340881347656
+    ["Sydney", 2.639066738523865, -0.5911057683494568], // 151.2073211669922, -33.86785125732422
+    ["London", -0.0021945780565992, 0.8989938207687379], //  -0.12574000656604767 51.50852966308594
+    ["Delhi", 1.3479443834213258, 0.500071093529129], // 77.23149108886719, 28.65195083618164
+    ["Hub of Universe", -1.2402274606460573, 0.7392943680816652], // Boston: hub of universe  -71.05976867675781, 42.358428955078125
   ];
-  // Center of map: lam0 longitude, phi0 latitude in radians -82.551449,35.595011
-  var locat = 2;
-  [this.viewStatus.lam0, this.viewStatus.phi0] = locations[locat];
+
+  this.gotoLocations.forEach((loc,ix) => {
+    const option = document.createElement("option");
+    option.text = loc[0];
+    option.value = ix;
+    this.gotoSelectBox.add(option);
+  });
+
 
   this.zoomMin = 0.1;
   this.zoomStart = 3e+2;
@@ -158,6 +168,7 @@ let Main = function () {
     this.canvas.addEventListener("webglcontextlost", this.handleContextLost.bind(this), false);
     this.canvas.addEventListener("webglcontextrestored", this.handleContextRestored.bind(this), false);
     this.layerSelectBox.addEventListener('change', this.handleLayerChange.bind(this), false);
+    this.gotoSelectBox.addEventListener('change', this.handleGotoChange.bind(this), false); 
     this.showCitiesCheckBox.addEventListener('change', this.handleShowCitiesChange.bind(this), false);
     this.mylocationButton.addEventListener('click', this.handleMyLocationClick.bind(this), false);
     this.zoominButton.addEventListener('click', this.handleZoomInClick.bind(this), false);
@@ -224,7 +235,7 @@ let Main = function () {
   }
 
   // Set variables from query parameters in the URL
-  // e.g. http://localhost:1234/?zoom=1000&lon=-74.0113949&lat=40.703355
+  // e.g. http://localhost:1234/?zoom=1000&lon=-74.0113949&lat=40.703355&map=mapbox_satellite&local&red
   this.getQueryParams = () => {
     let params = new URLSearchParams(window.location.search);
     let zoomScale = params.get("zoom");
@@ -244,6 +255,10 @@ let Main = function () {
         this.viewStatus.phi0 = latitude * 0.0174533; //degrees to radians
       }
     }
+    let map = params.get("map");
+    if (map) {
+      this.selectedLayer = map;
+    }
     let local = params.get("local");
     if (local == "") {
       this.debug = "local";
@@ -253,6 +268,16 @@ let Main = function () {
       this.debug = "red";
     }
   };
+
+  this.setQueryParams = () => {
+    // //console.log(`Setting query params.${this.viewStatus.lam0}, ${this.viewStatus.phi0}, ${this.viewStatus.zoomScale}`);
+    let params = new URLSearchParams(window.location.search);
+    params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
+    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(4)); // radians to degrees
+    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(4)); // radians to degrees
+    params.set("map", this.selectedLayer);
+    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
+  }
 
   this.getSessions = async () => { // Get Google Maps Tile API sessions for satellite, roadmap, terrain
     const language = navigator.language || "en-US";
@@ -325,15 +350,6 @@ let Main = function () {
       }
     }
   };
-
-  this.setQueryParams = () => {
-    // //console.log(`Setting query params.${this.viewStatus.lam0}, ${this.viewStatus.phi0}, ${this.viewStatus.zoomScale}`);
-    let params = new URLSearchParams(window.location.search);
-    params.set("zoom", this.viewStatus.zoomScale.toFixed(2)); // zoomScale
-    params.set("lon", (this.viewStatus.lam0 * 180 / Math.PI).toFixed(4)); // radians to degrees
-    params.set("lat", (this.viewStatus.phi0 * 180 / Math.PI).toFixed(4)); // radians to degrees
-    window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
-  }
 
   this.getUsersLocation = async (getPrecise = false) => {
     if (!getPrecise) {
