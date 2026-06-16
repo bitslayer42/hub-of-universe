@@ -121,7 +121,6 @@ export const Handlers = {
     let canv_xy = this.checkAndGetGesturePos(event.clientX, event.clientY);
     this.viewStatus.drag = true;
     this.viewStatus.dragPrevPos = canv_xy;
-    this.fetchNewAssets = false;
   },
 
   handleMouseMove(event) {
@@ -145,7 +144,6 @@ export const Handlers = {
   handleMouseUp(event) {
     this.viewStatus.drag = false;
     this.viewStatus.dragPrevPos = null;
-    this.fetchNewAssets = true;
     this.setQueryParams();
     this.mapView.renderSync(true, this.displayCities);
   },
@@ -172,7 +170,6 @@ export const Handlers = {
       if (canv_xy) {
         this.viewStatus.drag = true;
         this.viewStatus.dragPrevPos = canv_xy;
-        this.fetchNewAssets = false;
       }
     }
   },
@@ -191,7 +188,7 @@ export const Handlers = {
       }
       this.viewStatus.zoomScale = Math.min(Math.max(this.zoomMin, this.viewStatus.zoomScale), this.zoomMax);
       this.viewStatus.pinchPrevDistance = currentDistance;
-      requestAnimationFrame(this.renderOnceSync);
+      requestAnimationFrame(this.renderOnce);
     } else if (event.touches.length === 1 && this.viewStatus.drag) {
       // Single touch drag
       let touch = event.touches[0];
@@ -213,13 +210,64 @@ export const Handlers = {
     }
   },
 
-  handleTouchEnd(event) {
-    this.viewStatus.drag = false;
-    this.viewStatus.dragPrevPos = null;
-    this.fetchNewAssets = true;
-    this.setQueryParams();
-    this.mapView.renderSync(true, this.displayCities);
+    handleTouchEnd(event) {
+    const DOUBLE_TAP_MS = 300;
+    const DOUBLE_TAP_DIST_PX = 30;
+
+    if (event.touches.length < 2) {
+      this.viewStatus.pinching = false;
+      this.viewStatus.pinchPrevDistance = null;
+    }
+
+    // Detect double-tap on single-finger end
+    if (event.changedTouches && event.changedTouches.length === 1) {
+      const touch = event.changedTouches[0];
+      const now = Date.now();
+      const last = this.viewStatus.lastTapTime || 0;
+      const lastPos = this.viewStatus.lastTapPos;
+
+      if (last > 0 && (now - last) <= DOUBLE_TAP_MS && lastPos) {
+        const dx = touch.clientX - lastPos[0];
+        const dy = touch.clientY - lastPos[1];
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= DOUBLE_TAP_DIST_PX) {
+          // It's a double-tap: prevent browser zoom and trigger map double-tap
+          event.preventDefault();
+          this.viewStatus.lastTapTime = 0;
+          this.viewStatus.lastTapPos = null;
+          this.handleDoubleClick({ clientX: touch.clientX, clientY: touch.clientY, preventDefault: () => { } });
+        } else {
+          // Not close enough: treat as new tap
+          this.viewStatus.lastTapTime = now;
+          this.viewStatus.lastTapPos = [touch.clientX, touch.clientY];
+        }
+      } else {
+        // first tap: record
+        this.viewStatus.lastTapTime = now;
+        this.viewStatus.lastTapPos = [touch.clientX, touch.clientY];
+        // clear after threshold to avoid stale state
+        setTimeout(() => {
+          if (Date.now() - (this.viewStatus.lastTapTime || 0) > DOUBLE_TAP_MS) {
+            this.viewStatus.lastTapTime = 0;
+            this.viewStatus.lastTapPos = null;
+          }
+        }, DOUBLE_TAP_MS + 50);
+      }
+    }
+
+    if (event.touches.length === 0) {
+      this.viewStatus.drag = false;
+      this.viewStatus.dragPrevPos = null;
+      this.mapView.renderSync(true, this.displayCities);
+    }
   },
+
+  // handleTouchEnd(event) {
+  //   this.viewStatus.pinching = false;
+  //   this.viewStatus.pinchPrevDistance = null;
+  //   this.setQueryParams();
+  //   this.mapView.renderSync(true, this.displayCities);
+  // },
 
   ///////////////////////////////////////////////////////////////
   handleZoomInClick(event) {
